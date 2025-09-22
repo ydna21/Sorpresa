@@ -45,22 +45,6 @@
       background: rgba(0, 0, 0, 0.4);
       padding: 8px 15px;
       border-radius: 10px;
-      text-align: center;
-    }
-    /* 🔴 Nuevo mensaje de agradecimiento */
-    #agradecimiento {
-      position: absolute;
-      top: 60px;            /* Debajo del contador */
-      left: 50%;
-      transform: translateX(-50%);
-      color: red;
-      font-size: 1.4rem;
-      z-index: 4;
-      background: rgba(0, 0, 0, 0.3);
-      padding: 6px 12px;
-      border-radius: 10px;
-      text-align: center;
-      display: none;
     }
     #tiempoTotal {
       position: fixed;
@@ -104,15 +88,16 @@
     }
     .final-message {
       position: absolute;
-      top: 50%;
+      top: 65%;               /* 👈 centrado bajo la foto */
       left: 50%;
       transform: translate(-50%, -50%);
-      font-size: 2rem;
+      font-size: 1.5rem;
       color: white;
       text-shadow: 2px 2px 4px #000000, -1px -1px 2px #ff69b4;
       z-index: 3;
       text-align: center;
       display: none;
+      max-width: 90%;
     }
   </style>
 </head>
@@ -125,20 +110,16 @@
 
 <div id="contador" style="display:none;"></div>
 
-<!-- 🔴 Nuevo mensaje de agradecimiento -->
-<div id="agradecimiento" style="display:none;">
-  Gracias por dejarme formar parte de tu vida ❤️
-</div>
-
-<div id="tiempoTotal" style="display:none;"></div>
+<div id="tiempoTotal"></div>
 
 <div class="overlay" style="display:none;" id="contenido">
   <img src="imagen.jpg" alt="Foto juntos" class="center-image" />
   <div class="center-message">TE AMO ❤️</div>
 </div>
 
+<!-- 💖 Mensaje que aparece después de unos segundos -->
 <div class="final-message" id="finalMessage">
-  Gracias por dejarme formar parte de tu vida❤️
+  Gracias por dejarme formar parte de tu vida ❤️
 </div>
 
 <audio id="musica" loop>
@@ -152,7 +133,6 @@ function iniciarSorpresa() {
   document.getElementById('inicio').style.display = 'none';
   document.getElementById('contenido').style.display = 'flex';
   document.getElementById('contador').style.display = 'block';
-  document.getElementById('agradecimiento').style.display = 'block'; // 👈 mostrar
   document.getElementById('tiempoTotal').style.display = 'block';
   document.getElementById('musica').play();
   calcularDiasJuntos();
@@ -219,40 +199,9 @@ function iniciarAnimacion() {
   };
   const rainInterval = setInterval(drawRain, 50);
 
+  // 💖 Mostrar el mensaje central después de 10s
   setTimeout(() => {
-    clearInterval(rainInterval);
-    const particles = [];
-    for (let t = 0; t < Math.PI * 2; t += 0.02) {
-      const x = 16 * Math.pow(Math.sin(t), 3);
-      const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
-      const angle = Math.atan2(y, x);
-      const speed = 2 + Math.random() * 2;
-      particles.push({
-        x: canvas.width/2,
-        y: canvas.height/2,
-        vx: Math.cos(angle) * speed * 10,
-        vy: -Math.sin(angle) * speed * 10,
-        text: "TE AMO",
-        alpha: 1
-      });
-    }
-    function animateHeart() {
-      ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      particles.forEach(p => {
-        ctx.fillStyle = `rgba(255,105,180,${p.alpha})`;
-        ctx.fillText(p.text, p.x, p.y);
-        p.x += p.vx;
-        p.y += p.vy;
-        p.alpha -= 0.01;
-      });
-      if (particles[0].alpha > 0) {
-        requestAnimationFrame(animateHeart);
-      } else {
-        document.getElementById('finalMessage').style.display = 'block';
-      }
-    }
-    animateHeart();
+    document.getElementById('finalMessage').style.display = 'block';
   }, 10000);
 
   // Explosiones extra a los 14s
