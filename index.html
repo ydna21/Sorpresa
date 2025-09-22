@@ -87,9 +87,6 @@
 <script>
 let lluviaPrincipalIniciada=false;
 
-// 👉 Fecha de inicio ajustada a las 8 PM del 11 de agosto 2023
-const fechaInicio = new Date("2023-08-11T20:00:00");
-
 function iniciarSorpresa(){
   document.getElementById('inicio').style.display='none';
   document.getElementById('contenido').style.display='flex';
@@ -99,27 +96,30 @@ function iniciarSorpresa(){
   calcularDiasJuntos();
   iniciarTiempoTotal();
   if(!lluviaPrincipalIniciada){
-    iniciarAnimacion(); // inicia lluvia + explosión inicial
+    iniciarAnimacion();
     lluviaPrincipalIniciada=true;
   }
 }
 
 function calcularDiasJuntos(){
+  // ✅ Inicio desde el 11 de agosto 2023 a las 20:00 (8 PM)
+  const inicio=new Date("2023-08-11T20:00:00");
   const hoy=new Date();
-  const diff=hoy-fechaInicio;
+  const diff=hoy-inicio;
   const dias=Math.floor(diff/(1000*60*60*24));
   document.getElementById("contador").innerText=`Llevamos ${dias} días juntos💖`;
 }
 
 function iniciarTiempoTotal(){
+  const inicio=new Date("2023-08-11T20:00:00");
   function actualizar(){
     const ahora=new Date();
-    let años=ahora.getFullYear()-fechaInicio.getFullYear();
-    let meses=ahora.getMonth()-fechaInicio.getMonth();
-    let dias=ahora.getDate()-fechaInicio.getDate();
+    let años=ahora.getFullYear()-inicio.getFullYear();
+    let meses=ahora.getMonth()-inicio.getMonth();
+    let dias=ahora.getDate()-inicio.getDate();
     if(dias<0){meses--;dias+=new Date(ahora.getFullYear(),ahora.getMonth(),0).getDate();}
     if(meses<0){años--;meses+=12;}
-    const diffMs=ahora-fechaInicio;
+    const diffMs=ahora-inicio;
     const horas=Math.floor((diffMs/(1000*60*60))%24);
     const minutos=Math.floor((diffMs/(1000*60))%60);
     const segundos=Math.floor((diffMs/1000)%60);
@@ -216,6 +216,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   });
 });
 
+// ✅ Lluvia en la pantalla de recuerdos con un poquito más de velocidad
 function iniciarLluviaRecuerdos(){
   const canvas=document.getElementById('canvasRecuerdos');
   const ctx=canvas.getContext('2d');
@@ -232,7 +233,7 @@ function iniciarLluviaRecuerdos(){
       const y=drop*12;
       ctx.fillText("TE AMO",x,y);
       if(y>canvas.height && Math.random()>0.98) drops[i]=0;
-      drops[i]+=0.5;
+      drops[i]+=0.7; // 🔥 antes 0.5, ahora un poquito más rápido
     });
     requestAnimationFrame(draw);
   }
