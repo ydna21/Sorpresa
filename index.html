@@ -62,35 +62,6 @@
       white-space: pre-line;
       display: none;
     }
-    /* ✅ Estilo del botón de recuerdos */
-    #recuerdosBtn {
-      position: fixed;
-      bottom: 60px;
-      right: 20px;
-      padding: 12px 20px;
-      font-size: 1rem;
-      background: #ff69b4;
-      color: white;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      box-shadow: 0 0 15px #ff69b4;
-      display: none;
-      z-index: 12;
-    }
-    /* ✅ Caja de recuerdos */
-    #recuerdosLista {
-      position: fixed;
-      bottom: 120px;
-      right: 20px;
-      background: rgba(0, 0, 0, 0.7);
-      color: #ff69b4;
-      padding: 15px 20px;
-      border-radius: 12px;
-      display: none;
-      z-index: 12;
-      font-size: 1rem;
-    }
     .overlay {
       position: absolute;
       top: 0;
@@ -116,6 +87,29 @@
       font-size: 2rem;
       text-align: center;
     }
+    /* Botón de recuerdos */
+    #btnRecuerdos {
+      margin-top:20px;
+      padding:10px 20px;
+      font-size:1rem;
+      background:#ff69b4;
+      color:white;
+      border:none;
+      border-radius:10px;
+      cursor:pointer;
+      box-shadow:0 0 10px #ff69b4;
+      pointer-events:auto;
+    }
+    #listaRecuerdos {
+      display:none;
+      list-style:none;
+      margin-top:15px;
+      padding:0;
+      color:white;
+      text-align:center;
+      font-size:1.1rem;
+      pointer-events:auto;
+    }
     .final-message {
       position: absolute;
       top: 50%;
@@ -140,19 +134,23 @@
 <div id="contador" style="display:none;"></div>
 <div id="tiempoTotal" style="display:none;"></div>
 
-<!-- ✅ Botón y lista de recuerdos -->
-<button id="recuerdosBtn" onclick="toggleRecuerdos()">💖 Recuerdos</button>
-<div id="recuerdosLista">
-  <p>📅 15/07/2023 – Primera vez que nos reencontramos (detalle especial)</p>
-  <p>📅 21/07/2023 – Nuestra primera salida para volver a conocernos</p>
-</div>
-
 <div class="overlay" style="display:none;" id="contenido">
   <img src="imagen.jpg" alt="Foto juntos" class="center-image" />
   <div class="center-message">TE AMO ❤️</div>
+
+  <!-- Botón debajo de la foto -->
+  <button id="btnRecuerdos">💌 Nuestros recuerdos</button>
+
+  <!-- Lista oculta -->
+  <ul id="listaRecuerdos">
+    <li>15 de julio 2023 – Nuestro reencuentro y detalle 💖</li>
+    <li>21 de julio 2023 – Primera salida para volver a conocernos ✨</li>
+  </ul>
 </div>
 
-<div class="final-message" id="finalMessage">Gracias por dejarme formar parte de tu vida❤️</div>
+<div class="final-message" id="finalMessage">
+  Gracias por dejarme formar parte de tu vida❤️
+</div>
 
 <audio id="musica" loop>
   <source src="musica.mp3" type="audio/mpeg">
@@ -166,7 +164,6 @@ function iniciarSorpresa() {
   document.getElementById('contenido').style.display = 'flex';
   document.getElementById('contador').style.display = 'block';
   document.getElementById('tiempoTotal').style.display = 'block';
-  document.getElementById('recuerdosBtn').style.display = 'block'; // ✅ Mostrar botón
   document.getElementById('musica').play();
   calcularDiasJuntos();
   iniciarTiempoTotal();
@@ -207,12 +204,6 @@ function iniciarTiempoTotal() {
   }
   actualizar();
   setInterval(actualizar, 1000);
-}
-
-/* ✅ Mostrar/ocultar recuerdos */
-function toggleRecuerdos() {
-  const lista = document.getElementById('recuerdosLista');
-  lista.style.display = lista.style.display === 'block' ? 'none' : 'block';
 }
 
 function iniciarAnimacion() {
@@ -317,6 +308,15 @@ function iniciarAnimacion() {
     canvas.height = window.innerHeight;
   });
 }
+
+// Mostrar/ocultar la lista de recuerdos
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("btnRecuerdos");
+  const lista = document.getElementById("listaRecuerdos");
+  btn.addEventListener("click", () => {
+    lista.style.display = lista.style.display === "none" ? "block" : "none";
+  });
+});
 </script>
 </body>
 </html>
