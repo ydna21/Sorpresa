@@ -87,7 +87,20 @@
       font-size: 2rem;
       text-align: center;
     }
-    /* Botón de recuerdos */
+    /* 🔹 Ajustado: más abajo y más pequeña */
+    .final-message {
+      position: absolute;
+      top: 75%;             /* antes 50%, ahora más abajo */
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.5rem;    /* antes 2rem */
+      color: white;
+      text-shadow: 2px 2px 4px #000000, -1px -1px 2px #ff69b4;
+      z-index: 3;
+      text-align: center;
+      display: none;
+    }
+    /* Botón recuerdos */
     #btnRecuerdos {
       margin-top:20px;
       padding:10px 20px;
@@ -98,7 +111,7 @@
       border-radius:10px;
       cursor:pointer;
       box-shadow:0 0 10px #ff69b4;
-      pointer-events:auto;
+      pointer-events: auto; /* para que sea clickeable */
     }
     #listaRecuerdos {
       display:none;
@@ -108,19 +121,7 @@
       color:white;
       text-align:center;
       font-size:1.1rem;
-      pointer-events:auto;
-    }
-    .final-message {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 2rem;
-      color: white;
-      text-shadow: 2px 2px 4px #000000, -1px -1px 2px #ff69b4;
-      z-index: 3;
-      text-align: center;
-      display: none;
+      pointer-events: auto;
     }
   </style>
 </head>
@@ -138,10 +139,8 @@
   <img src="imagen.jpg" alt="Foto juntos" class="center-image" />
   <div class="center-message">TE AMO ❤️</div>
 
-  <!-- Botón debajo de la foto -->
+  <!-- 🔹 Botón de recuerdos y lista -->
   <button id="btnRecuerdos">💌 Nuestros recuerdos</button>
-
-  <!-- Lista oculta -->
   <ul id="listaRecuerdos">
     <li>15 de julio 2023 – Nuestro reencuentro y detalle 💖</li>
     <li>21 de julio 2023 – Primera salida para volver a conocernos ✨</li>
@@ -149,7 +148,7 @@
 </div>
 
 <div class="final-message" id="finalMessage">
-  Gracias por dejarme formar parte de tu vida❤️
+  Gracias por dejarme formar parte de tu vida ❤️
 </div>
 
 <audio id="musica" loop>
@@ -309,7 +308,7 @@ function iniciarAnimacion() {
   });
 }
 
-// Mostrar/ocultar la lista de recuerdos
+// Mostrar/ocultar lista de recuerdos
 document.addEventListener("DOMContentLoaded", () => {
   const btn = document.getElementById("btnRecuerdos");
   const lista = document.getElementById("listaRecuerdos");
