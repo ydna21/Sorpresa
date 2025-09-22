@@ -6,6 +6,7 @@
 <title>Sorpresa</title>
 <style>
   body{margin:0;background:black;overflow:hidden;font-family:'Courier New',monospace;}
+  /* Inicio */
   #inicio{position:fixed;width:100%;height:100%;
     background:linear-gradient(to top,#000,#330033);
     display:flex;align-items:center;justify-content:center;
@@ -13,19 +14,22 @@
   #inicio button{padding:20px 40px;font-size:1.5rem;
     background:#ff69b4;color:white;border:none;border-radius:15px;
     cursor:pointer;box-shadow:0 0 20px #ff69b4;margin-top:20px;}
+  /* Contadores */
   #contador{position:absolute;top:10px;left:50%;transform:translateX(-50%);
     color:white;font-size:1.2rem;z-index:4;background:rgba(0,0,0,0.4);
     padding:8px 40px;border-radius:10px;text-align:center;min-width:280px;display:none;}
   #tiempoTotal{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);
     color:#ff69b4;font-size:1.1rem;z-index:11;background:rgba(0,0,0,0.4);
     padding:8px 15px;border-radius:10px;text-align:center;white-space:pre-line;display:none;}
+  /* Pantalla principal */
   .overlay{position:absolute;top:0;left:0;width:100%;height:100%;
     z-index:2;display:none;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
   .center-image{width:200px;height:auto;border-radius:10px;margin-bottom:20px;
     box-shadow:0 0 20px #ff69b4;}
   .center-message{color:#ff69b4;font-size:2rem;text-align:center;}
-  #btnRecuerdos{margin-top:20px;padding:10px 20px;font-size:1rem;background:#ff69b4;
-    color:white;border:none;border-radius:10px;cursor:pointer;box-shadow:0 0 10px #ff69b4;pointer-events:auto;}
+  .btn{margin-top:20px;padding:10px 20px;font-size:1rem;background:#ff69b4;
+    color:white;border:none;border-radius:10px;cursor:pointer;
+    box-shadow:0 0 10px #ff69b4;pointer-events:auto;}
   #listaRecuerdos{display:none;list-style:none;margin-top:15px;padding:0;
     color:white;text-align:center;font-size:1.1rem;pointer-events:auto;}
   .final-message{position:absolute;top:40%;left:50%;
@@ -34,13 +38,13 @@
     z-index:3;text-align:center;display:none;}
 
   /* Pantalla de recuerdos */
-  #recuerdosScreen{display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+  #recuerdosScreen,#fotosScreen{display:none;position:fixed;top:0;left:0;width:100%;height:100%;
     background:black;z-index:20;flex-direction:column;align-items:center;justify-content:center;}
-  #canvasRecuerdos{position:absolute;top:0;left:0;width:100%;height:100%;z-index:19;}
-  #recuerdosContent{position:relative;z-index:21;text-align:center;}
-  #recuerdosContent h2{color:#ff69b4;font-size:2rem;margin-bottom:20px;}
+  #canvasRecuerdos,#canvasFotos{position:absolute;top:0;left:0;width:100%;height:100%;z-index:19;}
+  #recuerdosContent,#fotosContent{position:relative;z-index:21;text-align:center;}
+  #recuerdosContent h2,#fotosContent h2{color:#ff69b4;font-size:2rem;margin-bottom:20px;}
   #recuerdosContent ul{list-style:none;padding:0;margin-bottom:20px;color:white;font-size:1.2rem;}
-  #recuerdosContent button{padding:12px 25px;font-size:1.2rem;background:#ff69b4;
+  #recuerdosContent button,#fotosContent button{padding:12px 25px;font-size:1.2rem;background:#ff69b4;
     color:white;border:none;border-radius:12px;cursor:pointer;box-shadow:0 0 15px #ff69b4;}
 </style>
 </head>
@@ -58,7 +62,8 @@
 <div class="overlay" id="contenido">
   <img src="imagen.jpg" alt="Foto juntos" class="center-image" />
   <div class="center-message">TE AMO ❤️</div>
-  <button id="btnRecuerdos">💌 Nuestros recuerdos</button>
+  <button id="btnRecuerdos" class="btn">💌 Nuestros recuerdos</button>
+  <button id="btnFotos" class="btn">📷 Nuestras fotos</button>
   <ul id="listaRecuerdos">
     <li>15 de julio 2023 – Nuestro reencuentro y detalle 💖</li>
     <li>21 de julio 2023 – Primera salida para volver a conocernos ✨</li>
@@ -75,7 +80,16 @@
       <li>15 de julio 2023 – Nuestro reencuentro y detalle 💖</li>
       <li>21 de julio 2023 – Primera salida para volver a conocernos ✨</li>
     </ul>
-    <button id="btnRegresar">⬅️ Regresar</button>
+    <button id="btnRegresarRecuerdos">⬅️ Regresar</button>
+  </div>
+</div>
+
+<!-- Pantalla de fotos -->
+<div id="fotosScreen">
+  <canvas id="canvasFotos"></canvas>
+  <div id="fotosContent">
+    <h2>Nuestras Fotos</h2>
+    <button id="btnRegresarFotos">⬅️ Regresar</button>
   </div>
 </div>
 
@@ -86,7 +100,6 @@
 
 <script>
 let lluviaPrincipalIniciada=false;
-
 function iniciarSorpresa(){
   document.getElementById('inicio').style.display='none';
   document.getElementById('contenido').style.display='flex';
@@ -102,7 +115,7 @@ function iniciarSorpresa(){
 }
 
 function calcularDiasJuntos(){
-  const inicio=new Date("2023-08-11T20:00:00");
+  const inicio=new Date("2023-08-11T20:00:00"); // 11 agosto 8pm
   const hoy=new Date();
   const diff=hoy-inicio;
   const dias=Math.floor(diff/(1000*60*60*24));
@@ -136,28 +149,23 @@ function iniciarAnimacion(){
   canvas.width=window.innerWidth;
   canvas.height=window.innerHeight;
   ctx.font="16px monospace";
-  const drops=new Array(Math.floor(canvas.width/64)).fill(1);
-
+  const drops=new Array(Math.floor(canvas.width/32)).fill(1);
   function drawRain(){
     ctx.fillStyle="rgba(0,0,0,0.1)";
     ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle="#ff69b4";
     drops.forEach((drop,i)=>{
-      const x=i*64;
-      const y=drop*16;
+      const x=i*32;
+      const y=drop*12;
       ctx.fillText("TE AMO",x,y);
-      if(y>canvas.height && Math.random()>0.975) drops[i]=0;
-      drops[i]+=0.7; // ✅ velocidad igual que en recuerdos
+      if(y>canvas.height && Math.random()>0.98) drops[i]=0;
+      drops[i]+=0.7;
     });
     requestAnimationFrame(drawRain);
   }
   drawRain();
-
   lanzarExplosionYFrase(ctx,canvas);
-  window.addEventListener('resize',()=>{
-    canvas.width=window.innerWidth;
-    canvas.height=window.innerHeight;
-  });
+  window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
 }
 
 function lanzarExplosionYFrase(ctx,canvas){
@@ -194,28 +202,50 @@ function lanzarExplosionYFrase(ctx,canvas){
 }
 
 document.addEventListener("DOMContentLoaded",()=>{
-  document.getElementById("btnRecuerdos").addEventListener("click",()=>{
-    document.getElementById('contenido').style.display='none';
-    document.getElementById('contador').style.display='none';
-    document.getElementById('tiempoTotal').style.display='none';
-    document.getElementById('finalMessage').style.display='none';
-    document.getElementById('recuerdosScreen').style.display='flex';
+  const btnRecuerdos=document.getElementById("btnRecuerdos");
+  const btnFotos=document.getElementById("btnFotos");
+  const btnRegresarRecuerdos=document.getElementById("btnRegresarRecuerdos");
+  const btnRegresarFotos=document.getElementById("btnRegresarFotos");
+
+  btnRecuerdos.addEventListener("click",()=>{
+    mostrarPantalla('recuerdosScreen');
     iniciarLluviaRecuerdos();
   });
 
-  document.getElementById("btnRegresar").addEventListener("click",()=>{
-    document.getElementById('recuerdosScreen').style.display='none';
-    document.getElementById('contenido').style.display='flex';
-    document.getElementById('contador').style.display='block';
-    document.getElementById('tiempoTotal').style.display='block';
-    document.getElementById('finalMessage').style.display='none';
-    const canvas=document.getElementById('canvas');
-    const ctx=canvas.getContext('2d');
-    lanzarExplosionYFrase(ctx,canvas);
+  btnFotos.addEventListener("click",()=>{
+    mostrarPantalla('fotosScreen');
+    iniciarLluviaFotos();
+  });
+
+  btnRegresarRecuerdos.addEventListener("click",()=>{
+    regresarPantalla();
+  });
+
+  btnRegresarFotos.addEventListener("click",()=>{
+    regresarPantalla();
   });
 });
 
-// ✅ Lluvia de recuerdos con misma velocidad que el primer apartado
+function mostrarPantalla(id){
+  document.getElementById('contenido').style.display='none';
+  document.getElementById('contador').style.display='none';
+  document.getElementById('tiempoTotal').style.display='none';
+  document.getElementById('finalMessage').style.display='none';
+  document.getElementById(id).style.display='flex';
+}
+
+function regresarPantalla(){
+  document.getElementById('recuerdosScreen').style.display='none';
+  document.getElementById('fotosScreen').style.display='none';
+  document.getElementById('contenido').style.display='flex';
+  document.getElementById('contador').style.display='block';
+  document.getElementById('tiempoTotal').style.display='block';
+  document.getElementById('finalMessage').style.display='none';
+  const canvas=document.getElementById('canvas');
+  const ctx=canvas.getContext('2d');
+  lanzarExplosionYFrase(ctx,canvas);
+}
+
 function iniciarLluviaRecuerdos(){
   const canvas=document.getElementById('canvasRecuerdos');
   const ctx=canvas.getContext('2d');
@@ -232,15 +262,49 @@ function iniciarLluviaRecuerdos(){
       const y=drop*12;
       ctx.fillText("TE AMO",x,y);
       if(y>canvas.height && Math.random()>0.98) drops[i]=0;
-      drops[i]+=0.7; // misma velocidad que en el principal
+      drops[i]+=0.7;
     });
     requestAnimationFrame(draw);
   }
   draw();
-  window.addEventListener('resize',()=>{
-    canvas.width=window.innerWidth;
-    canvas.height=window.innerHeight;
-  });
+}
+
+function iniciarLluviaFotos(){
+  const canvas=document.getElementById('canvasFotos');
+  const ctx=canvas.getContext('2d');
+  canvas.width=window.innerWidth;
+  canvas.height=window.innerHeight;
+
+  const totalFotos=30; // cantidad de fotos
+  const fotos=[];
+  for(let i=1;i<=totalFotos;i++){
+    const img=new Image();
+    img.src=`fotos/foto${i}.jpg`; // debes poner tus fotos en /fotos/
+    fotos.push({
+      img:img,
+      x:Math.random()*canvas.width,
+      y:Math.random()*canvas.height,
+      speed:1+Math.random()*1.5,
+      size:50+Math.random()*50
+    });
+  }
+
+  function draw(){
+    ctx.fillStyle="rgba(0,0,0,0.1)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    fotos.forEach(f=>{
+      if(f.img.complete){
+        ctx.drawImage(f.img,f.x,f.y,f.size,f.size);
+      }
+      f.y+=f.speed;
+      if(f.y>canvas.height){
+        f.y=-f.size;
+        f.x=Math.random()*canvas.width;
+      }
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
 }
 </script>
 </body>
