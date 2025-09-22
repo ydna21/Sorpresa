@@ -62,6 +62,35 @@
       white-space: pre-line;
       display: none;
     }
+    /* ✅ Estilo del botón de recuerdos */
+    #recuerdosBtn {
+      position: fixed;
+      bottom: 60px;
+      right: 20px;
+      padding: 12px 20px;
+      font-size: 1rem;
+      background: #ff69b4;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 0 15px #ff69b4;
+      display: none;
+      z-index: 12;
+    }
+    /* ✅ Caja de recuerdos */
+    #recuerdosLista {
+      position: fixed;
+      bottom: 120px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #ff69b4;
+      padding: 15px 20px;
+      border-radius: 12px;
+      display: none;
+      z-index: 12;
+      font-size: 1rem;
+    }
     .overlay {
       position: absolute;
       top: 0;
@@ -99,29 +128,6 @@
       text-align: center;
       display: none;
     }
-    /* NUEVO botón y lista */
-    #btnRecuerdos {
-      margin-top: 20px;
-      padding: 10px 25px;
-      font-size: 1rem;
-      background: #ff69b4;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #ff69b4;
-      cursor: pointer;
-      pointer-events: auto;
-    }
-    #listaRecuerdos {
-      margin-top: 15px;
-      color: white;
-      font-size: 1rem;
-      background: rgba(0,0,0,0.5);
-      padding: 10px 15px;
-      border-radius: 10px;
-      display: none;
-      pointer-events: auto;
-    }
   </style>
 </head>
 <body>
@@ -134,16 +140,16 @@
 <div id="contador" style="display:none;"></div>
 <div id="tiempoTotal" style="display:none;"></div>
 
-<div class="overlay" style="display:none;" id="contenido">
-  <img src="imagen.jpg" alt="Foto juntos" class="center-image"/>
-  <div class="center-message">TE AMO ❤️</div>
+<!-- ✅ Botón y lista de recuerdos -->
+<button id="recuerdosBtn" onclick="toggleRecuerdos()">💖 Recuerdos</button>
+<div id="recuerdosLista">
+  <p>📅 15/07/2023 – Primera vez que nos reencontramos (detalle especial)</p>
+  <p>📅 21/07/2023 – Nuestra primera salida para volver a conocernos</p>
+</div>
 
-  <!-- NUEVO: botón y lista de recuerdos -->
-  <button id="btnRecuerdos" onclick="toggleRecuerdos()">Ver fechas especiales</button>
-  <div id="listaRecuerdos">
-    <p>📅 15/07/2023 – La primera vez que nos reencontramos después de años (te di un detalle)</p>
-    <p>📅 21/07/2023 – Nuestra primera salida para volver a conocernos más</p>
-  </div>
+<div class="overlay" style="display:none;" id="contenido">
+  <img src="imagen.jpg" alt="Foto juntos" class="center-image" />
+  <div class="center-message">TE AMO ❤️</div>
 </div>
 
 <div class="final-message" id="finalMessage">Gracias por dejarme formar parte de tu vida❤️</div>
@@ -160,6 +166,7 @@ function iniciarSorpresa() {
   document.getElementById('contenido').style.display = 'flex';
   document.getElementById('contador').style.display = 'block';
   document.getElementById('tiempoTotal').style.display = 'block';
+  document.getElementById('recuerdosBtn').style.display = 'block'; // ✅ Mostrar botón
   document.getElementById('musica').play();
   calcularDiasJuntos();
   iniciarTiempoTotal();
@@ -167,7 +174,7 @@ function iniciarSorpresa() {
 }
 
 function calcularDiasJuntos() {
-  const inicio = new Date("2023-08-11"); // vuelve a medianoche
+  const inicio = new Date("2023-08-11");
   const hoy = new Date();
   const diff = hoy - inicio;
   const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -178,20 +185,34 @@ function iniciarTiempoTotal() {
   const inicio = new Date("2023-08-11");
   function actualizar() {
     const ahora = new Date();
+    let años = ahora.getFullYear() - inicio.getFullYear();
+    let meses = ahora.getMonth() - inicio.getMonth();
+    let dias = ahora.getDate() - inicio.getDate();
+    if (dias < 0) {
+      meses--;
+      const mesAnterior = new Date(ahora.getFullYear(), ahora.getMonth(), 0).getDate();
+      dias += mesAnterior;
+    }
+    if (meses < 0) {
+      años--;
+      meses += 12;
+    }
     const diffMs = ahora - inicio;
-    const horasTotales = Math.floor(diffMs / (1000 * 60 * 60));
+    const horas = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
     const minutos = Math.floor((diffMs / (1000 * 60)) % 60);
     const segundos = Math.floor((diffMs / 1000) % 60);
     document.getElementById("tiempoTotal").innerText =
-      `Horas acumuladas: ${horasTotales}h ${minutos}m ${segundos}s`;
+      `Años: ${años} | Meses: ${meses} | Días: ${dias}\n` +
+      `Tiempo juntos: ${horas}h ${minutos}m ${segundos}s`;
   }
   actualizar();
   setInterval(actualizar, 1000);
 }
 
+/* ✅ Mostrar/ocultar recuerdos */
 function toggleRecuerdos() {
-  const lista = document.getElementById('listaRecuerdos');
-  lista.style.display = (lista.style.display === 'none' || lista.style.display === '') ? 'block' : 'none';
+  const lista = document.getElementById('recuerdosLista');
+  lista.style.display = lista.style.display === 'block' ? 'none' : 'block';
 }
 
 function iniciarAnimacion() {
