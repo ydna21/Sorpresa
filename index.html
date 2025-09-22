@@ -5,94 +5,43 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sorpresa</title>
 <style>
-  body{
-    margin:0;
-    background:black;
-    overflow:hidden;
-    font-family:'Courier New',monospace;
-  }
-  #inicio{
-    position:fixed;width:100%;height:100%;
+  body{margin:0;background:black;overflow:hidden;font-family:'Courier New',monospace;}
+  #inicio{position:fixed;width:100%;height:100%;
     background:linear-gradient(to top,#000,#330033);
     display:flex;align-items:center;justify-content:center;
-    flex-direction:column;z-index:10;color:white;
-  }
-  #inicio button{
-    padding:20px 40px;font-size:1.5rem;
-    background:#ff69b4;color:white;border:none;
-    border-radius:15px;cursor:pointer;box-shadow:0 0 20px #ff69b4;
-    margin-top:20px;
-  }
-  #contador{
-    position:absolute;top:10px;left:50%;
-    transform:translateX(-50%);color:white;font-size:1.2rem;
-    z-index:4;background:rgba(0,0,0,0.4);padding:8px 40px;
-    border-radius:10px;text-align:center;min-width:280px;
-    display:none;
-  }
-  #tiempoTotal{
-    position:fixed;bottom:10px;left:50%;
-    transform:translateX(-50%);color:#ff69b4;font-size:1.1rem;
-    z-index:11;background:rgba(0,0,0,0.4);
-    padding:8px 15px;border-radius:10px;text-align:center;
-    white-space:pre-line;display:none;
-  }
-  .overlay{
-    position:absolute;top:0;left:0;width:100%;height:100%;
-    z-index:2;display:none;flex-direction:column;
-    align-items:center;justify-content:center;pointer-events:none;
-  }
-  .center-image{
-    width:200px;height:auto;border-radius:10px;margin-bottom:20px;
-    box-shadow:0 0 20px #ff69b4;
-  }
-  .center-message{
-    color:#ff69b4;font-size:2rem;text-align:center;
-  }
-  #btnRecuerdos{
-    margin-top:20px;padding:10px 20px;font-size:1rem;
-    background:#ff69b4;color:white;border:none;border-radius:10px;
-    cursor:pointer;box-shadow:0 0 10px #ff69b4;pointer-events:auto;
-  }
-  #listaRecuerdos{
-    display:none;list-style:none;margin-top:15px;padding:0;
-    color:white;text-align:center;font-size:1.1rem;pointer-events:auto;
-  }
-  .final-message{
-    position:absolute;top:40%;left:50%;
+    flex-direction:column;z-index:10;color:white;}
+  #inicio button{padding:20px 40px;font-size:1.5rem;
+    background:#ff69b4;color:white;border:none;border-radius:15px;
+    cursor:pointer;box-shadow:0 0 20px #ff69b4;margin-top:20px;}
+  #contador{position:absolute;top:10px;left:50%;transform:translateX(-50%);
+    color:white;font-size:1.2rem;z-index:4;background:rgba(0,0,0,0.4);
+    padding:8px 40px;border-radius:10px;text-align:center;min-width:280px;display:none;}
+  #tiempoTotal{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);
+    color:#ff69b4;font-size:1.1rem;z-index:11;background:rgba(0,0,0,0.4);
+    padding:8px 15px;border-radius:10px;text-align:center;white-space:pre-line;display:none;}
+  .overlay{position:absolute;top:0;left:0;width:100%;height:100%;
+    z-index:2;display:none;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
+  .center-image{width:200px;height:auto;border-radius:10px;margin-bottom:20px;
+    box-shadow:0 0 20px #ff69b4;}
+  .center-message{color:#ff69b4;font-size:2rem;text-align:center;}
+  #btnRecuerdos{margin-top:20px;padding:10px 20px;font-size:1rem;background:#ff69b4;
+    color:white;border:none;border-radius:10px;cursor:pointer;box-shadow:0 0 10px #ff69b4;pointer-events:auto;}
+  #listaRecuerdos{display:none;list-style:none;margin-top:15px;padding:0;
+    color:white;text-align:center;font-size:1.1rem;pointer-events:auto;}
+  .final-message{position:absolute;top:40%;left:50%;
     transform:translate(-50%,-50%);font-size:2rem;color:white;
     text-shadow:2px 2px 4px #000,-1px -1px 2px #ff69b4;
-    z-index:3;text-align:center;display:none;
-  }
+    z-index:3;text-align:center;display:none;}
 
   /* Pantalla de recuerdos */
-  #recuerdosScreen{
-    display:none;
-    position:fixed;top:0;left:0;width:100%;height:100%;
-    background:black;z-index:20;
-    flex-direction:column;align-items:center;justify-content:center;
-  }
-  /* 🔹 Canvas al fondo */
-  #canvasRecuerdos{
-    position:absolute;top:0;left:0;width:100%;height:100%;
-    z-index:19; /* al fondo */
-  }
-  /* 🔹 Textos y botón arriba del canvas */
-  #recuerdosContent{
-    position:relative;
-    z-index:21; /* encima del canvas */
-    text-align:center;
-  }
-  #recuerdosContent h2{
-    color:#ff69b4;font-size:2rem;margin-bottom:20px;
-  }
-  #recuerdosContent ul{
-    list-style:none;padding:0;margin-bottom:20px;color:white;font-size:1.2rem;
-  }
-  #recuerdosContent button{
-    padding:12px 25px;font-size:1.2rem;background:#ff69b4;color:white;
-    border:none;border-radius:12px;cursor:pointer;box-shadow:0 0 15px #ff69b4;
-  }
+  #recuerdosScreen{display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+    background:black;z-index:20;flex-direction:column;align-items:center;justify-content:center;}
+  #canvasRecuerdos{position:absolute;top:0;left:0;width:100%;height:100%;z-index:19;}
+  #recuerdosContent{position:relative;z-index:21;text-align:center;}
+  #recuerdosContent h2{color:#ff69b4;font-size:2rem;margin-bottom:20px;}
+  #recuerdosContent ul{list-style:none;padding:0;margin-bottom:20px;color:white;font-size:1.2rem;}
+  #recuerdosContent button{padding:12px 25px;font-size:1.2rem;background:#ff69b4;
+    color:white;border:none;border-radius:12px;cursor:pointer;box-shadow:0 0 15px #ff69b4;}
 </style>
 </head>
 <body>
@@ -136,6 +85,8 @@
 <canvas id="canvas"></canvas>
 
 <script>
+let lluviaPrincipalIniciada=false;
+
 function iniciarSorpresa(){
   document.getElementById('inicio').style.display='none';
   document.getElementById('contenido').style.display='flex';
@@ -144,7 +95,7 @@ function iniciarSorpresa(){
   document.getElementById('musica').play();
   calcularDiasJuntos();
   iniciarTiempoTotal();
-  iniciarAnimacion();
+  if(!lluviaPrincipalIniciada){iniciarAnimacion(); lluviaPrincipalIniciada=true;}
 }
 
 function calcularDiasJuntos(){
@@ -183,7 +134,7 @@ function iniciarAnimacion(){
   canvas.height=window.innerHeight;
   ctx.font="16px monospace";
   const drops=new Array(Math.floor(canvas.width/64)).fill(1);
-  const drawRain=()=>{
+  function drawRain(){
     ctx.fillStyle="rgba(0,0,0,0.1)";
     ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle="#ff69b4";
@@ -194,43 +145,17 @@ function iniciarAnimacion(){
       if(y>canvas.height && Math.random()>0.975) drops[i]=0;
       drops[i]++;
     });
-  };
-  const rainInterval=setInterval(drawRain,50);
-
-  setTimeout(()=>{
-    clearInterval(rainInterval);
-    const particles=[];
-    for(let t=0;t<Math.PI*2;t+=0.02){
-      const x=16*Math.pow(Math.sin(t),3);
-      const y=13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t);
-      const angle=Math.atan2(y,x);
-      const speed=2+Math.random()*2;
-      particles.push({x:canvas.width/2,y:canvas.height/2,
-                      vx:Math.cos(angle)*speed*10,
-                      vy:-Math.sin(angle)*speed*10,
-                      text:"TE AMO",alpha:1});
-    }
-    function animateHeart(){
-      ctx.fillStyle="rgba(0,0,0,0.2)";
-      ctx.fillRect(0,0,canvas.width,canvas.height);
-      particles.forEach(p=>{
-        ctx.fillStyle=`rgba(255,105,180,${p.alpha})`;
-        ctx.fillText(p.text,p.x,p.y);
-        p.x+=p.vx; p.y+=p.vy; p.alpha-=0.01;
-      });
-      if(particles[0].alpha>0){
-        requestAnimationFrame(animateHeart);
-      }else{
-        document.getElementById('finalMessage').style.display='block';
-      }
-    }
-    animateHeart();
-  },10000);
+    requestAnimationFrame(drawRain);
+  }
+  drawRain();
+  window.addEventListener('resize',()=>{
+    canvas.width=window.innerWidth;
+    canvas.height=window.innerHeight;
+  });
 }
 
 document.addEventListener("DOMContentLoaded",()=>{
-  const btn=document.getElementById("btnRecuerdos");
-  btn.addEventListener("click",()=>{
+  document.getElementById("btnRecuerdos").addEventListener("click",()=>{
     document.getElementById('contenido').style.display='none';
     document.getElementById('contador').style.display='none';
     document.getElementById('tiempoTotal').style.display='none';
@@ -253,7 +178,6 @@ function iniciarLluviaRecuerdos(){
   canvas.width=window.innerWidth;
   canvas.height=window.innerHeight;
   ctx.font="16px monospace";
-
   const drops=new Array(Math.floor(canvas.width/32)).fill(1);
   function draw(){
     ctx.fillStyle="rgba(0,0,0,0.1)";
