@@ -102,7 +102,6 @@ function iniciarSorpresa(){
 }
 
 function calcularDiasJuntos(){
-  // ✅ Inicio desde el 11 de agosto 2023 a las 20:00 (8 PM)
   const inicio=new Date("2023-08-11T20:00:00");
   const hoy=new Date();
   const diff=hoy-inicio;
@@ -148,7 +147,7 @@ function iniciarAnimacion(){
       const y=drop*16;
       ctx.fillText("TE AMO",x,y);
       if(y>canvas.height && Math.random()>0.975) drops[i]=0;
-      drops[i]++;
+      drops[i]+=0.7; // ✅ velocidad igual que en recuerdos
     });
     requestAnimationFrame(drawRain);
   }
@@ -216,7 +215,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   });
 });
 
-// ✅ Lluvia en la pantalla de recuerdos con un poquito más de velocidad
+// ✅ Lluvia de recuerdos con misma velocidad que el primer apartado
 function iniciarLluviaRecuerdos(){
   const canvas=document.getElementById('canvasRecuerdos');
   const ctx=canvas.getContext('2d');
@@ -233,7 +232,7 @@ function iniciarLluviaRecuerdos(){
       const y=drop*12;
       ctx.fillText("TE AMO",x,y);
       if(y>canvas.height && Math.random()>0.98) drops[i]=0;
-      drops[i]+=0.7; // 🔥 antes 0.5, ahora un poquito más rápido
+      drops[i]+=0.7; // misma velocidad que en el principal
     });
     requestAnimationFrame(draw);
   }
