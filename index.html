@@ -95,7 +95,10 @@ function iniciarSorpresa(){
   document.getElementById('musica').play();
   calcularDiasJuntos();
   iniciarTiempoTotal();
-  if(!lluviaPrincipalIniciada){iniciarAnimacion(); lluviaPrincipalIniciada=true;}
+  if(!lluviaPrincipalIniciada){
+    iniciarAnimacion(); // inicia lluvia + explosión inicial
+    lluviaPrincipalIniciada=true;
+  }
 }
 
 function calcularDiasJuntos(){
@@ -134,6 +137,7 @@ function iniciarAnimacion(){
   canvas.height=window.innerHeight;
   ctx.font="16px monospace";
   const drops=new Array(Math.floor(canvas.width/64)).fill(1);
+
   function drawRain(){
     ctx.fillStyle="rgba(0,0,0,0.1)";
     ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -148,10 +152,46 @@ function iniciarAnimacion(){
     requestAnimationFrame(drawRain);
   }
   drawRain();
+
+  // explosión y frase después de 10s
+  lanzarExplosionYFrase(ctx,canvas);
   window.addEventListener('resize',()=>{
     canvas.width=window.innerWidth;
     canvas.height=window.innerHeight;
   });
+}
+
+function lanzarExplosionYFrase(ctx,canvas){
+  setTimeout(()=>{
+    const particles=[];
+    for(let t=0;t<Math.PI*2;t+=0.02){
+      const x=16*Math.pow(Math.sin(t),3);
+      const y=13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t);
+      const angle=Math.atan2(y,x);
+      const speed=2+Math.random()*2;
+      particles.push({
+        x:canvas.width/2,
+        y:canvas.height/2,
+        vx:Math.cos(angle)*speed*10,
+        vy:-Math.sin(angle)*speed*10,
+        alpha:1
+      });
+    }
+    function animateHeart(){
+      ctx.fillStyle="rgba(0,0,0,0.2)";
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      particles.forEach(p=>{
+        ctx.fillStyle=`rgba(255,105,180,${p.alpha})`;
+        ctx.fillText("TE AMO",p.x,p.y);
+        p.x+=p.vx;
+        p.y+=p.vy;
+        p.alpha-=0.01;
+      });
+      if(particles[0].alpha>0){requestAnimationFrame(animateHeart);}
+      else{document.getElementById('finalMessage').style.display='block';}
+    }
+    animateHeart();
+  },1000); // ahora la explosion al regresar sale rápido (1s)
 }
 
 document.addEventListener("DOMContentLoaded",()=>{
@@ -169,6 +209,11 @@ document.addEventListener("DOMContentLoaded",()=>{
     document.getElementById('contenido').style.display='flex';
     document.getElementById('contador').style.display='block';
     document.getElementById('tiempoTotal').style.display='block';
+    document.getElementById('finalMessage').style.display='none';
+    // 💥 al regresar nueva explosión
+    const canvas=document.getElementById('canvas');
+    const ctx=canvas.getContext('2d');
+    lanzarExplosionYFrase(ctx,canvas);
   });
 });
 
