@@ -47,22 +47,6 @@
       border-radius: 10px;
       text-align: center;
     }
-    /* AÑADIDO: apartado inferior con tiempo */
-    #tiempoTotal {
-      position: fixed;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: #ff69b4;
-      font-size: 1.1rem;
-      z-index: 11;
-      background: rgba(0, 0, 0, 0.4);
-      padding: 8px 15px;
-      border-radius: 10px;
-      text-align: center;
-      white-space: pre-line;
-      display: none;
-    }
     .overlay {
       position: absolute;
       top: 0;
@@ -87,6 +71,7 @@
       color: #ff69b4;
       font-size: 2rem;
       text-align: center;
+      margin-bottom: 10px;
     }
     .final-message {
       position: absolute;
@@ -100,6 +85,33 @@
       text-align: center;
       display: none;
     }
+    /* Estilos para el botón y lista de momentos */
+    #momentosBtn {
+      padding: 10px 20px;
+      background: #ff69b4;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      cursor: pointer;
+      font-size: 1rem;
+      box-shadow: 0 0 10px #ff69b4;
+      pointer-events: auto; /* permite hacer clic */
+      margin-bottom: 10px;
+    }
+    #momentosLista {
+      display: none;
+      background: rgba(0,0,0,0.5);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 10px;
+      pointer-events: auto;
+      max-width: 300px;
+      text-align: left;
+    }
+    #momentosLista ul {
+      padding-left: 20px;
+      margin: 0;
+    }
   </style>
 </head>
 <body>
@@ -110,11 +122,21 @@
 </div>
 
 <div id="contador" style="display:none;"></div>
-<div id="tiempoTotal" style="display:none;"></div> <!-- AÑADIDO -->
 
 <div class="overlay" style="display:none;" id="contenido">
   <img src="imagen.jpg" alt="Foto juntos" class="center-image" />
   <div class="center-message">TE AMO ❤️</div>
+
+  <!-- Botón para mostrar/ocultar momentos -->
+  <button id="momentosBtn" onclick="toggleMomentos()">✨ Momentos Especiales ✨</button>
+
+  <!-- Lista de momentos -->
+  <div id="momentosLista">
+    <ul>
+      <li>💝 15 de julio 2023 – Primera vez que nos reencontramos después de años (detalle especial).</li>
+      <li>🌟 21 de julio 2023 – Nuestra primera salida para volver a conocernos más.</li>
+    </ul>
+  </div>
 </div>
 
 <div class="final-message" id="finalMessage">Gracias por dejarme formar parte de tu vida❤️</div>
@@ -130,48 +152,40 @@ function iniciarSorpresa() {
   document.getElementById('inicio').style.display = 'none';
   document.getElementById('contenido').style.display = 'flex';
   document.getElementById('contador').style.display = 'block';
-  document.getElementById('tiempoTotal').style.display = 'block'; // AÑADIDO: mostrar apartado inferior
   document.getElementById('musica').play();
   calcularDiasJuntos();
-  iniciarTiempoTotal(); // AÑADIDO: iniciar conteo detallado
   iniciarAnimacion();
 }
 
-function calcularDiasJuntos() {
-  const inicio = new Date("2023-08-11");
-  const hoy = new Date();
-  const diff = hoy - inicio;
-  const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
-  document.getElementById("contador").innerText = `Llevamos ${dias} días juntos 💖`;
+function toggleMomentos(){
+  const lista = document.getElementById("momentosLista");
+  lista.style.display = (lista.style.display === "none" || lista.style.display === "") ? "block" : "none";
 }
 
-/* AÑADIDO: función para mostrar años, meses, días y tiempo juntos (hh:mm:ss) */
-function iniciarTiempoTotal() {
-  const inicio = new Date("2023-08-11");
-  function actualizar() {
-    const ahora = new Date();
-    let años = ahora.getFullYear() - inicio.getFullYear();
-    let meses = ahora.getMonth() - inicio.getMonth();
-    let dias = ahora.getDate() - inicio.getDate();
-    if (dias < 0) {
-      meses--;
-      const mesAnterior = new Date(ahora.getFullYear(), ahora.getMonth(), 0).getDate();
-      dias += mesAnterior;
-    }
-    if (meses < 0) {
-      años--;
-      meses += 12;
-    }
-    const diffMs = ahora - inicio;
-    const horas = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
-    const minutos = Math.floor((diffMs / (1000 * 60)) % 60);
-    const segundos = Math.floor((diffMs / 1000) % 60);
-    document.getElementById("tiempoTotal").innerText =
-      `Años: ${años} | Meses: ${meses} | Días: ${dias}\n` +
-      `Tiempo juntos: ${horas}h ${minutos}m ${segundos}s`;
-  }
-  actualizar();
-  setInterval(actualizar, 1000);
+function calcularDiasJuntos() {
+  // 🔴 AHORA contamos desde el 11 de agosto de 2023 a las 20:00 (8 PM)
+  const inicio = new Date("2023-08-11T20:00:00");
+  const hoy = new Date();
+  const diff = hoy - inicio;
+
+  const msEnSegundo = 1000;
+  const msEnMinuto = msEnSegundo * 60;
+  const msEnHora = msEnMinuto * 60;
+  const msEnDia = msEnHora * 24;
+
+  const diasTotales = Math.floor(diff / msEnDia);
+  const horasTotales = Math.floor(diff / msEnHora);
+  const minutosTotales = Math.floor(diff / msEnMinuto);
+  const segundosTotales = Math.floor(diff / msEnSegundo);
+
+  // Cálculo aproximado de años y meses
+  const años = Math.floor(diasTotales / 365);
+  const meses = Math.floor((diasTotales % 365) / 30);
+  const dias = diasTotales - (años * 365 + meses * 30);
+
+  document.getElementById("contador").innerText =
+    `Juntos: ${años} años, ${meses} meses, ${dias} días\n` +
+    `≈ ${horasTotales} horas totales (${minutosTotales} min / ${segundosTotales} seg) 💖`;
 }
 
 function iniciarAnimacion() {
