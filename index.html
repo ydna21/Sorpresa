@@ -28,6 +28,7 @@
     transform:translateX(-50%);color:white;font-size:1.2rem;
     z-index:4;background:rgba(0,0,0,0.4);padding:8px 40px;
     border-radius:10px;text-align:center;min-width:280px;
+    display:none;
   }
   #tiempoTotal{
     position:fixed;bottom:10px;left:50%;
@@ -38,7 +39,7 @@
   }
   .overlay{
     position:absolute;top:0;left:0;width:100%;height:100%;
-    z-index:2;display:flex;flex-direction:column;
+    z-index:2;display:none;flex-direction:column;
     align-items:center;justify-content:center;pointer-events:none;
   }
   .center-image{
@@ -69,22 +70,28 @@
     display:none;
     position:fixed;top:0;left:0;width:100%;height:100%;
     background:black;z-index:20;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    flex-direction:column;align-items:center;justify-content:center;
   }
-  #recuerdosScreen h2{
-    color:#ff69b4;font-size:2rem;margin-bottom:20px;text-align:center;
+  /* 🔹 Canvas al fondo */
+  #canvasRecuerdos{
+    position:absolute;top:0;left:0;width:100%;height:100%;
+    z-index:19; /* al fondo */
   }
-  #recuerdosScreen ul{
-    list-style:none;padding:0;margin-bottom:20px;color:white;font-size:1.2rem;
+  /* 🔹 Textos y botón arriba del canvas */
+  #recuerdosContent{
+    position:relative;
+    z-index:21; /* encima del canvas */
     text-align:center;
   }
-  #recuerdosScreen button{
+  #recuerdosContent h2{
+    color:#ff69b4;font-size:2rem;margin-bottom:20px;
+  }
+  #recuerdosContent ul{
+    list-style:none;padding:0;margin-bottom:20px;color:white;font-size:1.2rem;
+  }
+  #recuerdosContent button{
     padding:12px 25px;font-size:1.2rem;background:#ff69b4;color:white;
     border:none;border-radius:12px;cursor:pointer;box-shadow:0 0 15px #ff69b4;
-    z-index:21;
-  }
-  #canvasRecuerdos{
-    position:absolute;top:0;left:0;width:100%;height:100%;z-index:19;
   }
 </style>
 </head>
@@ -97,9 +104,9 @@
 </div>
 
 <!-- Pantalla principal -->
-<div id="contador" style="display:none;"></div>
-<div id="tiempoTotal" style="display:none;"></div>
-<div class="overlay" style="display:none;" id="contenido">
+<div id="contador"></div>
+<div id="tiempoTotal"></div>
+<div class="overlay" id="contenido">
   <img src="imagen.jpg" alt="Foto juntos" class="center-image" />
   <div class="center-message">TE AMO ❤️</div>
   <button id="btnRecuerdos">💌 Nuestros recuerdos</button>
@@ -113,12 +120,14 @@
 <!-- Pantalla de recuerdos -->
 <div id="recuerdosScreen">
   <canvas id="canvasRecuerdos"></canvas>
-  <h2>Nuestros Recuerdos</h2>
-  <ul>
-    <li>15 de julio 2023 – Nuestro reencuentro y detalle 💖</li>
-    <li>21 de julio 2023 – Primera salida para volver a conocernos ✨</li>
-  </ul>
-  <button id="btnRegresar">⬅️ Regresar</button>
+  <div id="recuerdosContent">
+    <h2>Nuestros Recuerdos</h2>
+    <ul>
+      <li>15 de julio 2023 – Nuestro reencuentro y detalle 💖</li>
+      <li>21 de julio 2023 – Primera salida para volver a conocernos ✨</li>
+    </ul>
+    <button id="btnRegresar">⬅️ Regresar</button>
+  </div>
 </div>
 
 <audio id="musica" loop>
@@ -221,9 +230,7 @@ function iniciarAnimacion(){
 
 document.addEventListener("DOMContentLoaded",()=>{
   const btn=document.getElementById("btnRecuerdos");
-  const lista=document.getElementById("listaRecuerdos");
   btn.addEventListener("click",()=>{
-    // Entra a pantalla de recuerdos
     document.getElementById('contenido').style.display='none';
     document.getElementById('contador').style.display='none';
     document.getElementById('tiempoTotal').style.display='none';
@@ -246,17 +253,18 @@ function iniciarLluviaRecuerdos(){
   canvas.width=window.innerWidth;
   canvas.height=window.innerHeight;
   ctx.font="16px monospace";
-  const drops=new Array(Math.floor(canvas.width/64)).fill(1);
+
+  const drops=new Array(Math.floor(canvas.width/32)).fill(1);
   function draw(){
     ctx.fillStyle="rgba(0,0,0,0.1)";
     ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle="#ff69b4";
     drops.forEach((drop,i)=>{
-      const x=i*64;
-      const y=drop*16;
+      const x=i*32;
+      const y=drop*12;
       ctx.fillText("TE AMO",x,y);
-      if(y>canvas.height && Math.random()>0.975) drops[i]=0;
-      drops[i]++;
+      if(y>canvas.height && Math.random()>0.98) drops[i]=0;
+      drops[i]+=0.5;
     });
     requestAnimationFrame(draw);
   }
@@ -269,4 +277,3 @@ function iniciarLluviaRecuerdos(){
 </script>
 </body>
 </html>
-
