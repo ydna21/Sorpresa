@@ -47,7 +47,6 @@
       border-radius: 10px;
       text-align: center;
     }
-    /* apartado inferior con tiempo */
     #tiempoTotal {
       position: fixed;
       bottom: 10px;
@@ -82,7 +81,6 @@
       border-radius: 10px;
       margin-bottom: 20px;
       box-shadow: 0 0 20px #ff69b4;
-      cursor: pointer; /* para indicar que se puede hacer clic */
     }
     .center-message {
       color: #ff69b4;
@@ -101,7 +99,7 @@
       text-align: center;
       display: none;
     }
-    /* NUEVO: estilos para el botón de recuerdos */
+    /* NUEVO botón y lista */
     #btnRecuerdos {
       margin-top: 20px;
       padding: 10px 25px;
@@ -112,7 +110,7 @@
       border-radius: 10px;
       box-shadow: 0 0 10px #ff69b4;
       cursor: pointer;
-      pointer-events: auto; /* permite clic */
+      pointer-events: auto;
     }
     #listaRecuerdos {
       margin-top: 15px;
@@ -137,7 +135,7 @@
 <div id="tiempoTotal" style="display:none;"></div>
 
 <div class="overlay" style="display:none;" id="contenido">
-  <img src="imagen.jpg" alt="Foto juntos" class="center-image" id="fotoJuntos"/>
+  <img src="imagen.jpg" alt="Foto juntos" class="center-image"/>
   <div class="center-message">TE AMO ❤️</div>
 
   <!-- NUEVO: botón y lista de recuerdos -->
@@ -169,7 +167,7 @@ function iniciarSorpresa() {
 }
 
 function calcularDiasJuntos() {
-  const inicio = new Date("2023-08-11T20:00:00"); // desde las 8 PM
+  const inicio = new Date("2023-08-11"); // vuelve a medianoche
   const hoy = new Date();
   const diff = hoy - inicio;
   const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -177,7 +175,7 @@ function calcularDiasJuntos() {
 }
 
 function iniciarTiempoTotal() {
-  const inicio = new Date("2023-08-11T20:00:00");
+  const inicio = new Date("2023-08-11");
   function actualizar() {
     const ahora = new Date();
     const diffMs = ahora - inicio;
@@ -191,7 +189,6 @@ function iniciarTiempoTotal() {
   setInterval(actualizar, 1000);
 }
 
-/* NUEVO: mostrar/ocultar la lista de recuerdos */
 function toggleRecuerdos() {
   const lista = document.getElementById('listaRecuerdos');
   lista.style.display = (lista.style.display === 'none' || lista.style.display === '') ? 'block' : 'none';
