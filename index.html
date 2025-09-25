@@ -6,16 +6,11 @@
 <title>Sorpresa</title>
 <style>
   body{margin:0;background:black;overflow:hidden;font-family:'Courier New',monospace;}
-  /* Pantallas base */
-  .screen{position:fixed;top:0;left:0;width:100%;height:100%;background:black;
-    display:none;flex-direction:column;align-items:center;justify-content:center;z-index:20;}
-  .btn{margin:10px;padding:12px 25px;font-size:1.1rem;background:#ff69b4;
-    color:white;border:none;border-radius:12px;cursor:pointer;
-    box-shadow:0 0 15px #ff69b4;}
-  h2{color:#ff69b4;text-align:center;margin-bottom:20px;}
   /* Inicio */
-  #inicio{z-index:30;background:linear-gradient(to top,#000,#330033);
-    color:white;text-align:center;display:flex;flex-direction:column;}
+  #inicio{position:fixed;width:100%;height:100%;
+    background:linear-gradient(to top,#000,#330033);
+    display:flex;align-items:center;justify-content:center;
+    flex-direction:column;z-index:10;color:white;}
   #inicio button{padding:20px 40px;font-size:1.5rem;
     background:#ff69b4;color:white;border:none;border-radius:15px;
     cursor:pointer;box-shadow:0 0 20px #ff69b4;margin-top:20px;}
@@ -29,27 +24,50 @@
   /* Pantalla principal */
   .overlay{position:absolute;top:0;left:0;width:100%;height:100%;
     z-index:2;display:none;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
-  .center-image{width:200px;border-radius:10px;margin-bottom:20px;box-shadow:0 0 20px #ff69b4;}
+  .center-image{width:200px;height:auto;border-radius:10px;margin-bottom:20px;
+    box-shadow:0 0 20px #ff69b4;}
   .center-message{color:#ff69b4;font-size:2rem;text-align:center;}
-  #listaRecuerdos{display:none;list-style:none;margin-top:15px;padding:0;color:white;text-align:center;}
+  .btn{margin-top:15px;padding:10px 20px;font-size:1rem;background:#ff69b4;
+    color:white;border:none;border-radius:10px;cursor:pointer;
+    box-shadow:0 0 10px #ff69b4;pointer-events:auto;}
+  #listaRecuerdos{display:none;list-style:none;margin-top:15px;padding:0;
+    color:white;text-align:center;font-size:1.1rem;pointer-events:auto;}
   .final-message{position:absolute;top:40%;left:50%;
     transform:translate(-50%,-50%);font-size:2rem;color:white;
     text-shadow:2px 2px 4px #000,-1px -1px 2px #ff69b4;
     z-index:3;text-align:center;display:none;}
-  /* Recuerdos */
-  #recuerdosContent ul{list-style:none;padding:0;margin-bottom:20px;color:white;font-size:1.1rem;text-align:center;}
+
+  /* Pantallas */
+  #recuerdosScreen,#fotosScreen,#miniJuegoScreen,#fechasScreen{display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+    background:black;z-index:20;flex-direction:column;align-items:center;justify-content:center;}
+  #canvasRecuerdos,#canvasFotos{position:absolute;top:0;left:0;width:100%;height:100%;z-index:19;}
+  #recuerdosContent,#fotosContent,#miniJuegoContent,#fechasContent{position:relative;z-index:21;text-align:center;}
+  #recuerdosContent h2,#fotosContent h2,#miniJuegoContent h2,#fechasContent h2{color:#ff69b4;font-size:2rem;margin-bottom:20px;}
+  #recuerdosContent ul{list-style:none;padding:0;margin-bottom:20px;color:white;font-size:1.2rem;}
+  #recuerdosContent button,#fotosContent button,#miniJuegoContent button,#fechasContent button{padding:12px 25px;font-size:1.2rem;background:#ff69b4;
+    color:white;border:none;border-radius:12px;cursor:pointer;box-shadow:0 0 15px #ff69b4;margin:8px;}
+
+  /* Overlay foto grande */
+  #fotoGrandeOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,0.8);z-index:50;align-items:center;justify-content:center;flex-direction:column;}
+  #fotoGrandeOverlay img{max-width:80%;max-height:80%;border-radius:15px;box-shadow:0 0 30px #ff69b4;}
+  #cerrarFoto{margin-top:20px;padding:10px 25px;font-size:1.2rem;background:#ff69b4;color:white;
+    border:none;border-radius:12px;cursor:pointer;box-shadow:0 0 15px #ff69b4;}
+
   /* Confeti */
   #confetiCanvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:100;}
-  #confetiMensaje{position:fixed;top:50%;left:50%;
-    transform:translate(-50%,-50%);background:rgba(255,255,255,0.9);
-    color:#ff69b4;font-size:2rem;font-weight:bold;text-align:center;
-    padding:30px 40px;border-radius:20px;box-shadow:0 0 30px #ff69b4;z-index:101;display:none;}
+  #confetiMensaje{
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+    background:rgba(255,255,255,0.9);color:#ff69b4;font-size:2rem;
+    font-weight:bold;text-align:center;padding:30px 40px;border-radius:20px;
+    box-shadow:0 0 30px #ff69b4;z-index:101;display:none;
+  }
 </style>
 </head>
 <body>
 
 <!-- Pantalla de inicio -->
-<div id="inicio" class="screen" style="display:flex;">
+<div id="inicio">
   <h1>🎁 Tengo algo especial para ti</h1>
   <button onclick="iniciarSorpresa()">Haz clic para abrir</button>
 </div>
@@ -60,48 +78,58 @@
 <div class="overlay" id="contenido">
   <img src="imagen.jpg" alt="Foto juntos" class="center-image" />
   <div class="center-message">TE AMO ❤️</div>
-  <button id="btnRecuerdos" class="btn" style="pointer-events:auto;">💌 Nuestros recuerdos</button>
-  <button id="btnFotos" class="btn" style="pointer-events:auto;">📷 Nuestras fotos</button>
+  <button id="btnRecuerdos" class="btn">💌 Nuestros recuerdos</button>
+  <button id="btnFotos" class="btn">📷 Nuestras fotos</button>
 </div>
 <div class="final-message" id="finalMessage">Gracias por dejarme formar parte de tu vida❤️</div>
 
-<!-- Recuerdos -->
-<div id="recuerdosScreen" class="screen">
+<!-- Pantalla de recuerdos -->
+<div id="recuerdosScreen">
   <canvas id="canvasRecuerdos"></canvas>
   <div id="recuerdosContent">
     <h2>Nuestros Recuerdos</h2>
     <ul>
-      <li>15 de julio 2023 – Nuestro reencuentro 💖</li>
-      <li>21 de julio 2023 – Primera salida ✨</li>
+      <li>15 de julio 2023 – Nuestro reencuentro y detalle 💖</li>
+      <li>21 de julio 2023 – Primera salida para volver a conocernos ✨</li>
     </ul>
-    <button id="btnMiniJuego" class="btn">🎮 Mini-juego</button>
-    <button id="btnFechas" class="btn">📅 Fechas especiales</button>
-    <button id="btnRegresarRecuerdos" class="btn">⬅️ Regresar</button>
+    <button id="btnMiniJuego">🎮 Mini-juego</button>
+    <button id="btnFechas">📅 Fechas especiales</button>
+    <button id="btnRegresarRecuerdos">⬅️ Regresar</button>
   </div>
 </div>
 
-<!-- Fotos -->
-<div id="fotosScreen" class="screen">
+<!-- Pantalla de fotos -->
+<div id="fotosScreen">
   <canvas id="canvasFotos"></canvas>
-  <div>
+  <div id="fotosContent">
     <h2>Nuestras Fotos</h2>
-    <button id="btnRegresarFotos" class="btn">⬅️ Regresar</button>
+    <button id="btnRegresarFotos">⬅️ Regresar</button>
   </div>
 </div>
 
-<!-- Mini-juego -->
-<div id="miniJuegoScreen" class="screen">
-  <h2>🎮 Mini-juego de recuerdos</h2>
-  <p style="color:white;">Aquí irá el rompecabezas o juego que quieras agregar.</p>
-  <button id="btnRegresarMiniJuego" class="btn">⬅️ Regresar</button>
+<!-- Mini Juego -->
+<div id="miniJuegoScreen">
+  <div id="miniJuegoContent">
+    <h2>🎮 Mini-juego</h2>
+    <p style="color:white">Aquí puedes integrar tu rompecabezas u otro juego.</p>
+    <button id="btnRegresarMiniJuego">⬅️ Regresar</button>
+  </div>
 </div>
 
 <!-- Fechas especiales -->
-<div id="fechasScreen" class="screen">
-  <h2>📅 Fechas especiales</h2>
-  <p style="color:white;">Cuenta regresiva y eventos especiales aparecerán aquí.</p>
-  <button id="btnCarta" class="btn">💌 Carta secreta</button>
-  <button id="btnRegresarFechas" class="btn">⬅️ Regresar</button>
+<div id="fechasScreen">
+  <div id="fechasContent">
+    <h2>📅 Fechas Especiales</h2>
+    <p style="color:white">Cuenta regresiva y sorpresas en fechas especiales.</p>
+    <button id="btnCarta">💌 Carta secreta</button>
+    <button id="btnRegresarFechas">⬅️ Regresar</button>
+  </div>
+</div>
+
+<!-- Overlay para foto grande -->
+<div id="fotoGrandeOverlay">
+  <img id="fotoGrande" src="" alt="Foto grande">
+  <button id="cerrarFoto">Cerrar</button>
 </div>
 
 <!-- Confeti -->
@@ -126,6 +154,7 @@ function iniciarSorpresa(){
   if(!lluviaPrincipalIniciada){ iniciarAnimacion(); lluviaPrincipalIniciada=true; }
   checkFechasEspeciales();
 }
+
 function calcularDiasJuntos(){
   const inicio=new Date("2023-08-11T20:00:00");
   const hoy=new Date();
@@ -133,6 +162,7 @@ function calcularDiasJuntos(){
   const dias=Math.floor(diff/(1000*60*60*24));
   document.getElementById("contador").innerText=`Llevamos ${dias} días juntos💖`;
 }
+
 function iniciarTiempoTotal(){
   const inicio=new Date("2023-08-11T20:00:00");
   function actualizar(){
@@ -147,32 +177,37 @@ function iniciarTiempoTotal(){
     const minutos=Math.floor((diffMs/(1000*60))%60);
     const segundos=Math.floor((diffMs/1000)%60);
     document.getElementById("tiempoTotal").innerText=
-      `Años: ${años} | Meses: ${meses} | Días: ${dias}\n`+
-      `Tiempo juntos: ${horas}h ${minutos}m ${segundos}s`;
+      `Años: ${años} | Meses: ${meses} | Días: ${dias}\nTiempo juntos: ${horas}h ${minutos}m ${segundos}s`;
   }
-  actualizar(); setInterval(actualizar,1000);
+  actualizar();
+  setInterval(actualizar,1000);
 }
+
 function iniciarAnimacion(){
   const canvas=document.getElementById('canvas');
   const ctx=canvas.getContext('2d');
-  canvas.width=innerWidth; canvas.height=innerHeight;
+  canvas.width=window.innerWidth;
+  canvas.height=window.innerHeight;
   ctx.font="16px monospace";
   const drops=new Array(Math.floor(canvas.width/32)).fill(1);
-  function draw(){
+  function drawRain(){
     ctx.fillStyle="rgba(0,0,0,0.1)";
     ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle="#ff69b4";
     drops.forEach((drop,i)=>{
-      const x=i*32, y=drop*12;
+      const x=i*32;
+      const y=drop*12;
       ctx.fillText("TE AMO",x,y);
       if(y>canvas.height && Math.random()>0.98) drops[i]=0;
       drops[i]+=0.7;
     });
-    requestAnimationFrame(draw);
+    requestAnimationFrame(drawRain);
   }
-  draw();
+  drawRain();
   lanzarExplosionYFrase(ctx,canvas);
+  window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
 }
+
 function lanzarExplosionYFrase(ctx,canvas){
   setTimeout(()=>{
     const particles=[];
@@ -181,10 +216,9 @@ function lanzarExplosionYFrase(ctx,canvas){
       const y=13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t);
       const angle=Math.atan2(y,x);
       const speed=2+Math.random()*2;
-      particles.push({x:canvas.width/2,y:canvas.height/2,
-        vx:Math.cos(angle)*speed*10,vy:-Math.sin(angle)*speed*10,alpha:1});
+      particles.push({x:canvas.width/2,y:canvas.height/2,vx:Math.cos(angle)*speed*10,vy:-Math.sin(angle)*speed*10,alpha:1});
     }
-    function animate(){
+    function animateHeart(){
       ctx.fillStyle="rgba(0,0,0,0.2)";
       ctx.fillRect(0,0,canvas.width,canvas.height);
       particles.forEach(p=>{
@@ -192,103 +226,147 @@ function lanzarExplosionYFrase(ctx,canvas){
         ctx.fillText("TE AMO",p.x,p.y);
         p.x+=p.vx; p.y+=p.vy; p.alpha-=0.01;
       });
-      if(particles[0].alpha>0) requestAnimationFrame(animate);
-      else document.getElementById('finalMessage').style.display='block';
+      if(particles[0].alpha>0){requestAnimationFrame(animateHeart);}
+      else{document.getElementById('finalMessage').style.display='block';}
     }
-    animate();
+    animateHeart();
   },1000);
 }
 
-/* ----- Manejo de pantallas ----- */
-const screens={
-  main:'contenido', recuerdos:'recuerdosScreen', fotos:'fotosScreen',
-  mini:'miniJuegoScreen', fechas:'fechasScreen'
-};
-function show(id){
-  Object.values(screens).forEach(s=>document.getElementById(s).style.display='none');
-  if(id==='main'){
-    document.getElementById(screens.main).style.display='flex';
-    document.getElementById('contador').style.display='block';
-    document.getElementById('tiempoTotal').style.display='block';
-  }else{
-    document.getElementById(screens[id]).style.display='flex';
+/* --- Cambio de pantallas --- */
+document.addEventListener("DOMContentLoaded",()=>{
+  const $=id=>document.getElementById(id);
+  function mostrar(id){
+    ['contenido','recuerdosScreen','fotosScreen','miniJuegoScreen','fechasScreen'].forEach(v=>$(v).style.display='none');
+    $(id).style.display='flex';
   }
-}
+  function regresar(){
+    ['recuerdosScreen','fotosScreen','miniJuegoScreen','fechasScreen'].forEach(v=>$(v).style.display='none');
+    $('contenido').style.display='flex';
+    $('contador').style.display='block';
+    $('tiempoTotal').style.display='block';
+    const ctx=document.getElementById('canvas').getContext('2d');
+    lanzarExplosionYFrase(ctx,document.getElementById('canvas'));
+  }
 
-document.getElementById('btnRecuerdos').onclick=()=>{show('recuerdos');iniciarLluviaRecuerdos();};
-document.getElementById('btnFotos').onclick=()=>{show('fotos');};
-document.getElementById('btnRegresarRecuerdos').onclick=()=>{show('main');};
-document.getElementById('btnRegresarFotos').onclick=()=>{show('main');};
-document.getElementById('btnMiniJuego').onclick=()=>{show('mini');};
-document.getElementById('btnRegresarMiniJuego').onclick=()=>{show('recuerdos');};
-document.getElementById('btnFechas').onclick=()=>{show('fechas');};
-document.getElementById('btnRegresarFechas').onclick=()=>{show('recuerdos');};
-document.getElementById('btnCarta').onclick=()=>{alert("Aquí puedes mostrar la carta secreta ❤️");};
+  $('btnRecuerdos').onclick=()=>{ mostrar('recuerdosScreen'); iniciarLluviaRecuerdos(); };
+  $('btnFotos').onclick=()=>{ mostrar('fotosScreen'); iniciarLluviaFotos(); };
+  $('btnMiniJuego').onclick=()=>{ mostrar('miniJuegoScreen'); };
+  $('btnFechas').onclick=()=>{ mostrar('fechasScreen'); };
+  $('btnRegresarRecuerdos').onclick=regresar;
+  $('btnRegresarFotos').onclick=regresar;
+  $('btnRegresarMiniJuego').onclick=()=>{ mostrar('recuerdosScreen'); };
+  $('btnRegresarFechas').onclick=()=>{ mostrar('recuerdosScreen'); };
+  $('btnCarta').onclick=()=>alert("💌 Aquí irá tu carta secreta");
+});
 
 function iniciarLluviaRecuerdos(){
   const canvas=document.getElementById('canvasRecuerdos');
   const ctx=canvas.getContext('2d');
-  canvas.width=innerWidth; canvas.height=innerHeight;
+  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
   ctx.font="16px monospace";
   const drops=new Array(Math.floor(canvas.width/32)).fill(1);
-  function draw(){
+  (function draw(){
     ctx.fillStyle="rgba(0,0,0,0.1)";
     ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle="#ff69b4";
-    drops.forEach((drop,i)=>{
-      const x=i*32, y=drop*12;
+    drops.forEach((d,i)=>{
+      const x=i*32,y=d*12;
       ctx.fillText("TE AMO",x,y);
       if(y>canvas.height && Math.random()>0.98) drops[i]=0;
       drops[i]+=0.7;
     });
-    if(document.getElementById('recuerdosScreen').style.display==='flex')
-      requestAnimationFrame(draw);
-  }
-  draw();
+    requestAnimationFrame(draw);
+  })();
 }
 
-/* ----- Confeti en fechas especiales ----- */
+function iniciarLluviaFotos(){
+  const canvas=document.getElementById('canvasFotos');
+  const ctx=canvas.getContext('2d');
+  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+  const totalFotos=30;
+  const fotos=[];
+  for(let i=1;i<=totalFotos;i++){
+    const img=new Image();
+    img.src=`fotos/foto${i}.jpg`;
+    fotos.push({img,x:Math.random()*canvas.width,y:Math.random()*canvas.height,speed:1+Math.random()*1.5,size:50+Math.random()*50});
+  }
+  canvas.onclick=e=>{
+    const r=canvas.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
+    fotos.forEach(f=>{
+      if(mx>f.x&&mx<f.x+f.size&&my>f.y&&my<f.y+f.size) mostrarFotoGrande(f.img.src);
+    });
+  };
+  (function draw(){
+    ctx.fillStyle="rgba(0,0,0,0.1)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    fotos.forEach(f=>{
+      if(f.img.complete) ctx.drawImage(f.img,f.x,f.y,f.size,f.size);
+      f.y+=f.speed; if(f.y>canvas.height){ f.y=-f.size; f.x=Math.random()*canvas.width; }
+    });
+    requestAnimationFrame(draw);
+  })();
+}
+
+function mostrarFotoGrande(src){
+  document.getElementById('fotoGrande').src=src;
+  document.getElementById('fotoGrandeOverlay').style.display='flex';
+}
+document.getElementById('cerrarFoto').onclick=()=>{document.getElementById('fotoGrandeOverlay').style.display='none';};
+
+/* --- Confeti --- */
 function checkFechasEspeciales(){
-  const hoy=new Date();
-  const d=hoy.getDate();
-  const m=hoy.getMonth();
+  const hoy=new Date(),d=hoy.getDate(),m=hoy.getMonth();
   let mensaje=null;
   if(d===25){ mensaje="Feliz otro mes más juntos 💖"; }
   if(d===11){ mensaje="Feliz otro mes más juntos 💖"; }
-  if(d===11 && m===7){ mensaje="🎉 Feliz aniversario 💖"; }
+  if(d===11 && m===7){ mensaje="🎉 Feliz aniversario 💖, otro año más junto a ti💖"; }
   if(d===8 && m===6){ mensaje="🎂 Feliz cumpleaños amor 💖"; }
   if(d===10 && m===1){ mensaje="🎂 Feliz cumpleaños 🎉"; }
   if(mensaje) lanzarConfeti(mensaje);
 }
+
 function lanzarConfeti(mensaje){
   const canvas=document.getElementById('confetiCanvas');
   const ctx=canvas.getContext('2d');
   const msg=document.getElementById('confetiMensaje');
-  canvas.width=innerWidth; canvas.height=innerHeight;
-  msg.innerText=mensaje; msg.style.display='block';
+  canvas.width=window.innerWidth;
+  canvas.height=window.innerHeight;
+  msg.innerText=mensaje;
+  msg.style.display='block';
+
   const confetis=[];
   for(let i=0;i<200;i++){
     confetis.push({
-      x:Math.random()*canvas.width,y:Math.random()*canvas.height,
-      r:Math.random()*6+4,dx:Math.random()*2-1,dy:Math.random()*2+1,
+      x:Math.random()*canvas.width,
+      y:Math.random()*canvas.height,
+      r:Math.random()*6+4,
+      dx:Math.random()*2-1,
+      dy:Math.random()*2+1,
       color:`hsl(${Math.random()*360},100%,50%)`
     });
   }
+
   let start=performance.now();
   function draw(now){
     const elapsed=now-start;
     ctx.clearRect(0,0,canvas.width,canvas.height);
     confetis.forEach(c=>{
       ctx.beginPath();
-      ctx.arc(c.x,c.y,c.r,0,Math.PI*2);
+      ctx.arc(c.x,c.y,c.r,0,2*Math.PI);
       ctx.fillStyle=c.color;
       ctx.fill();
-      c.x+=c.dx; c.y+=c.dy;
-      if(c.y>canvas.height){c.y=-c.r;}
-      if(c.x>canvas.width||c.x<-c.r){c.x=Math.random()*canvas.width;}
+      c.x+=c.dx;
+      c.y+=c.dy;
+      if(c.y>canvas.height) c.y=-10;
+      if(c.x>canvas.width || c.x<0) c.dx*=-1;
     });
-    if(elapsed<5000){ requestAnimationFrame(draw); }
-    else{ ctx.clearRect(0,0,canvas.width,canvas.height); msg.style.display='none'; }
+    if(elapsed<5000){ // dura 5 segundos
+      requestAnimationFrame(draw);
+    } else {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      msg.style.display='none';
+    }
   }
   requestAnimationFrame(draw);
 }
