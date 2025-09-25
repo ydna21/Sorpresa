@@ -56,9 +56,22 @@
 
   /* Confeti */
   #confetiCanvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:100;}
-  #confetiMensaje{position:fixed;top:20%;left:50%;transform:translateX(-50%);
-    color:#ff69b4;font-size:2rem;font-weight:bold;text-align:center;
-    text-shadow:0 0 15px #fff;z-index:101;display:none;}
+  /* --- NUEVO globo de mensaje --- */
+  #confetiMensaje{
+    position:fixed;
+    top:50%;left:50%;
+    transform:translate(-50%,-50%);
+    background:rgba(255,255,255,0.9);
+    color:#ff69b4;
+    font-size:2rem;
+    font-weight:bold;
+    text-align:center;
+    padding:30px 40px;
+    border-radius:20px;
+    box-shadow:0 0 30px #ff69b4;
+    z-index:101;
+    display:none;
+  }
 </style>
 </head>
 <body>
@@ -353,14 +366,12 @@ function checkFechasEspeciales(){
   const hoy=new Date();
   const d=hoy.getDate();
   const m=hoy.getMonth(); // 0 enero
-  const y=hoy.getFullYear();
   let mensaje=null;
   if(d===25){ mensaje="Feliz otro mes más juntos 💖"; }
   if(d===11){ mensaje="Feliz otro mes más juntos 💖"; }
   if(d===11 && m===7){ mensaje="🎉 Feliz aniversario 💖, otro año mas junto a ti💖"; }
   if(d===8 && m===6){ mensaje="🎂 Feliz cumpleaños amor 💖"; }
   if(d===10 && m===1){ mensaje="🎂 Feliz cumpleaños 🎉"; }
-
   if(mensaje){ lanzarConfeti(mensaje); }
 }
 
@@ -378,14 +389,16 @@ function lanzarConfeti(mensaje){
     confetis.push({
       x:Math.random()*canvas.width,
       y:Math.random()*canvas.height,
-      r:5+Math.random()*10,
+      r:Math.random()*6+4,
       dx:Math.random()*2-1,
-      dy:Math.random()*3+2,
+      dy:Math.random()*2+1,
       color:`hsl(${Math.random()*360},100%,50%)`
     });
   }
 
-  function draw(){
+  let start=performance.now();
+  function draw(now){
+    const elapsed=now-start;
     ctx.clearRect(0,0,canvas.width,canvas.height);
     confetis.forEach(c=>{
       ctx.beginPath();
@@ -394,11 +407,17 @@ function lanzarConfeti(mensaje){
       ctx.fill();
       c.x+=c.dx;
       c.y+=c.dy;
-      if(c.y>canvas.height){ c.y=-c.r; c.x=Math.random()*canvas.width; }
+      if(c.y>canvas.height) c.y=-10;
+      if(c.x>canvas.width || c.x<0) c.dx*=-1;
     });
-    requestAnimationFrame(draw);
+    if(elapsed<5000){ // dura 5 segundos
+      requestAnimationFrame(draw);
+    } else {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      msg.style.display='none';
+    }
   }
-  draw();
+  requestAnimationFrame(draw);
 }
 </script>
 </body>
