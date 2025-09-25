@@ -6,11 +6,16 @@
 <title>Sorpresa</title>
 <style>
   body{margin:0;background:black;overflow:hidden;font-family:'Courier New',monospace;}
+  /* Pantallas base */
+  .screen{position:fixed;top:0;left:0;width:100%;height:100%;background:black;
+    display:none;flex-direction:column;align-items:center;justify-content:center;z-index:20;}
+  .btn{margin:10px;padding:12px 25px;font-size:1.1rem;background:#ff69b4;
+    color:white;border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 0 15px #ff69b4;}
+  h2{color:#ff69b4;text-align:center;margin-bottom:20px;}
   /* Inicio */
-  #inicio{position:fixed;width:100%;height:100%;
-    background:linear-gradient(to top,#000,#330033);
-    display:flex;align-items:center;justify-content:center;
-    flex-direction:column;z-index:10;color:white;}
+  #inicio{z-index:30;background:linear-gradient(to top,#000,#330033);
+    color:white;text-align:center;display:flex;flex-direction:column;}
   #inicio button{padding:20px 40px;font-size:1.5rem;
     background:#ff69b4;color:white;border:none;border-radius:15px;
     cursor:pointer;box-shadow:0 0 20px #ff69b4;margin-top:20px;}
@@ -24,49 +29,27 @@
   /* Pantalla principal */
   .overlay{position:absolute;top:0;left:0;width:100%;height:100%;
     z-index:2;display:none;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
-  .center-image{width:200px;height:auto;border-radius:10px;margin-bottom:20px;
-    box-shadow:0 0 20px #ff69b4;}
+  .center-image{width:200px;border-radius:10px;margin-bottom:20px;box-shadow:0 0 20px #ff69b4;}
   .center-message{color:#ff69b4;font-size:2rem;text-align:center;}
-  .btn{margin-top:15px;padding:10px 20px;font-size:1rem;background:#ff69b4;
-    color:white;border:none;border-radius:10px;cursor:pointer;
-    box-shadow:0 0 10px #ff69b4;pointer-events:auto;}
-  #listaRecuerdos{display:none;list-style:none;margin-top:15px;padding:0;
-    color:white;text-align:center;font-size:1.1rem;pointer-events:auto;}
+  #listaRecuerdos{display:none;list-style:none;margin-top:15px;padding:0;color:white;text-align:center;}
   .final-message{position:absolute;top:40%;left:50%;
     transform:translate(-50%,-50%);font-size:2rem;color:white;
     text-shadow:2px 2px 4px #000,-1px -1px 2px #ff69b4;
     z-index:3;text-align:center;display:none;}
-  /* Pantallas */
-  #recuerdosScreen,#fotosScreen{display:none;position:fixed;top:0;left:0;width:100%;height:100%;
-    background:black;z-index:20;flex-direction:column;align-items:center;justify-content:center;}
-  #canvasRecuerdos,#canvasFotos{position:absolute;top:0;left:0;width:100%;height:100%;z-index:19;}
-  #recuerdosContent,#fotosContent{position:relative;z-index:21;text-align:center;}
-  #recuerdosContent h2,#fotosContent h2{color:#ff69b4;font-size:2rem;margin-bottom:20px;}
-  #recuerdosContent ul{list-style:none;padding:0;margin-bottom:20px;color:white;font-size:1.2rem;}
-  #recuerdosContent button,#fotosContent button{padding:12px 25px;font-size:1.2rem;background:#ff69b4;
-    color:white;border:none;border-radius:12px;cursor:pointer;box-shadow:0 0 15px #ff69b4;margin:5px;}
-  /* Overlay foto grande */
-  #fotoGrandeOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;
-    background:rgba(0,0,0,0.8);z-index:50;align-items:center;justify-content:center;flex-direction:column;}
-  #fotoGrandeOverlay img{max-width:80%;max-height:80%;border-radius:15px;box-shadow:0 0 30px #ff69b4;}
-  #cerrarFoto{margin-top:20px;padding:10px 25px;font-size:1.2rem;background:#ff69b4;color:white;
-    border:none;border-radius:12px;cursor:pointer;box-shadow:0 0 15px #ff69b4;}
+  /* Recuerdos */
+  #recuerdosContent ul{list-style:none;padding:0;margin-bottom:20px;color:white;font-size:1.1rem;text-align:center;}
   /* Confeti */
   #confetiCanvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:100;}
-  #confetiMensaje{
-    position:fixed;top:50%;left:50%;
-    transform:translate(-50%,-50%);
-    background:rgba(255,255,255,0.9);
-    color:#ff69b4;font-size:2rem;font-weight:bold;
-    text-align:center;padding:30px 40px;border-radius:20px;
-    box-shadow:0 0 30px #ff69b4;z-index:101;display:none;
-  }
+  #confetiMensaje{position:fixed;top:50%;left:50%;
+    transform:translate(-50%,-50%);background:rgba(255,255,255,0.9);
+    color:#ff69b4;font-size:2rem;font-weight:bold;text-align:center;
+    padding:30px 40px;border-radius:20px;box-shadow:0 0 30px #ff69b4;z-index:101;display:none;}
 </style>
 </head>
 <body>
 
 <!-- Pantalla de inicio -->
-<div id="inicio">
+<div id="inicio" class="screen" style="display:flex;">
   <h1>🎁 Tengo algo especial para ti</h1>
   <button onclick="iniciarSorpresa()">Haz clic para abrir</button>
 </div>
@@ -77,40 +60,48 @@
 <div class="overlay" id="contenido">
   <img src="imagen.jpg" alt="Foto juntos" class="center-image" />
   <div class="center-message">TE AMO ❤️</div>
-  <button id="btnRecuerdos" class="btn">💌 Nuestros recuerdos</button>
-  <button id="btnFotos" class="btn">📷 Nuestras fotos</button>
+  <button id="btnRecuerdos" class="btn" style="pointer-events:auto;">💌 Nuestros recuerdos</button>
+  <button id="btnFotos" class="btn" style="pointer-events:auto;">📷 Nuestras fotos</button>
 </div>
 <div class="final-message" id="finalMessage">Gracias por dejarme formar parte de tu vida❤️</div>
 
-<!-- Pantalla de recuerdos -->
-<div id="recuerdosScreen">
+<!-- Recuerdos -->
+<div id="recuerdosScreen" class="screen">
   <canvas id="canvasRecuerdos"></canvas>
   <div id="recuerdosContent">
     <h2>Nuestros Recuerdos</h2>
     <ul>
-      <li>15 de julio 2023 – Nuestro reencuentro y detalle 💖</li>
-      <li>21 de julio 2023 – Primera salida para volver a conocernos ✨</li>
+      <li>15 de julio 2023 – Nuestro reencuentro 💖</li>
+      <li>21 de julio 2023 – Primera salida ✨</li>
     </ul>
-    <!-- NUEVOS BOTONES SOLO AQUÍ -->
-    <button id="btnMiniJuego">🎮 Mini-juego</button>
-    <button id="btnFechas">📅 Fechas especiales</button>
-    <button id="btnRegresarRecuerdos">⬅️ Regresar</button>
+    <button id="btnMiniJuego" class="btn">🎮 Mini-juego</button>
+    <button id="btnFechas" class="btn">📅 Fechas especiales</button>
+    <button id="btnRegresarRecuerdos" class="btn">⬅️ Regresar</button>
   </div>
 </div>
 
-<!-- Pantalla de fotos -->
-<div id="fotosScreen">
+<!-- Fotos -->
+<div id="fotosScreen" class="screen">
   <canvas id="canvasFotos"></canvas>
-  <div id="fotosContent">
+  <div>
     <h2>Nuestras Fotos</h2>
-    <button id="btnRegresarFotos">⬅️ Regresar</button>
+    <button id="btnRegresarFotos" class="btn">⬅️ Regresar</button>
   </div>
 </div>
 
-<!-- Overlay para foto grande -->
-<div id="fotoGrandeOverlay">
-  <img id="fotoGrande" src="" alt="Foto grande">
-  <button id="cerrarFoto">Cerrar</button>
+<!-- Mini-juego -->
+<div id="miniJuegoScreen" class="screen">
+  <h2>🎮 Mini-juego de recuerdos</h2>
+  <p style="color:white;">Aquí irá el rompecabezas o juego que quieras agregar.</p>
+  <button id="btnRegresarMiniJuego" class="btn">⬅️ Regresar</button>
+</div>
+
+<!-- Fechas especiales -->
+<div id="fechasScreen" class="screen">
+  <h2>📅 Fechas especiales</h2>
+  <p style="color:white;">Cuenta regresiva y eventos especiales aparecerán aquí.</p>
+  <button id="btnCarta" class="btn">💌 Carta secreta</button>
+  <button id="btnRegresarFechas" class="btn">⬅️ Regresar</button>
 </div>
 
 <!-- Confeti -->
@@ -164,25 +155,23 @@ function iniciarTiempoTotal(){
 function iniciarAnimacion(){
   const canvas=document.getElementById('canvas');
   const ctx=canvas.getContext('2d');
-  canvas.width=window.innerWidth;
-  canvas.height=window.innerHeight;
+  canvas.width=innerWidth; canvas.height=innerHeight;
   ctx.font="16px monospace";
   const drops=new Array(Math.floor(canvas.width/32)).fill(1);
-  function drawRain(){
+  function draw(){
     ctx.fillStyle="rgba(0,0,0,0.1)";
     ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle="#ff69b4";
     drops.forEach((drop,i)=>{
-      const x=i*32; const y=drop*12;
+      const x=i*32, y=drop*12;
       ctx.fillText("TE AMO",x,y);
       if(y>canvas.height && Math.random()>0.98) drops[i]=0;
       drops[i]+=0.7;
     });
-    requestAnimationFrame(drawRain);
+    requestAnimationFrame(draw);
   }
-  drawRain();
+  draw();
   lanzarExplosionYFrase(ctx,canvas);
-  window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
 }
 function lanzarExplosionYFrase(ctx,canvas){
   setTimeout(()=>{
@@ -195,7 +184,7 @@ function lanzarExplosionYFrase(ctx,canvas){
       particles.push({x:canvas.width/2,y:canvas.height/2,
         vx:Math.cos(angle)*speed*10,vy:-Math.sin(angle)*speed*10,alpha:1});
     }
-    function animateHeart(){
+    function animate(){
       ctx.fillStyle="rgba(0,0,0,0.2)";
       ctx.fillRect(0,0,canvas.width,canvas.height);
       particles.forEach(p=>{
@@ -203,46 +192,43 @@ function lanzarExplosionYFrase(ctx,canvas){
         ctx.fillText("TE AMO",p.x,p.y);
         p.x+=p.vx; p.y+=p.vy; p.alpha-=0.01;
       });
-      if(particles[0].alpha>0){requestAnimationFrame(animateHeart);}
-      else{document.getElementById('finalMessage').style.display='block';}
+      if(particles[0].alpha>0) requestAnimationFrame(animate);
+      else document.getElementById('finalMessage').style.display='block';
     }
-    animateHeart();
+    animate();
   },1000);
 }
-/* Pantallas */
-document.addEventListener("DOMContentLoaded",()=>{
-  const btnRecuerdos=document.getElementById("btnRecuerdos");
-  const btnFotos=document.getElementById("btnFotos");
-  const btnRegresarRecuerdos=document.getElementById("btnRegresarRecuerdos");
-  const btnRegresarFotos=document.getElementById("btnRegresarFotos");
-  btnRecuerdos.addEventListener("click",()=>{mostrarPantalla('recuerdosScreen');iniciarLluviaRecuerdos();});
-  btnFotos.addEventListener("click",()=>{mostrarPantalla('fotosScreen');iniciarLluviaFotos();});
-  btnRegresarRecuerdos.addEventListener("click",()=>{regresarPantalla();});
-  btnRegresarFotos.addEventListener("click",()=>{regresarPantalla();});
-});
-function mostrarPantalla(id){
-  document.getElementById('contenido').style.display='none';
-  document.getElementById('contador').style.display='none';
-  document.getElementById('tiempoTotal').style.display='none';
-  document.getElementById('finalMessage').style.display='none';
-  document.getElementById(id).style.display='flex';
+
+/* ----- Manejo de pantallas ----- */
+const screens={
+  main:'contenido', recuerdos:'recuerdosScreen', fotos:'fotosScreen',
+  mini:'miniJuegoScreen', fechas:'fechasScreen'
+};
+function show(id){
+  Object.values(screens).forEach(s=>document.getElementById(s).style.display='none');
+  if(id==='main'){
+    document.getElementById(screens.main).style.display='flex';
+    document.getElementById('contador').style.display='block';
+    document.getElementById('tiempoTotal').style.display='block';
+  }else{
+    document.getElementById(screens[id]).style.display='flex';
+  }
 }
-function regresarPantalla(){
-  document.getElementById('recuerdosScreen').style.display='none';
-  document.getElementById('fotosScreen').style.display='none';
-  document.getElementById('contenido').style.display='flex';
-  document.getElementById('contador').style.display='block';
-  document.getElementById('tiempoTotal').style.display='block';
-  document.getElementById('finalMessage').style.display='none';
-  const canvas=document.getElementById('canvas');
-  const ctx=canvas.getContext('2d');
-  lanzarExplosionYFrase(ctx,canvas);
-}
+
+document.getElementById('btnRecuerdos').onclick=()=>{show('recuerdos');iniciarLluviaRecuerdos();};
+document.getElementById('btnFotos').onclick=()=>{show('fotos');};
+document.getElementById('btnRegresarRecuerdos').onclick=()=>{show('main');};
+document.getElementById('btnRegresarFotos').onclick=()=>{show('main');};
+document.getElementById('btnMiniJuego').onclick=()=>{show('mini');};
+document.getElementById('btnRegresarMiniJuego').onclick=()=>{show('recuerdos');};
+document.getElementById('btnFechas').onclick=()=>{show('fechas');};
+document.getElementById('btnRegresarFechas').onclick=()=>{show('recuerdos');};
+document.getElementById('btnCarta').onclick=()=>{alert("Aquí puedes mostrar la carta secreta ❤️");};
+
 function iniciarLluviaRecuerdos(){
   const canvas=document.getElementById('canvasRecuerdos');
   const ctx=canvas.getContext('2d');
-  canvas.width=window.innerWidth;
-  canvas.height=window.innerHeight;
+  canvas.width=innerWidth; canvas.height=innerHeight;
   ctx.font="16px monospace";
   const drops=new Array(Math.floor(canvas.width/32)).fill(1);
   function draw(){
@@ -250,60 +236,18 @@ function iniciarLluviaRecuerdos(){
     ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle="#ff69b4";
     drops.forEach((drop,i)=>{
-      const x=i*32; const y=drop*12;
+      const x=i*32, y=drop*12;
       ctx.fillText("TE AMO",x,y);
       if(y>canvas.height && Math.random()>0.98) drops[i]=0;
       drops[i]+=0.7;
     });
-    requestAnimationFrame(draw);
+    if(document.getElementById('recuerdosScreen').style.display==='flex')
+      requestAnimationFrame(draw);
   }
   draw();
 }
-/* Fotos cayendo */
-function iniciarLluviaFotos(){
-  const canvas=document.getElementById('canvasFotos');
-  const ctx=canvas.getContext('2d');
-  canvas.width=window.innerWidth;
-  canvas.height=window.innerHeight;
-  const totalFotos=30;
-  const fotos=[];
-  for(let i=1;i<=totalFotos;i++){
-    const img=new Image();
-    img.src=`fotos/foto${i}.jpg`;
-    const f={img:img,x:Math.random()*canvas.width,y:Math.random()*canvas.height,
-      speed:1+Math.random()*1.5,size:50+Math.random()*50};
-    fotos.push(f);
-  }
-  canvas.addEventListener('click',function(e){
-    const rect=canvas.getBoundingClientRect();
-    const mx=e.clientX-rect.left, my=e.clientY-rect.top;
-    fotos.forEach(f=>{
-      if(mx>f.x && mx<f.x+f.size && my>f.y && my<f.y+f.size){
-        mostrarFotoGrande(f.img.src);
-      }
-    });
-  });
-  function draw(){
-    ctx.fillStyle="rgba(0,0,0,0.1)";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-    fotos.forEach(f=>{
-      if(f.img.complete){ ctx.drawImage(f.img,f.x,f.y,f.size,f.size); }
-      f.y+=f.speed;
-      if(f.y>canvas.height){ f.y=-f.size; f.x=Math.random()*canvas.width; }
-    });
-    requestAnimationFrame(draw);
-  }
-  draw();
-}
-function mostrarFotoGrande(src){
-  const overlay=document.getElementById('fotoGrandeOverlay');
-  document.getElementById('fotoGrande').src=src;
-  overlay.style.display='flex';
-}
-document.getElementById('cerrarFoto').addEventListener('click',()=>{
-  document.getElementById('fotoGrandeOverlay').style.display='none';
-});
-/* Confeti */
+
+/* ----- Confeti en fechas especiales ----- */
 function checkFechasEspeciales(){
   const hoy=new Date();
   const d=hoy.getDate();
@@ -311,19 +255,17 @@ function checkFechasEspeciales(){
   let mensaje=null;
   if(d===25){ mensaje="Feliz otro mes más juntos 💖"; }
   if(d===11){ mensaje="Feliz otro mes más juntos 💖"; }
-  if(d===11 && m===7){ mensaje="🎉 Feliz aniversario 💖, otro año mas junto a ti💖"; }
+  if(d===11 && m===7){ mensaje="🎉 Feliz aniversario 💖"; }
   if(d===8 && m===6){ mensaje="🎂 Feliz cumpleaños amor 💖"; }
   if(d===10 && m===1){ mensaje="🎂 Feliz cumpleaños 🎉"; }
-  if(mensaje){ lanzarConfeti(mensaje); }
+  if(mensaje) lanzarConfeti(mensaje);
 }
 function lanzarConfeti(mensaje){
   const canvas=document.getElementById('confetiCanvas');
   const ctx=canvas.getContext('2d');
   const msg=document.getElementById('confetiMensaje');
-  canvas.width=window.innerWidth;
-  canvas.height=window.innerHeight;
-  msg.innerText=mensaje;
-  msg.style.display='block';
+  canvas.width=innerWidth; canvas.height=innerHeight;
+  msg.innerText=mensaje; msg.style.display='block';
   const confetis=[];
   for(let i=0;i<200;i++){
     confetis.push({
