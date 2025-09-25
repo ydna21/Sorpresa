@@ -27,7 +27,8 @@
   .center-image{width:200px;height:auto;border-radius:10px;margin-bottom:20px;
     box-shadow:0 0 20px #ff69b4;}
   .center-message{color:#ff69b4;font-size:2rem;text-align:center;}
-  .btn{margin-top:20px;padding:10px 20px;font-size:1rem;background:#ff69b4;
+  .btn{margin-top:12px; /* ← antes 20px */
+    padding:10px 20px;font-size:1rem;background:#ff69b4;
     color:white;border:none;border-radius:10px;cursor:pointer;
     box-shadow:0 0 10px #ff69b4;pointer-events:auto;}
   #listaRecuerdos{display:none;list-style:none;margin-top:15px;padding:0;
@@ -37,7 +38,7 @@
     text-shadow:2px 2px 4px #000,-1px -1px 2px #ff69b4;
     z-index:3;text-align:center;display:none;}
 
-  /* Pantalla de recuerdos */
+  /* Pantalla de recuerdos y fotos */
   #recuerdosScreen,#fotosScreen{display:none;position:fixed;top:0;left:0;width:100%;height:100%;
     background:black;z-index:20;flex-direction:column;align-items:center;justify-content:center;}
   #canvasRecuerdos,#canvasFotos{position:absolute;top:0;left:0;width:100%;height:100%;z-index:19;}
@@ -217,13 +218,8 @@ document.addEventListener("DOMContentLoaded",()=>{
     iniciarLluviaFotos();
   });
 
-  btnRegresarRecuerdos.addEventListener("click",()=>{
-    regresarPantalla();
-  });
-
-  btnRegresarFotos.addEventListener("click",()=>{
-    regresarPantalla();
-  });
+  btnRegresarRecuerdos.addEventListener("click",()=>{regresarPantalla();});
+  btnRegresarFotos.addEventListener("click",()=>{regresarPantalla();});
 });
 
 function mostrarPantalla(id){
@@ -279,7 +275,7 @@ function iniciarLluviaFotos(){
   const fotos=[];
   for(let i=1;i<=totalFotos;i++){
     const img=new Image();
-    img.src=`fotos/foto${i}.jpg`; // debes poner tus fotos en /fotos/
+    img.src=`fotos/foto${i}.jpg`; // tus fotos en /fotos/
     fotos.push({
       img:img,
       x:Math.random()*canvas.width,
