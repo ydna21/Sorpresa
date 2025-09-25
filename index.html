@@ -1,658 +1,424 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sorpresa</title>
 <style>
-  /* ---------------- layout / estilo general ---------------- */
-  :root{--pink:#ff69b4;}
-  body{margin:0;background:black;overflow:hidden;font-family:'Courier New',monospace;color:white;}
-  .hidden{display:none;}
-  .center{display:flex;align-items:center;justify-content:center;flex-direction:column;}
-
+  body{margin:0;background:black;overflow:hidden;font-family:'Courier New',monospace;}
   /* Inicio */
-  #inicio{position:fixed;inset:0;background:linear-gradient(to top,#000,#330033);z-index:40;}
-  #inicio .wrap{height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;}
-  #inicio button{padding:20px 40px;font-size:1.5rem;background:var(--pink);color:#fff;border:0;border-radius:15px;cursor:pointer;box-shadow:0 0 20px var(--pink);}
+  #inicio{position:fixed;width:100%;height:100%;
+    background:linear-gradient(to top,#000,#330033);
+    display:flex;align-items:center;justify-content:center;
+    flex-direction:column;z-index:10;color:white;}
+  #inicio button{padding:20px 40px;font-size:1.5rem;
+    background:#ff69b4;color:white;border:none;border-radius:15px;
+    cursor:pointer;box-shadow:0 0 20px #ff69b4;margin-top:20px;}
+  /* Contadores */
+  #contador{position:absolute;top:10px;left:50%;transform:translateX(-50%);
+    color:white;font-size:1.2rem;z-index:4;background:rgba(0,0,0,0.4);
+    padding:8px 40px;border-radius:10px;text-align:center;min-width:280px;display:none;}
+  #tiempoTotal{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);
+    color:#ff69b4;font-size:1.1rem;z-index:11;background:rgba(0,0,0,0.4);
+    padding:8px 15px;border-radius:10px;text-align:center;white-space:pre-line;display:none;}
+  /* Pantalla principal */
+  .overlay{position:absolute;top:0;left:0;width:100%;height:100%;
+    z-index:2;display:none;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
+  .center-image{width:200px;height:auto;border-radius:10px;margin-bottom:20px;
+    box-shadow:0 0 20px #ff69b4;}
+  .center-message{color:#ff69b4;font-size:2rem;text-align:center;}
+  .btn{margin-top:15px;padding:10px 20px;font-size:1rem;background:#ff69b4;
+    color:white;border:none;border-radius:10px;cursor:pointer;
+    box-shadow:0 0 10px #ff69b4;pointer-events:auto;}
+  #listaRecuerdos{display:none;list-style:none;margin-top:15px;padding:0;
+    color:white;text-align:center;font-size:1.1rem;pointer-events:auto;}
+  .final-message{position:absolute;top:40%;left:50%;
+    transform:translate(-50%,-50%);font-size:2rem;color:white;
+    text-shadow:2px 2px 4px #000,-1px -1px 2px #ff69b4;
+    z-index:3;text-align:center;display:none;}
 
-  /* contadores */
-  #contador{position:absolute;top:10px;left:50%;transform:translateX(-50%);color:white;font-size:1.2rem;z-index:35;background:rgba(0,0,0,0.45);padding:8px 40px;border-radius:10px;text-align:center;min-width:280px;display:none;}
-  #tiempoTotal{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:var(--pink);font-size:1.05rem;z-index:35;background:rgba(0,0,0,0.45);padding:8px 15px;border-radius:10px;text-align:center;white-space:pre-line;display:none;}
+  /* Pantallas */
+  #recuerdosScreen,#fotosScreen{display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+    background:black;z-index:20;flex-direction:column;align-items:center;justify-content:center;}
+  #canvasRecuerdos,#canvasFotos{position:absolute;top:0;left:0;width:100%;height:100%;z-index:19;}
+  #recuerdosContent,#fotosContent{position:relative;z-index:21;text-align:center;}
+  #recuerdosContent h2,#fotosContent h2{color:#ff69b4;font-size:2rem;margin-bottom:20px;}
+  #recuerdosContent ul{list-style:none;padding:0;margin-bottom:20px;color:white;font-size:1.2rem;}
+  #recuerdosContent button,#fotosContent button{padding:12px 25px;font-size:1.2rem;background:#ff69b4;
+    color:white;border:none;border-radius:12px;cursor:pointer;box-shadow:0 0 15px #ff69b4;}
 
-  /* pantalla principal */
-  .overlay{position:absolute;top:0;left:0;width:100%;height:100%;z-index:30;display:none;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
-  .center-image{width:200px;border-radius:10px;margin-bottom:18px;box-shadow:0 0 20px var(--pink);pointer-events:auto;}
-  .center-message{color:var(--pink);font-size:2rem;text-align:center;pointer-events:auto;}
-  .btn{margin-top:12px;padding:10px 20px;font-size:1rem;background:var(--pink);color:white;border:none;border-radius:10px;cursor:pointer;box-shadow:0 0 10px var(--pink);pointer-events:auto;}
+  /* Overlay foto grande */
+  #fotoGrandeOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,0.8);z-index:50;align-items:center;justify-content:center;flex-direction:column;}
+  #fotoGrandeOverlay img{max-width:80%;max-height:80%;border-radius:15px;box-shadow:0 0 30px #ff69b4;}
+  #cerrarFoto{margin-top:20px;padding:10px 25px;font-size:1.2rem;background:#ff69b4;color:white;
+    border:none;border-radius:12px;cursor:pointer;box-shadow:0 0 15px #ff69b4;}
 
-  /* pantalla recuerdos / fotos / mini / fechas */
-  .screen{display:none;position:fixed;inset:0;background:black;z-index:50;flex-direction:column;align-items:center;justify-content:center;}
-  canvas.full{position:absolute;top:0;left:0;width:100%;height:100%;z-index:10;}
-  .screen .content{position:relative;z-index:20;text-align:center;padding:20px;}
-
-  /* lista recuerdos */
-  #recuerdosContent ul{list-style:none;padding:0;margin:12px 0;color:white;font-size:1.15rem;text-align:center;}
-
-  /* overlay foto grande */
-  #fotoGrandeOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:120;align-items:center;justify-content:center;flex-direction:column;}
-  #fotoGrandeOverlay img{max-width:85%;max-height:85%;border-radius:12px;box-shadow:0 0 30px var(--pink);}
-  #cerrarFoto{margin-top:16px;padding:10px 22px;background:var(--pink);color:#fff;border:0;border-radius:10px;cursor:pointer;box-shadow:0 0 15px var(--pink);}
-
-  /* confeti y globo mensaje */
-  #confetiCanvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:200;}
-  #confetiMensaje{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(255,255,255,0.95);color:var(--pink);font-size:1.6rem;font-weight:700;text-align:center;padding:22px 28px;border-radius:18px;box-shadow:0 0 30px var(--pink);z-index:210;display:none;}
-
-  /* puzzle area */
-  #puzzleBoard{width:360px;height:360px;background:#111;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:2px;border-radius:8px;overflow:hidden;margin:10px auto;}
-  .tile{background-size:300% 300%;background-position:center;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#fff;cursor:pointer;user-select:none;}
-  .blank{background:none;cursor:default;}
-
-  /* mensaje ganador */
-  #puzzleWin{display:none;color:var(--pink);font-size:1.3rem;margin-top:12px;}
-
-  /* pequeño layout responsivo */
-  @media (max-width:420px){
-    #puzzleBoard{width:300px;height:300px;}
+  /* Confeti */
+  #confetiCanvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:100;}
+  /* --- NUEVO globo de mensaje --- */
+  #confetiMensaje{
+    position:fixed;
+    top:50%;left:50%;
+    transform:translate(-50%,-50%);
+    background:rgba(255,255,255,0.9);
+    color:#ff69b4;
+    font-size:2rem;
+    font-weight:bold;
+    text-align:center;
+    padding:30px 40px;
+    border-radius:20px;
+    box-shadow:0 0 30px #ff69b4;
+    z-index:101;
+    display:none;
   }
 </style>
 </head>
 <body>
 
-<!-- INICIO -->
+<!-- Pantalla de inicio -->
 <div id="inicio">
-  <div class="wrap center">
-    <h1>🎁 Tengo algo especial para ti</h1>
-    <button id="startBtn">Haz clic para abrir</button>
-  </div>
+  <h1>🎁 Tengo algo especial para ti</h1>
+  <button onclick="iniciarSorpresa()">Haz clic para abrir</button>
 </div>
 
-<!-- contadores -->
+<!-- Pantalla principal -->
 <div id="contador"></div>
 <div id="tiempoTotal"></div>
-
-<!-- PANTALLA PRINCIPAL -->
-<div id="contenido" class="overlay">
+<div class="overlay" id="contenido">
   <img src="imagen.jpg" alt="Foto juntos" class="center-image" />
   <div class="center-message">TE AMO ❤️</div>
   <button id="btnRecuerdos" class="btn">💌 Nuestros recuerdos</button>
   <button id="btnFotos" class="btn">📷 Nuestras fotos</button>
+  <ul id="listaRecuerdos">
+    <li>15 de julio 2023 – Nuestro reencuentro y detalle 💖</li>
+    <li>21 de julio 2023 – Primera salida para volver a conocernos ✨</li>
+  </ul>
 </div>
+<div class="final-message" id="finalMessage">Gracias por dejarme formar parte de tu vida❤️</div>
 
-<div id="finalMessage" class="center-message" style="display:none;position:absolute;z-index:40;top:42%;">Gracias por dejarme formar parte de tu vida❤️</div>
-
-<!-- RECuerdos screen -->
-<div id="recuerdosScreen" class="screen">
-  <canvas id="canvasRecuerdos" class="full"></canvas>
-  <div id="recuerdosContent" class="content">
+<!-- Pantalla de recuerdos -->
+<div id="recuerdosScreen">
+  <canvas id="canvasRecuerdos"></canvas>
+  <div id="recuerdosContent">
     <h2>Nuestros Recuerdos</h2>
     <ul>
       <li>15 de julio 2023 – Nuestro reencuentro y detalle 💖</li>
       <li>21 de julio 2023 – Primera salida para volver a conocernos ✨</li>
     </ul>
-
-    <!-- botones solicitados ahora DENTRO de recuerdos -->
-    <div>
-      <button id="btnMiniJuego" class="btn">🎮 Mini-juego</button>
-      <button id="btnFechas" class="btn">📅 Fechas especiales</button>
-    </div>
-
-    <div style="margin-top:14px;">
-      <button id="btnRegresarRecuerdos" class="btn">⬅️ Regresar</button>
-    </div>
+    <button id="btnRegresarRecuerdos">⬅️ Regresar</button>
   </div>
 </div>
 
-<!-- FOTOS screen -->
-<div id="fotosScreen" class="screen">
-  <canvas id="canvasFotos" class="full"></canvas>
-  <div id="fotosContent" class="content">
+<!-- Pantalla de fotos -->
+<div id="fotosScreen">
+  <canvas id="canvasFotos"></canvas>
+  <div id="fotosContent">
     <h2>Nuestras Fotos</h2>
-    <button id="btnRegresarFotos" class="btn">⬅️ Regresar</button>
+    <button id="btnRegresarFotos">⬅️ Regresar</button>
   </div>
 </div>
 
-<!-- MINI-JUEGO screen -->
-<div id="miniJuegoScreen" class="screen">
-  <div id="miniJuegoContent" class="content">
-    <h2>🎮 Rompecabezas 3x3</h2>
-    <div id="puzzleBoard" role="application" aria-label="Rompecabezas 3 por 3"></div>
-    <div style="margin-top:8px;">
-      <button id="shuffleBtn" class="btn">🔀 Mezclar</button>
-      <button id="solveBtn" class="btn">🔁 Reset</button>
-    </div>
-    <div id="puzzleWin">¡Lo lograste! ❤️</div>
-    <div style="margin-top:14px;"><button id="btnRegresarMiniJuego" class="btn">⬅️ Regresar</button></div>
-  </div>
-</div>
-
-<!-- FECHAS screen -->
-<div id="fechasScreen" class="screen">
-  <div id="fechasContent" class="content">
-    <h2>📅 Fechas especiales</h2>
-    <p style="color:#fff">Aquí verás la cuenta regresiva cuando toque y las sorpresas.</p>
-    <div id="fechasCountdown" style="color:var(--pink);margin:8px 0;"></div>
-    <!-- Botón carta: oculto por defecto y solo visible en fechas especiales por checkFechasEspeciales() -->
-    <button id="btnCarta" class="btn" style="display:none;">💌 Carta secreta</button>
-    <div style="margin-top:14px;"><button id="btnRegresarFechas" class="btn">⬅️ Regresar</button></div>
-  </div>
-</div>
-
-<!-- overlay foto grande -->
+<!-- Overlay para foto grande -->
 <div id="fotoGrandeOverlay">
-  <img id="fotoGrande" src="" alt="Foto grande" />
+  <img id="fotoGrande" src="" alt="Foto grande">
   <button id="cerrarFoto">Cerrar</button>
 </div>
 
-<!-- confeti -->
+<!-- Confeti -->
 <canvas id="confetiCanvas"></canvas>
 <div id="confetiMensaje"></div>
 
-<!-- audio -->
-<audio id="musica" loop><source src="musica.mp3" type="audio/mpeg"></audio>
-
-<!-- canvas principal lluvia TE AMO -->
+<audio id="musica" loop>
+  <source src="musica.mp3" type="audio/mpeg">
+</audio>
 <canvas id="canvas"></canvas>
 
 <script>
-/* ============================== Inicialización / UI ============================== */
-const $ = id => document.getElementById(id);
-const startBtn = $('startBtn');
-
-startBtn.addEventListener('click', iniciarSorpresa);
-
-/* ---------------------- mostrar/ocultar pantallas ---------------------- */
-function showMain(){
-  $('inicio').style.display='none';
-  $('contenido').style.display='flex';
-  $('contador').style.display='block';
-  $('tiempoTotal').style.display='block';
-}
-function showScreen(id){
-  // ocultar todas las screens personalizadas
-  ['contenido','recuerdosScreen','fotosScreen','miniJuegoScreen','fechasScreen'].forEach(k=>{
-    const el = $(k);
-    if(el) el.style.display = 'none';
-  });
-  $(id).style.display = 'flex';
+let lluviaPrincipalIniciada=false;
+function iniciarSorpresa(){
+  document.getElementById('inicio').style.display='none';
+  document.getElementById('contenido').style.display='flex';
+  document.getElementById('contador').style.display='block';
+  document.getElementById('tiempoTotal').style.display='block';
+  document.getElementById('musica').play();
+  calcularDiasJuntos();
+  iniciarTiempoTotal();
+  if(!lluviaPrincipalIniciada){
+    iniciarAnimacion();
+    lluviaPrincipalIniciada=true;
+  }
+  checkFechasEspeciales();
 }
 
-/* ============================== Contadores / tiempo ============================== */
 function calcularDiasJuntos(){
-  const inicio = new Date("2023-08-11T20:00:00");
-  const hoy = new Date();
-  const diff = hoy - inicio;
-  const dias = Math.floor(diff / (1000*60*60*24));
-  $('contador').innerText = `Llevamos ${dias} días juntos💖`;
+  const inicio=new Date("2023-08-11T20:00:00");
+  const hoy=new Date();
+  const diff=hoy-inicio;
+  const dias=Math.floor(diff/(1000*60*60*24));
+  document.getElementById("contador").innerText=`Llevamos ${dias} días juntos💖`;
 }
 
 function iniciarTiempoTotal(){
-  const inicio = new Date("2023-08-11T20:00:00");
+  const inicio=new Date("2023-08-11T20:00:00");
   function actualizar(){
-    const ahora = new Date();
-    let años = ahora.getFullYear() - inicio.getFullYear();
-    let meses = ahora.getMonth() - inicio.getMonth();
-    let dias = ahora.getDate() - inicio.getDate();
-    if (dias < 0) { meses--; dias += new Date(ahora.getFullYear(), ahora.getMonth(), 0).getDate(); }
-    if (meses < 0) { años--; meses += 12; }
-    const diffMs = ahora - inicio;
-    const horas = Math.floor((diffMs / (1000*60*60)) % 24);
-    const minutos = Math.floor((diffMs / (1000*60)) % 60);
-    const segundos = Math.floor((diffMs / 1000) % 60);
-    $('tiempoTotal').innerText = `Años: ${años} | Meses: ${meses} | Días: ${dias}\nTiempo juntos: ${horas}h ${minutos}m ${segundos}s`;
+    const ahora=new Date();
+    let años=ahora.getFullYear()-inicio.getFullYear();
+    let meses=ahora.getMonth()-inicio.getMonth();
+    let dias=ahora.getDate()-inicio.getDate();
+    if(dias<0){meses--;dias+=new Date(ahora.getFullYear(),ahora.getMonth(),0).getDate();}
+    if(meses<0){años--;meses+=12;}
+    const diffMs=ahora-inicio;
+    const horas=Math.floor((diffMs/(1000*60*60))%24);
+    const minutos=Math.floor((diffMs/(1000*60))%60);
+    const segundos=Math.floor((diffMs/1000)%60);
+    document.getElementById("tiempoTotal").innerText=
+      `Años: ${años} | Meses: ${meses} | Días: ${dias}\n`+
+      `Tiempo juntos: ${horas}h ${minutos}m ${segundos}s`;
   }
   actualizar();
   setInterval(actualizar,1000);
 }
 
-/* ============================== Iniciar sorpresa ============================== */
-let lluviaPrincipalIniciada = false;
-function iniciarSorpresa(){
-  showMain();
-  $('musica').play().catch(()=>{/* autoplay bloqueado, el usuario ya hizo click */});
-  calcularDiasJuntos();
-  iniciarTiempoTotal();
-  if(!lluviaPrincipalIniciada){
-    iniciarAnimacion();
-    lluviaPrincipalIniciada = true;
-  }
-  checkFechasEspeciales();
-}
-
-/* ============================== Lluvia principal "TE AMO" ============================== */
 function iniciarAnimacion(){
-  const canvas = $('canvas');
-  const ctx = canvas.getContext('2d');
-  function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; ctx.font = "16px monospace"; }
-  resize();
-  window.addEventListener('resize', resize);
-  const drops = new Array(Math.floor(canvas.width/32)).fill(1);
-  (function draw(){
-    ctx.fillStyle = "rgba(0,0,0,0.12)";
+  const canvas=document.getElementById('canvas');
+  const ctx=canvas.getContext('2d');
+  canvas.width=window.innerWidth;
+  canvas.height=window.innerHeight;
+  ctx.font="16px monospace";
+  const drops=new Array(Math.floor(canvas.width/32)).fill(1);
+  function drawRain(){
+    ctx.fillStyle="rgba(0,0,0,0.1)";
     ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle = "#ff69b4";
-    drops.forEach((d,i)=>{
-      const x = i*32;
-      const y = d*12;
-      ctx.fillText("TE AMO", x, y);
-      if(y > canvas.height && Math.random() > 0.98) drops[i] = 0;
-      drops[i] += 0.7;
+    ctx.fillStyle="#ff69b4";
+    drops.forEach((drop,i)=>{
+      const x=i*32;
+      const y=drop*12;
+      ctx.fillText("TE AMO",x,y);
+      if(y>canvas.height && Math.random()>0.98) drops[i]=0;
+      drops[i]+=0.7;
     });
-    requestAnimationFrame(draw);
-  })();
-
-  // explosión final y frase (cuando regresas también la lanzamos)
-  lanzarExplosionYFrase(ctx, canvas);
+    requestAnimationFrame(drawRain);
+  }
+  drawRain();
+  lanzarExplosionYFrase(ctx,canvas);
+  window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
 }
 
-/* ---------------- explosion + frase --------------- */
 function lanzarExplosionYFrase(ctx,canvas){
-  setTimeout(()=> {
-    const particles = [];
+  setTimeout(()=>{
+    const particles=[];
     for(let t=0;t<Math.PI*2;t+=0.02){
-      const x = 16*Math.pow(Math.sin(t),3);
-      const y = 13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t);
-      const angle = Math.atan2(y,x);
-      const speed = 2 + Math.random()*2;
-      particles.push({ x: canvas.width/2, y: canvas.height/2, vx: Math.cos(angle)*speed*10, vy: -Math.sin(angle)*speed*10, alpha: 1 });
+      const x=16*Math.pow(Math.sin(t),3);
+      const y=13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t);
+      const angle=Math.atan2(y,x);
+      const speed=2+Math.random()*2;
+      particles.push({
+        x:canvas.width/2,
+        y:canvas.height/2,
+        vx:Math.cos(angle)*speed*10,
+        vy:-Math.sin(angle)*speed*10,
+        alpha:1
+      });
     }
-    function anim(){
-      ctx.fillStyle = "rgba(0,0,0,0.2)";
+    function animateHeart(){
+      ctx.fillStyle="rgba(0,0,0,0.2)";
       ctx.fillRect(0,0,canvas.width,canvas.height);
       particles.forEach(p=>{
-        ctx.fillStyle = `rgba(255,105,180,${p.alpha})`;
-        ctx.fillText("TE AMO", p.x, p.y);
-        p.x += p.vx; p.y += p.vy; p.alpha -= 0.01;
+        ctx.fillStyle=`rgba(255,105,180,${p.alpha})`;
+        ctx.fillText("TE AMO",p.x,p.y);
+        p.x+=p.vx;
+        p.y+=p.vy;
+        p.alpha-=0.01;
       });
-      if(particles[0].alpha > 0) requestAnimationFrame(anim);
-      else $('finalMessage').style.display = 'block';
+      if(particles[0].alpha>0){requestAnimationFrame(animateHeart);}
+      else{document.getElementById('finalMessage').style.display='block';}
     }
-    anim();
-  }, 1000);
+    animateHeart();
+  },1000);
 }
 
-/* ============================== Recuerdos screen: lluvia "TE AMO" lenta ============================== */
+/* --- Cambio de pantallas --- */
+document.addEventListener("DOMContentLoaded",()=>{
+  const btnRecuerdos=document.getElementById("btnRecuerdos");
+  const btnFotos=document.getElementById("btnFotos");
+  const btnRegresarRecuerdos=document.getElementById("btnRegresarRecuerdos");
+  const btnRegresarFotos=document.getElementById("btnRegresarFotos");
+
+  btnRecuerdos.addEventListener("click",()=>{
+    mostrarPantalla('recuerdosScreen');
+    iniciarLluviaRecuerdos();
+  });
+
+  btnFotos.addEventListener("click",()=>{
+    mostrarPantalla('fotosScreen');
+    iniciarLluviaFotos();
+  });
+
+  btnRegresarRecuerdos.addEventListener("click",()=>{regresarPantalla();});
+  btnRegresarFotos.addEventListener("click",()=>{regresarPantalla();});
+});
+
+function mostrarPantalla(id){
+  document.getElementById('contenido').style.display='none';
+  document.getElementById('contador').style.display='none';
+  document.getElementById('tiempoTotal').style.display='none';
+  document.getElementById('finalMessage').style.display='none';
+  document.getElementById(id).style.display='flex';
+}
+
+function regresarPantalla(){
+  document.getElementById('recuerdosScreen').style.display='none';
+  document.getElementById('fotosScreen').style.display='none';
+  document.getElementById('contenido').style.display='flex';
+  document.getElementById('contador').style.display='block';
+  document.getElementById('tiempoTotal').style.display='block';
+  document.getElementById('finalMessage').style.display='none';
+  const canvas=document.getElementById('canvas');
+  const ctx=canvas.getContext('2d');
+  lanzarExplosionYFrase(ctx,canvas);
+}
+
 function iniciarLluviaRecuerdos(){
-  const canvas = $('canvasRecuerdos');
-  const ctx = canvas.getContext('2d');
-  function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; ctx.font = "16px monospace"; }
-  resize(); window.addEventListener('resize', resize);
-  const drops = new Array(Math.floor(canvas.width/32)).fill(1);
-  (function draw(){
-    ctx.fillStyle = "rgba(0,0,0,0.12)";
+  const canvas=document.getElementById('canvasRecuerdos');
+  const ctx=canvas.getContext('2d');
+  canvas.width=window.innerWidth;
+  canvas.height=window.innerHeight;
+  ctx.font="16px monospace";
+  const drops=new Array(Math.floor(canvas.width/32)).fill(1);
+  function draw(){
+    ctx.fillStyle="rgba(0,0,0,0.1)";
     ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle = "#ff69b4";
-    drops.forEach((d,i)=>{
-      const x = i*32; const y = d*12;
-      ctx.fillText("TE AMO", x, y);
-      if(y > canvas.height && Math.random() > 0.98) drops[i] = 0;
-      drops[i] += 0.9; // un poco más rápido/visible para recuerdos
+    ctx.fillStyle="#ff69b4";
+    drops.forEach((drop,i)=>{
+      const x=i*32;
+      const y=drop*12;
+      ctx.fillText("TE AMO",x,y);
+      if(y>canvas.height && Math.random()>0.98) drops[i]=0;
+      drops[i]+=0.7;
     });
-    if ($('recuerdosScreen').style.display === 'flex') requestAnimationFrame(draw);
-  })();
+    requestAnimationFrame(draw);
+  }
+  draw();
 }
 
-/* ============================== Fotos cayendo (igual que base) ============================== */
+/* --- Fotos cayendo --- */
 function iniciarLluviaFotos(){
-  const canvas = $('canvasFotos');
-  const ctx = canvas.getContext('2d');
-  function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; }
-  resize(); window.addEventListener('resize', resize);
-  const totalFotos = 30;
-  const fotos = [];
+  const canvas=document.getElementById('canvasFotos');
+  const ctx=canvas.getContext('2d');
+  canvas.width=window.innerWidth;
+  canvas.height=window.innerHeight;
+
+  const totalFotos=30;
+  const fotos=[];
   for(let i=1;i<=totalFotos;i++){
-    const img = new Image();
-    img.src = `fotos/foto${i}.jpg`;
-    fotos.push({ img, x: Math.random()*innerWidth, y: Math.random()*innerHeight, speed: 1 + Math.random()*1.5, size: 50 + Math.random()*50 });
+    const img=new Image();
+    img.src=`fotos/foto${i}.jpg`;
+    const f={
+      img:img,
+      x:Math.random()*canvas.width,
+      y:Math.random()*canvas.height,
+      speed:1+Math.random()*1.5,
+      size:50+Math.random()*50
+    };
+    fotos.push(f);
+    img.addEventListener('click',()=>mostrarFotoGrande(img.src));
   }
-  canvas.addEventListener('click', e=>{
-    const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+
+  canvas.addEventListener('click',function(e){
+    const rect=canvas.getBoundingClientRect();
+    const mx=e.clientX-rect.left;
+    const my=e.clientY-rect.top;
     fotos.forEach(f=>{
-      if(mx > f.x && mx < f.x + f.size && my > f.y && my < f.y + f.size){
+      if(mx>f.x && mx<f.x+f.size && my>f.y && my<f.y+f.size){
         mostrarFotoGrande(f.img.src);
       }
     });
   });
-  (function draw(){
-    ctx.fillStyle = "rgba(0,0,0,0.12)";
+
+  function draw(){
+    ctx.fillStyle="rgba(0,0,0,0.1)";
     ctx.fillRect(0,0,canvas.width,canvas.height);
     fotos.forEach(f=>{
-      if(f.img.complete) ctx.drawImage(f.img, f.x, f.y, f.size, f.size);
-      f.y += f.speed;
-      if(f.y > canvas.height){ f.y = -f.size; f.x = Math.random()*canvas.width; }
+      if(f.img.complete){ ctx.drawImage(f.img,f.x,f.y,f.size,f.size); }
+      f.y+=f.speed;
+      if(f.y>canvas.height){
+        f.y=-f.size;
+        f.x=Math.random()*canvas.width;
+      }
     });
-    if($('fotosScreen').style.display === 'flex') requestAnimationFrame(draw);
-  })();
-}
-
-/* ============================== foto grande overlay ============================== */
-function mostrarFotoGrande(src){
-  $('fotoGrande').src = src;
-  $('fotoGrandeOverlay').style.display = 'flex';
-}
-$('cerrarFoto').addEventListener('click', ()=> $('fotoGrandeOverlay').style.display = 'none');
-
-/* ============================== Confeti & fechas especiales ============================== */
-/* La lógica del confeti se mantiene tal como en tu base.
-   Además: si hay fecha especial, mostramos también el botón de carta dentro de la pantalla de fechas. */
-
-function checkFechasEspeciales(){
-  const hoy = new Date(), d = hoy.getDate(), m = hoy.getMonth(); // m: 0=enero
-  let mensaje = null;
-  // pruebas / condiciones que ya usabas
-  if (d === 25) mensaje = "Feliz otro mes más juntos 💖";
-  if (d === 11) mensaje = "Feliz otro mes más juntos 💖";
-  if (d === 11 && m === 7) mensaje = "🎉 Feliz aniversario 💖, otro año más junto a ti💖"; // agosto es 7 ? -> en Date: 7 = agosto (0=Ene)
-  if (d === 8 && m === 6) mensaje = "🎂 Feliz cumpleaños amor 💖";
-  if (d === 10 && m === 1) mensaje = "🎂 Feliz cumpleaños 🎉";
-  if (mensaje){
-    lanzarConfeti(mensaje);
-    // mostrar botón carta en FECHAS (aparecerá cuando entres a la pantalla fechas)
-    $('btnCarta').style.display = 'inline-block';
-  } else {
-    $('btnCarta').style.display = 'none';
+    requestAnimationFrame(draw);
   }
+  draw();
+}
+
+function mostrarFotoGrande(src){
+  const overlay=document.getElementById('fotoGrandeOverlay');
+  document.getElementById('fotoGrande').src=src;
+  overlay.style.display='flex';
+}
+document.getElementById('cerrarFoto').addEventListener('click',()=>{
+  document.getElementById('fotoGrandeOverlay').style.display='none';
+});
+
+/* --- Confeti --- */
+function checkFechasEspeciales(){
+  const hoy=new Date();
+  const d=hoy.getDate();
+  const m=hoy.getMonth(); // 0 enero
+  let mensaje=null;
+  if(d===25){ mensaje="Feliz otro mes más juntos 💖"; }
+  if(d===11){ mensaje="Feliz otro mes más juntos 💖"; }
+  if(d===11 && m===7){ mensaje="🎉 Feliz aniversario 💖, otro año mas junto a ti💖"; }
+  if(d===8 && m===6){ mensaje="🎂 Feliz cumpleaños amor 💖"; }
+  if(d===10 && m===1){ mensaje="🎂 Feliz cumpleaños 🎉"; }
+  if(mensaje){ lanzarConfeti(mensaje); }
 }
 
 function lanzarConfeti(mensaje){
-  const canvas = $('confetiCanvas');
-  const ctx = canvas.getContext('2d');
-  const msg = $('confetiMensaje');
-  function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; }
-  resize(); window.addEventListener('resize', resize);
-  msg.innerText = mensaje; msg.style.display = 'block';
+  const canvas=document.getElementById('confetiCanvas');
+  const ctx=canvas.getContext('2d');
+  const msg=document.getElementById('confetiMensaje');
+  canvas.width=window.innerWidth;
+  canvas.height=window.innerHeight;
+  msg.innerText=mensaje;
+  msg.style.display='block';
 
-  const confetis = [];
+  const confetis=[];
   for(let i=0;i<200;i++){
     confetis.push({
-      x: Math.random()*canvas.width,
-      y: Math.random()*canvas.height,
-      r: Math.random()*6+4,
-      dx: Math.random()*2-1,
-      dy: Math.random()*2+1,
-      color: `hsl(${Math.random()*360},100%,50%)`
+      x:Math.random()*canvas.width,
+      y:Math.random()*canvas.height,
+      r:Math.random()*6+4,
+      dx:Math.random()*2-1,
+      dy:Math.random()*2+1,
+      color:`hsl(${Math.random()*360},100%,50%)`
     });
   }
-  let start = performance.now();
+
+  let start=performance.now();
   function draw(now){
-    const elapsed = now - start;
+    const elapsed=now-start;
     ctx.clearRect(0,0,canvas.width,canvas.height);
     confetis.forEach(c=>{
       ctx.beginPath();
-      ctx.arc(c.x,c.y,c.r,0,Math.PI*2);
-      ctx.fillStyle = c.color;
+      ctx.arc(c.x,c.y,c.r,0,2*Math.PI);
+      ctx.fillStyle=c.color;
       ctx.fill();
-      c.x += c.dx; c.y += c.dy;
-      if(c.y > canvas.height) c.y = -10;
-      if(c.x > canvas.width || c.x < -10) c.dx *= -1;
+      c.x+=c.dx;
+      c.y+=c.dy;
+      if(c.y>canvas.height) c.y=-10;
+      if(c.x>canvas.width || c.x<0) c.dx*=-1;
     });
-    if (elapsed < 5000) requestAnimationFrame(draw);
-    else { ctx.clearRect(0,0,canvas.width,canvas.height); msg.style.display = 'none'; }
+    if(elapsed<5000){ // dura 5 segundos
+      requestAnimationFrame(draw);
+    } else {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      msg.style.display='none';
+    }
   }
   requestAnimationFrame(draw);
 }
-
-/* ============================== Puzle 3x3 (sliding puzzle) ==============================
-   Implementación: se divide mentalmente la imagen en 3x3, se crea 8 tiles + 1 blank.
-   - Usa la imagen puzzle.jpg (colócala en la misma carpeta).
-   - Botón 'Mezclar' mezcla de forma solvable.
-   - Click en tile adyacente mueve.
-   - Detecta victoria.
-=========================================================================================== */
-const PUZZLE = {
-  size: 3,
-  boardEl: null,
-  tiles: [],  // array de 9 elementos con {pos,index,imgX,imgY}
-  blankIndex: 8,
-  solved: true
-};
-
-function createPuzzle(){
-  PUZZLE.boardEl = $('puzzleBoard');
-  PUZZLE.tiles = [];
-  PUZZLE.blankIndex = 8; // última posición vacía
-  PUZZLE.solved = false;
-  // preparar 3x3 posiciones
-  const n = PUZZLE.size;
-  for(let i=0;i<n*n;i++){
-    const tile = document.createElement('div');
-    tile.className = 'tile';
-    tile.dataset.index = i; // posición actual
-    tile.style.width = '100%';
-    tile.style.height = '100%';
-    // asignaremos background para cada pieza si no es la blank
-    PUZZLE.boardEl.appendChild(tile);
-    PUZZLE.tiles.push(tile);
-  }
-  updateTilesVisuals();
-  // listeners
-  PUZZLE.boardEl.addEventListener('click', onPuzzleClick);
-}
-
-function onPuzzleClick(e){
-  const target = e.target;
-  if(!target.classList.contains('tile')) return;
-  const idx = Number(target.dataset.index);
-  moveIfAdjacent(idx);
-}
-
-function moveIfAdjacent(idx){
-  const n = PUZZLE.size;
-  const blank = PUZZLE.blankIndex;
-  const sameRow = Math.floor(blank/n) === Math.floor(idx/n);
-  const sameCol = blank % n === idx % n;
-  const adjacent = (sameRow && Math.abs(blank-idx)===1) || (sameCol && Math.abs(blank-idx)===n);
-  if(!adjacent) return;
-  swapTiles(idx, blank);
-  PUZZLE.blankIndex = idx; // blank moved
-  updateTilesVisuals();
-  checkPuzzleSolved();
-}
-
-function swapTiles(a,b){
-  // swap dataset positions visually by swapping background and index markers
-  const ta = PUZZLE.tiles[a];
-  const tb = PUZZLE.tiles[b];
-  // swap content by swapping attributes (we'll swap data-pos)
-  const posA = ta.dataset.pos ?? ta.dataset.index;
-  const posB = tb.dataset.pos ?? tb.dataset.index;
-  ta.dataset.pos = posB;
-  tb.dataset.pos = posA;
-
-  // swap dataset.index (represents the current index position)
-  const tmpIndex = ta.dataset.index;
-  ta.dataset.index = tb.dataset.index;
-  tb.dataset.index = tmpIndex;
-
-  // swap elements in tiles array so indices correspond to positions for easier logic
-  const temp = PUZZLE.tiles[a];
-  PUZZLE.tiles[a] = PUZZLE.tiles[b];
-  PUZZLE.tiles[b] = temp;
-}
-
-function updateTilesVisuals(){
-  // set backgrounds for tiles according to their original order (pos)
-  const n = PUZZLE.size;
-  const boardRect = PUZZLE.boardEl.getBoundingClientRect();
-  const tileW = boardRect.width / n;
-  const tileH = boardRect.height / n;
-  // ensure each tile has dataset.pos (original correct index)
-  PUZZLE.tiles.forEach((tile, i)=>{
-    if(!tile.dataset.pos) tile.dataset.pos = i; //At init pos == i
-  });
-
-  // rebuild grid children to ensure correct order
-  PUZZLE.boardEl.innerHTML = '';
-  PUZZLE.tiles.forEach((tile, i)=>{
-    tile.dataset.index = i; // current position index within board
-    // calculate which original piece this tile represents
-    const orig = Number(tile.dataset.pos);
-    if(orig === PUZZLE.size*PUZZLE.size - 1){
-      tile.classList.add('blank');
-      tile.style.backgroundImage = 'none';
-      tile.style.cursor = 'default';
-      tile.textContent = '';
-    } else {
-      tile.classList.remove('blank');
-      // set background using puzzle.jpg positioned by piece coordinates
-      const sx = (orig % PUZZLE.size) / (PUZZLE.size - 1) * 100;
-      const sy = Math.floor(orig / PUZZLE.size) / (PUZZLE.size - 1) * 100;
-      tile.style.backgroundImage = 'url("puzzle.jpg")';
-      tile.style.backgroundSize = `${PUZZLE.size * 100}% ${PUZZLE.size * 100}%`;
-      tile.style.backgroundPosition = `${sx}% ${sy}%`;
-      tile.style.cursor = 'pointer';
-      tile.textContent = '';
-    }
-    PUZZLE.boardEl.appendChild(tile);
-  });
-}
-
-/* Shuffle ensuring solvability for sliding puzzle */
-function shufflePuzzle(){
-  // generate a solvable permutation by performing random valid moves from solved state
-  const moves = 100 + Math.floor(Math.random()*200);
-  for(let i=0;i<moves;i++){
-    // get neighbors of blank
-    const blank = PUZZLE.blankIndex;
-    const n = PUZZLE.size;
-    const neighbors = [];
-    const r = Math.floor(blank / n), c = blank % n;
-    if(r>0) neighbors.push(blank - n);
-    if(r < n-1) neighbors.push(blank + n);
-    if(c>0) neighbors.push(blank - 1);
-    if(c < n-1) neighbors.push(blank + 1);
-    const choice = neighbors[Math.floor(Math.random()*neighbors.length)];
-    // swap in tiles array (we want to swap positions)
-    // to swap tiles so their positions update, we'll swap dataset.pos
-    const posA = PUZZLE.tiles[choice].dataset.pos;
-    const posB = PUZZLE.tiles[blank].dataset.pos;
-    PUZZLE.tiles[choice].dataset.pos = posB;
-    PUZZLE.tiles[blank].dataset.pos = posA;
-    // swap elements in PUZZLE.tiles array to keep array order consistent
-    const tmp = PUZZLE.tiles[choice]; PUZZLE.tiles[choice] = PUZZLE.tiles[blank]; PUZZLE.tiles[blank] = tmp;
-    PUZZLE.blankIndex = choice;
-  }
-  updateTilesVisuals();
-  PUZZLE.solved = false;
-  $('puzzleWin').style.display = 'none';
-}
-
-/* Reset puzzle to solved */
-function resetPuzzle(){
-  // restore pos = index ascending, blank at last
-  PUZZLE.tiles.forEach((tile,i)=>{
-    tile.dataset.pos = i;
-  });
-  // reassign tiles array to order
-  PUZZLE.tiles.sort((a,b)=> Number(a.dataset.pos) - Number(b.dataset.pos));
-  PUZZLE.blankIndex = PUZZLE.size*PUZZLE.size - 1;
-  updateTilesVisuals();
-  PUZZLE.solved = true;
-  $('puzzleWin').style.display = 'none';
-}
-
-/* Check solved */
-function checkPuzzleSolved(){
-  let ok = true;
-  PUZZLE.tiles.forEach((tile, i)=>{
-    const pos = Number(tile.dataset.pos);
-    if(pos !== i) ok = false;
-  });
-  if(ok){
-    PUZZLE.solved = true;
-    $('puzzleWin').style.display = 'block';
-  }
-}
-
-/* Initialize puzzle on screen show */
-function initPuzzleOnce(){
-  // build tiles if not already
-  if(!PUZZLE.boardEl) createPuzzle();
-  resetPuzzle();
-}
-
-/* ============================== Eventos botones (pantallas / mini / fechas / carta) ============================== */
-document.addEventListener('DOMContentLoaded', () => {
-  // main buttons
-  $('btnRecuerdos').onclick = ()=> { showScreen('recuerdosScreen'); iniciarLluviaRecuerdos(); };
-  $('btnFotos').onclick = ()=> { showScreen('fotosScreen'); iniciarLluviaFotos(); };
-
-  // recuerdos internal
-  $('btnRegresarRecuerdos').onclick = ()=> { showScreen('contenido'); $('contador').style.display='block'; $('tiempoTotal').style.display='block'; lanzarExplosionYFrase(document.getElementById('canvas').getContext('2d'), document.getElementById('canvas')); };
-  $('btnMiniJuego').onclick = ()=> { showScreen('miniJuegoScreen'); initPuzzleOnce(); };
-  $('btnFechas').onclick = ()=> { showScreen('fechasScreen'); startCountdowns(); };
-
-  // fotos screen regresa
-  $('btnRegresarFotos').onclick = ()=> { showScreen('contenido'); $('contador').style.display='block'; $('tiempoTotal').style.display='block'; };
-
-  // mini game controls
-  $('shuffleBtn').onclick = ()=> shufflePuzzle();
-  $('solveBtn').onclick = ()=> resetPuzzle();
-  $('btnRegresarMiniJuego').onclick = ()=> { showScreen('recuerdosScreen'); iniciarLluviaRecuerdos(); };
-
-  // fechas
-  $('btnRegresarFechas').onclick = ()=> { showScreen('recuerdosScreen'); iniciarLluviaRecuerdos(); };
-  // carta botón: muestra overlay con texto (contenido incrustado)
-  $('btnCarta').onclick = ()=> {
-    // carta overlay simple (modal)
-    const modal = document.createElement('div');
-    modal.style.position='fixed'; modal.style.inset='0'; modal.style.background='rgba(0,0,0,0.85)'; modal.style.zIndex=9999;
-    modal.style.display='flex'; modal.style.alignItems='center'; modal.style.justifyContent='center'; modal.style.padding='20px';
-    const box = document.createElement('div');
-    box.style.background='#fff'; box.style.color='#000'; box.style.padding='22px'; box.style.borderRadius='12px'; box.style.maxWidth='740px';
-    box.style.boxShadow='0 0 30px rgba(255,105,180,0.3)';
-    // Aquí pones el texto de la carta (edítalo si quieres)
-    box.innerHTML = `<h2 style="color:#ff69b4;margin:0 0 10px">Carta secreta ❤️</h2>
-      <p>Amor, cada día a tu lado es un regalo. Gracias por cada risa, cada abrazo y por ser tú. Te amo profundamente y siempre quiero construir recuerdos contigo. — Con todo mi corazón.</p>
-      <div style="text-align:right;margin-top:14px;"><button id="closeCarta" style="background:var(--pink);color:#fff;border:0;padding:8px 14px;border-radius:8px;cursor:pointer">Cerrar</button></div>`;
-    modal.appendChild(box); document.body.appendChild(modal);
-    $('closeCarta').onclick = ()=> modal.remove();
-  };
-
-  // comprobar fechas especiales al cargar
-  checkFechasEspeciales();
-});
-
-/* ============================== Fechas: cuenta regresiva dentro de pantalla 'fechasScreen' ============================== */
-let countdownInterval = null;
-function startCountdowns(){
-  // ejemplo: si queremos mostrar un countdown hacia el próximo día 11 de cada mes
-  // calculamos próximo evento (próximo 11 o 25) - aquí se dejan como ejemplo: 11 del mes actual o siguiente
-  if(countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
-  const now = new Date();
-  // Prioriza el 11 del mes (evento mensual), si ya pasó, toma siguiente mes.
-  let eventDay = 11;
-  let eventMonth = now.getMonth();
-  let eventYear = now.getFullYear();
-  if(now.getDate() >= eventDay){ // ya pasó este mes
-    eventMonth = eventMonth + 1;
-    if(eventMonth > 11){ eventMonth = 0; eventYear++; }
-  }
-  const eventDate = new Date(eventYear, eventMonth, eventDay, 20, 0, 0); // a las 20:00 por ejemplo
-  function update(){
-    const diff = eventDate - new Date();
-    if(diff <= 0){ $('fechasCountdown').innerText = "¡Hoy es el día!"; clearInterval(countdownInterval); return; }
-    const d = Math.floor(diff / (1000*60*60*24));
-    const h = Math.floor((diff / (1000*60*60)) % 24);
-    const m = Math.floor((diff / (1000*60)) % 60);
-    const s = Math.floor((diff / 1000) % 60);
-    $('fechasCountdown').innerText = `Cuenta regresiva: ${d}d ${h}h ${m}m ${s}s`;
-  }
-  update();
-  countdownInterval = setInterval(update,1000);
-}
-
-/* ============================== Inicial: crear puzzle elementos vacíos (pero no mezclar) ============================== */
-createPuzzle(); resetPuzzle();
-
-/* ============================== Evitar errores iniciales para elementos que existen en tu base ============================== */
-/* Asegurarse de que canvas principal exista y responder a resize */
-(function ensureCanvases(){
-  const c = $('canvas'); if(c){ c.width = innerWidth; c.height = innerHeight; window.addEventListener('resize', ()=>{ c.width = innerWidth; c.height = innerHeight; }); }
-  const cr = $('confetiCanvas'); if(cr){ cr.width = innerWidth; cr.height = innerHeight; window.addEventListener('resize', ()=>{ cr.width = innerWidth; cr.height = innerHeight; }); }
-})();
-
 </script>
 </body>
 </html>
