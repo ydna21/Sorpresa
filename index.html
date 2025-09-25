@@ -38,7 +38,7 @@
     z-index:3;text-align:center;display:none;}
 
   /* Pantallas */
-  #recuerdosScreen,#fotosScreen{display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+  #recuerdosScreen,#fotosScreen,#puzzleScreen{display:none;position:fixed;top:0;left:0;width:100%;height:100%;
     background:black;z-index:20;flex-direction:column;align-items:center;justify-content:center;}
   #canvasRecuerdos,#canvasFotos{position:absolute;top:0;left:0;width:100%;height:100%;z-index:19;}
   #recuerdosContent,#fotosContent{position:relative;z-index:21;text-align:center;}
@@ -46,6 +46,18 @@
   #recuerdosContent ul{list-style:none;padding:0;margin-bottom:20px;color:white;font-size:1.2rem;}
   #recuerdosContent button,#fotosContent button{padding:12px 25px;font-size:1.2rem;background:#ff69b4;
     color:white;border:none;border-radius:12px;cursor:pointer;box-shadow:0 0 15px #ff69b4;}
+
+  /* Puzzle */
+  #puzzleCanvas{border:4px solid #ff69b4;border-radius:10px;box-shadow:0 0 20px #ff69b4;}
+  #puzzleScreen button{padding:12px 25px;font-size:1.2rem;background:#ff69b4;
+    color:white;border:none;border-radius:12px;cursor:pointer;box-shadow:0 0 15px #ff69b4;margin-top:20px;}
+
+  /* Carta modal */
+  #cartaModal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,0.8);z-index:40;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:20px;}
+  #cartaContenido{background:white;color:#ff69b4;padding:30px 40px;border-radius:20px;
+      box-shadow:0 0 30px #ff69b4;max-width:500px;}
 
   /* Overlay foto grande */
   #fotoGrandeOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;
@@ -56,21 +68,11 @@
 
   /* Confeti */
   #confetiCanvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:100;}
-  /* --- NUEVO globo de mensaje --- */
   #confetiMensaje{
-    position:fixed;
-    top:50%;left:50%;
-    transform:translate(-50%,-50%);
-    background:rgba(255,255,255,0.9);
-    color:#ff69b4;
-    font-size:2rem;
-    font-weight:bold;
-    text-align:center;
-    padding:30px 40px;
-    border-radius:20px;
-    box-shadow:0 0 30px #ff69b4;
-    z-index:101;
-    display:none;
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+    background:rgba(255,255,255,0.9);color:#ff69b4;font-size:2rem;font-weight:bold;
+    text-align:center;padding:30px 40px;border-radius:20px;box-shadow:0 0 30px #ff69b4;
+    z-index:101;display:none;
   }
 </style>
 </head>
@@ -90,10 +92,6 @@
   <div class="center-message">TE AMO ❤️</div>
   <button id="btnRecuerdos" class="btn">💌 Nuestros recuerdos</button>
   <button id="btnFotos" class="btn">📷 Nuestras fotos</button>
-  <ul id="listaRecuerdos">
-    <li>15 de julio 2023 – Nuestro reencuentro y detalle 💖</li>
-    <li>21 de julio 2023 – Primera salida para volver a conocernos ✨</li>
-  </ul>
 </div>
 <div class="final-message" id="finalMessage">Gracias por dejarme formar parte de tu vida❤️</div>
 
@@ -106,6 +104,8 @@
       <li>15 de julio 2023 – Nuestro reencuentro y detalle 💖</li>
       <li>21 de julio 2023 – Primera salida para volver a conocernos ✨</li>
     </ul>
+    <button id="btnRompecabezas">🧩 Rompecabezas</button>
+    <button id="btnCarta">💌 Carta secreta</button>
     <button id="btnRegresarRecuerdos">⬅️ Regresar</button>
   </div>
 </div>
@@ -116,6 +116,26 @@
   <div id="fotosContent">
     <h2>Nuestras Fotos</h2>
     <button id="btnRegresarFotos">⬅️ Regresar</button>
+  </div>
+</div>
+
+<!-- Pantalla de rompecabezas -->
+<div id="puzzleScreen">
+  <canvas id="puzzleCanvas" width="300" height="300"></canvas>
+  <button id="btnRegresarPuzzle">⬅️ Regresar</button>
+</div>
+
+<!-- Carta secreta -->
+<div id="cartaModal">
+  <div id="cartaContenido">
+    <h2>💌 Carta para ti 💖</h2>
+    <p style="font-size:1.1rem;">
+      Mi amor, cada momento contigo hace que mi corazón lata más fuerte.
+      Gracias por cada sonrisa, cada mirada y cada instante que compartimos.
+      Eres mi razón de ser y siempre lo serás. 💖
+    </p>
+    <button id="cerrarCarta" style="margin-top:20px;padding:10px 20px;background:#ff69b4;
+      color:white;border:none;border-radius:10px;cursor:pointer;">Cerrar</button>
   </div>
 </div>
 
@@ -244,6 +264,10 @@ document.addEventListener("DOMContentLoaded",()=>{
   const btnFotos=document.getElementById("btnFotos");
   const btnRegresarRecuerdos=document.getElementById("btnRegresarRecuerdos");
   const btnRegresarFotos=document.getElementById("btnRegresarFotos");
+  const btnPuzzle=document.getElementById("btnRompecabezas");
+  const btnCarta=document.getElementById("btnCarta");
+  const btnRegresarPuzzle=document.getElementById("btnRegresarPuzzle");
+  const cartaModal=document.getElementById("cartaModal");
 
   btnRecuerdos.addEventListener("click",()=>{
     mostrarPantalla('recuerdosScreen');
@@ -257,6 +281,20 @@ document.addEventListener("DOMContentLoaded",()=>{
 
   btnRegresarRecuerdos.addEventListener("click",()=>{regresarPantalla();});
   btnRegresarFotos.addEventListener("click",()=>{regresarPantalla();});
+
+  btnPuzzle.addEventListener("click",()=>{
+    document.getElementById('recuerdosScreen').style.display='none';
+    document.getElementById('puzzleScreen').style.display='flex';
+    iniciarPuzzle();
+  });
+
+  btnRegresarPuzzle.addEventListener("click",()=>{
+    document.getElementById('puzzleScreen').style.display='none';
+    document.getElementById('recuerdosScreen').style.display='flex';
+  });
+
+  btnCarta.addEventListener("click",()=>{ cartaModal.style.display='flex'; });
+  document.getElementById("cerrarCarta").addEventListener("click",()=>{ cartaModal.style.display='none'; });
 });
 
 function mostrarPantalla(id){
@@ -308,117 +346,144 @@ function iniciarLluviaFotos(){
   const ctx=canvas.getContext('2d');
   canvas.width=window.innerWidth;
   canvas.height=window.innerHeight;
-
   const totalFotos=30;
   const fotos=[];
   for(let i=1;i<=totalFotos;i++){
     const img=new Image();
     img.src=`fotos/foto${i}.jpg`;
-    const f={
-      img:img,
-      x:Math.random()*canvas.width,
-      y:Math.random()*canvas.height,
-      speed:1+Math.random()*1.5,
-      size:50+Math.random()*50
-    };
-    fotos.push(f);
-    img.addEventListener('click',()=>mostrarFotoGrande(img.src));
+    img.onload=()=>{fotos.push({img:img,x:Math.random()*canvas.width,y:Math.random()*-canvas.height,vel:1+Math.random()*2});};
   }
-
-  canvas.addEventListener('click',function(e){
-    const rect=canvas.getBoundingClientRect();
-    const mx=e.clientX-rect.left;
-    const my=e.clientY-rect.top;
-    fotos.forEach(f=>{
-      if(mx>f.x && mx<f.x+f.size && my>f.y && my<f.y+f.size){
-        mostrarFotoGrande(f.img.src);
-      }
-    });
-  });
-
   function draw(){
-    ctx.fillStyle="rgba(0,0,0,0.1)";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
     fotos.forEach(f=>{
-      if(f.img.complete){ ctx.drawImage(f.img,f.x,f.y,f.size,f.size); }
-      f.y+=f.speed;
-      if(f.y>canvas.height){
-        f.y=-f.size;
-        f.x=Math.random()*canvas.width;
-      }
+      ctx.drawImage(f.img,f.x,f.y,100,100);
+      f.y+=f.vel;
+      if(f.y>canvas.height) f.y=-100;
     });
     requestAnimationFrame(draw);
   }
   draw();
 }
 
-function mostrarFotoGrande(src){
-  const overlay=document.getElementById('fotoGrandeOverlay');
-  document.getElementById('fotoGrande').src=src;
-  overlay.style.display='flex';
+/* --- Rompecabezas 3x3 --- */
+function iniciarPuzzle(){
+  const canvas=document.getElementById("puzzleCanvas");
+  const ctx=canvas.getContext("2d");
+  const size=300;
+  const rows=3, cols=3;
+  const pieceSize=size/rows;
+  const img=new Image();
+  img.src="puzzle.jpg";
+  let pieces=[];
+  img.onload=function(){
+    pieces=[];
+    for(let r=0;r<rows;r++){
+      for(let c=0;c<cols;c++){
+        pieces.push({r:r,c:c});
+      }
+    }
+    shuffle(pieces);
+    drawPuzzle();
+  };
+  let empty={r:rows-1,c:cols-1};
+  function drawPuzzle(){
+    ctx.clearRect(0,0,size,size);
+    pieces.forEach((p,i)=>{
+      const r=Math.floor(i/cols);
+      const c=i%cols;
+      if(p.r!==rows-1 || p.c!==cols-1){
+        ctx.drawImage(img,
+          p.c*pieceSize,p.r*pieceSize,pieceSize,pieceSize,
+          c*pieceSize,r*pieceSize,pieceSize,pieceSize);
+      }
+    });
+  }
+  canvas.onclick=function(e){
+    const x=Math.floor(e.offsetX/pieceSize);
+    const y=Math.floor(e.offsetY/pieceSize);
+    const idx=y*cols+x;
+    const p=pieces[idx];
+    if((Math.abs(empty.r - p.r)+Math.abs(empty.c - p.c))===1){
+      const emptyIdx=pieces.findIndex(piece=>piece.r===empty.r && piece.c===empty.c);
+      pieces[emptyIdx]=p;
+      pieces[idx]={r:empty.r,c:empty.c};
+      empty=p;
+      drawPuzzle();
+      comprobarVictoria();
+    }
+  };
+  function comprobarVictoria(){
+    let correcto=true;
+    pieces.forEach((p,i)=>{
+      if(p.r!==Math.floor(i/cols) || p.c!==i%cols){correcto=false;}
+    });
+    if(correcto){setTimeout(()=>alert("🎉 ¡Completaste el rompecabezas!"),200);}
+  }
+  function shuffle(arr){
+    for(let i=arr.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [arr[i],arr[j]]=[arr[j],arr[i]];
+    }
+  }
 }
-document.getElementById('cerrarFoto').addEventListener('click',()=>{
-  document.getElementById('fotoGrandeOverlay').style.display='none';
-});
 
 /* --- Confeti --- */
 function checkFechasEspeciales(){
-  const hoy=new Date();
-  const d=hoy.getDate();
-  const m=hoy.getMonth(); // 0 enero
+  const hoy=new Date(),d=hoy.getDate(),m=hoy.getMonth();
   let mensaje=null;
   if(d===25){ mensaje="Feliz otro mes más juntos 💖"; }
   if(d===11){ mensaje="Feliz otro mes más juntos 💖"; }
-  if(d===11 && m===7){ mensaje="🎉 Feliz aniversario 💖, otro año mas junto a ti💖"; }
+  if(d===11 && m===7){ mensaje="🎉 Feliz aniversario 💖, otro año más junto a ti💖"; }
   if(d===8 && m===6){ mensaje="🎂 Feliz cumpleaños amor 💖"; }
   if(d===10 && m===1){ mensaje="🎂 Feliz cumpleaños 🎉"; }
-  if(mensaje){ lanzarConfeti(mensaje); }
+  if(mensaje) lanzarConfeti(mensaje);
 }
 
 function lanzarConfeti(mensaje){
   const canvas=document.getElementById('confetiCanvas');
   const ctx=canvas.getContext('2d');
-  const msg=document.getElementById('confetiMensaje');
+  const mensajeDiv=document.getElementById('confetiMensaje');
+  mensajeDiv.innerText=mensaje;
+  mensajeDiv.style.display='block';
+  setTimeout(()=>{mensajeDiv.style.display='none';},5000);
   canvas.width=window.innerWidth;
   canvas.height=window.innerHeight;
-  msg.innerText=mensaje;
-  msg.style.display='block';
-
   const confetis=[];
   for(let i=0;i<200;i++){
     confetis.push({
       x:Math.random()*canvas.width,
       y:Math.random()*canvas.height,
       r:Math.random()*6+4,
-      dx:Math.random()*2-1,
-      dy:Math.random()*2+1,
-      color:`hsl(${Math.random()*360},100%,50%)`
+      d:Math.random()*200
     });
   }
-
-  let start=performance.now();
-  function draw(now){
-    const elapsed=now-start;
+  let angle=0;
+  function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    confetis.forEach(c=>{
+    confetis.forEach((c,i)=>{
       ctx.beginPath();
-      ctx.arc(c.x,c.y,c.r,0,2*Math.PI);
-      ctx.fillStyle=c.color;
+      ctx.fillStyle=`hsl(${i%360},100%,50%)`;
+      ctx.moveTo(c.x,c.y);
+      ctx.arc(c.x,c.y,c.r,0,Math.PI*2,true);
       ctx.fill();
-      c.x+=c.dx;
-      c.y+=c.dy;
-      if(c.y>canvas.height) c.y=-10;
-      if(c.x>canvas.width || c.x<0) c.dx*=-1;
     });
-    if(elapsed<5000){ // dura 5 segundos
-      requestAnimationFrame(draw);
-    } else {
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      msg.style.display='none';
-    }
+    update();
   }
-  requestAnimationFrame(draw);
+  function update(){
+    angle+=0.01;
+    confetis.forEach(c=>{
+      c.y+=Math.cos(angle+c.d)+1+c.r/2;
+      c.x+=Math.sin(angle);
+      if(c.y>canvas.height){
+        c.y=-10;
+        c.x=Math.random()*canvas.width;
+      }
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
 }
 </script>
 </body>
 </html>
+
