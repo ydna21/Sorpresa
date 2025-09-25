@@ -27,8 +27,7 @@
   .center-image{width:200px;height:auto;border-radius:10px;margin-bottom:20px;
     box-shadow:0 0 20px #ff69b4;}
   .center-message{color:#ff69b4;font-size:2rem;text-align:center;}
-  .btn{margin-top:12px; /* ← antes 20px */
-    padding:10px 20px;font-size:1rem;background:#ff69b4;
+  .btn{margin-top:15px;padding:10px 20px;font-size:1rem;background:#ff69b4;
     color:white;border:none;border-radius:10px;cursor:pointer;
     box-shadow:0 0 10px #ff69b4;pointer-events:auto;}
   #listaRecuerdos{display:none;list-style:none;margin-top:15px;padding:0;
@@ -38,7 +37,7 @@
     text-shadow:2px 2px 4px #000,-1px -1px 2px #ff69b4;
     z-index:3;text-align:center;display:none;}
 
-  /* Pantalla de recuerdos y fotos */
+  /* Pantallas */
   #recuerdosScreen,#fotosScreen{display:none;position:fixed;top:0;left:0;width:100%;height:100%;
     background:black;z-index:20;flex-direction:column;align-items:center;justify-content:center;}
   #canvasRecuerdos,#canvasFotos{position:absolute;top:0;left:0;width:100%;height:100%;z-index:19;}
@@ -47,6 +46,19 @@
   #recuerdosContent ul{list-style:none;padding:0;margin-bottom:20px;color:white;font-size:1.2rem;}
   #recuerdosContent button,#fotosContent button{padding:12px 25px;font-size:1.2rem;background:#ff69b4;
     color:white;border:none;border-radius:12px;cursor:pointer;box-shadow:0 0 15px #ff69b4;}
+
+  /* Overlay foto grande */
+  #fotoGrandeOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,0.8);z-index:50;align-items:center;justify-content:center;flex-direction:column;}
+  #fotoGrandeOverlay img{max-width:80%;max-height:80%;border-radius:15px;box-shadow:0 0 30px #ff69b4;}
+  #cerrarFoto{margin-top:20px;padding:10px 25px;font-size:1.2rem;background:#ff69b4;color:white;
+    border:none;border-radius:12px;cursor:pointer;box-shadow:0 0 15px #ff69b4;}
+
+  /* Confeti */
+  #confetiCanvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:100;}
+  #confetiMensaje{position:fixed;top:20%;left:50%;transform:translateX(-50%);
+    color:#ff69b4;font-size:2rem;font-weight:bold;text-align:center;
+    text-shadow:0 0 15px #fff;z-index:101;display:none;}
 </style>
 </head>
 <body>
@@ -94,6 +106,16 @@
   </div>
 </div>
 
+<!-- Overlay para foto grande -->
+<div id="fotoGrandeOverlay">
+  <img id="fotoGrande" src="" alt="Foto grande">
+  <button id="cerrarFoto">Cerrar</button>
+</div>
+
+<!-- Confeti -->
+<canvas id="confetiCanvas"></canvas>
+<div id="confetiMensaje"></div>
+
 <audio id="musica" loop>
   <source src="musica.mp3" type="audio/mpeg">
 </audio>
@@ -113,10 +135,11 @@ function iniciarSorpresa(){
     iniciarAnimacion();
     lluviaPrincipalIniciada=true;
   }
+  checkFechasEspeciales();
 }
 
 function calcularDiasJuntos(){
-  const inicio=new Date("2023-08-11T20:00:00"); // 11 agosto 8pm
+  const inicio=new Date("2023-08-11T20:00:00");
   const hoy=new Date();
   const diff=hoy-inicio;
   const dias=Math.floor(diff/(1000*60*60*24));
@@ -202,6 +225,7 @@ function lanzarExplosionYFrase(ctx,canvas){
   },1000);
 }
 
+/* --- Cambio de pantallas --- */
 document.addEventListener("DOMContentLoaded",()=>{
   const btnRecuerdos=document.getElementById("btnRecuerdos");
   const btnFotos=document.getElementById("btnFotos");
@@ -265,38 +289,111 @@ function iniciarLluviaRecuerdos(){
   draw();
 }
 
+/* --- Fotos cayendo --- */
 function iniciarLluviaFotos(){
   const canvas=document.getElementById('canvasFotos');
   const ctx=canvas.getContext('2d');
   canvas.width=window.innerWidth;
   canvas.height=window.innerHeight;
 
-  const totalFotos=30; // cantidad de fotos
+  const totalFotos=30;
   const fotos=[];
   for(let i=1;i<=totalFotos;i++){
     const img=new Image();
-    img.src=`fotos/foto${i}.jpg`; // tus fotos en /fotos/
-    fotos.push({
+    img.src=`fotos/foto${i}.jpg`;
+    const f={
       img:img,
       x:Math.random()*canvas.width,
       y:Math.random()*canvas.height,
       speed:1+Math.random()*1.5,
       size:50+Math.random()*50
-    });
+    };
+    fotos.push(f);
+    img.addEventListener('click',()=>mostrarFotoGrande(img.src));
   }
+
+  canvas.addEventListener('click',function(e){
+    const rect=canvas.getBoundingClientRect();
+    const mx=e.clientX-rect.left;
+    const my=e.clientY-rect.top;
+    fotos.forEach(f=>{
+      if(mx>f.x && mx<f.x+f.size && my>f.y && my<f.y+f.size){
+        mostrarFotoGrande(f.img.src);
+      }
+    });
+  });
 
   function draw(){
     ctx.fillStyle="rgba(0,0,0,0.1)";
     ctx.fillRect(0,0,canvas.width,canvas.height);
     fotos.forEach(f=>{
-      if(f.img.complete){
-        ctx.drawImage(f.img,f.x,f.y,f.size,f.size);
-      }
+      if(f.img.complete){ ctx.drawImage(f.img,f.x,f.y,f.size,f.size); }
       f.y+=f.speed;
       if(f.y>canvas.height){
         f.y=-f.size;
         f.x=Math.random()*canvas.width;
       }
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+function mostrarFotoGrande(src){
+  const overlay=document.getElementById('fotoGrandeOverlay');
+  document.getElementById('fotoGrande').src=src;
+  overlay.style.display='flex';
+}
+document.getElementById('cerrarFoto').addEventListener('click',()=>{
+  document.getElementById('fotoGrandeOverlay').style.display='none';
+});
+
+/* --- Confeti --- */
+function checkFechasEspeciales(){
+  const hoy=new Date();
+  const d=hoy.getDate();
+  const m=hoy.getMonth(); // 0 enero
+  const y=hoy.getFullYear();
+  let mensaje=null;
+  if(d===11){ mensaje="Feliz otro mes más juntos 💖"; }
+  if(d===11 && m===7){ mensaje="🎉 Feliz aniversario 💖"; }
+  if(d===8 && m===6){ mensaje="🎂 Feliz cumpleaños amor 💖"; }
+  if(d===10 && m===1){ mensaje="🎂 Feliz cumpleaños 🎉"; }
+
+  if(mensaje){ lanzarConfeti(mensaje); }
+}
+
+function lanzarConfeti(mensaje){
+  const canvas=document.getElementById('confetiCanvas');
+  const ctx=canvas.getContext('2d');
+  const msg=document.getElementById('confetiMensaje');
+  canvas.width=window.innerWidth;
+  canvas.height=window.innerHeight;
+  msg.innerText=mensaje;
+  msg.style.display='block';
+
+  const confetis=[];
+  for(let i=0;i<200;i++){
+    confetis.push({
+      x:Math.random()*canvas.width,
+      y:Math.random()*canvas.height,
+      r:5+Math.random()*10,
+      dx:Math.random()*2-1,
+      dy:Math.random()*3+2,
+      color:`hsl(${Math.random()*360},100%,50%)`
+    });
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    confetis.forEach(c=>{
+      ctx.beginPath();
+      ctx.arc(c.x,c.y,c.r,0,2*Math.PI);
+      ctx.fillStyle=c.color;
+      ctx.fill();
+      c.x+=c.dx;
+      c.y+=c.dy;
+      if(c.y>canvas.height){ c.y=-c.r; c.x=Math.random()*canvas.width; }
     });
     requestAnimationFrame(draw);
   }
