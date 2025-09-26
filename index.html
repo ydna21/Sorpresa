@@ -97,6 +97,9 @@
 </div>
 <div class="final-message" id="finalMessage">Gracias por dejarme formar parte de tu vida❤️</div>
 
+
+
+  
 <!-- Pantalla de recuerdos -->
 <div id="recuerdosScreen">
   <canvas id="canvasRecuerdos"></canvas>
@@ -107,9 +110,41 @@
       <li>21 de julio 2023 – Primera salida para volver a conocernos ✨</li>
     </ul>
     <button id="btnRegresarRecuerdos">⬅️ Regresar</button>
+    <button id="btnRompecabezas">🧩 Rompecabezas</button>
+<button id="btnCarta">💌 Carta secreta</button>
+  </div>
+</div>
+<!-- 🔹 Nuevo apartado para el rompecabezas -->
+<div id="puzzleScreen" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+  background:black;z-index:30;flex-direction:column;align-items:center;justify-content:center;">
+  <canvas id="puzzleCanvas" width="300" height="300"
+    style="border:4px solid #ff69b4;border-radius:10px;box-shadow:0 0 20px #ff69b4;"></canvas>
+  <button id="btnRegresarPuzzle" style="margin-top:20px;padding:12px 25px;
+    font-size:1.2rem;background:#ff69b4;color:white;border:none;border-radius:12px;
+    cursor:pointer;box-shadow:0 0 15px #ff69b4;">⬅️ Regresar</button>
+</div>
+
+<!-- 🔹 Carta secreta modal -->
+<div id="cartaModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.8);z-index:40;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:20px;">
+  <div style="background:white;color:#ff69b4;padding:30px 40px;border-radius:20px;
+      box-shadow:0 0 30px #ff69b4;max-width:500px;">
+    <h2>💌 Carta para ti 💖</h2>
+    <p style="font-size:1.1rem;">
+      Mi amor, cada momento contigo hace que mi corazón lata más fuerte.
+      Gracias por cada sonrisa, cada mirada y cada instante que compartimos.
+      Eres mi razón de ser y siempre lo serás. 💖
+    </p>
+    <button id="cerrarCarta" style="margin-top:20px;padding:10px 20px;background:#ff69b4;
+      color:white;border:none;border-radius:10px;cursor:pointer;">Cerrar</button>
   </div>
 </div>
 
+
+
+
+  
 <!-- Pantalla de fotos -->
 <div id="fotosScreen">
   <canvas id="canvasFotos"></canvas>
@@ -361,6 +396,104 @@ document.getElementById('cerrarFoto').addEventListener('click',()=>{
   document.getElementById('fotoGrandeOverlay').style.display='none';
 });
 
+
+
+  
+  /* --- Botones nuevos dentro de Recuerdos --- */
+document.addEventListener("DOMContentLoaded",()=>{
+  const btnPuzzle=document.getElementById("btnRompecabezas");
+  const btnCarta=document.getElementById("btnCarta");
+  const puzzleScreen=document.getElementById("puzzleScreen");
+  const cartaModal=document.getElementById("cartaModal");
+
+  btnPuzzle.addEventListener("click",()=>{
+    document.getElementById('recuerdosScreen').style.display='none';
+    puzzleScreen.style.display='flex';
+    iniciarPuzzle();
+  });
+
+  document.getElementById("btnRegresarPuzzle").addEventListener("click",()=>{
+    puzzleScreen.style.display='none';
+    document.getElementById('recuerdosScreen').style.display='flex';
+  });
+
+  btnCarta.addEventListener("click",()=>{ cartaModal.style.display='flex'; });
+  document.getElementById("cerrarCarta").addEventListener("click",()=>{ cartaModal.style.display='none'; });
+});
+
+/* --- Rompecabezas 3x3 --- */
+function iniciarPuzzle(){
+  const canvas=document.getElementById("puzzleCanvas");
+  const ctx=canvas.getContext("2d");
+  const size=300;
+  const rows=3, cols=3;
+  const pieceSize=size/rows;
+  const img=new Image();
+  img.src="puzzle.jpg";
+  let pieces=[];
+
+  img.onload=function(){
+    // Crear piezas mezcladas
+    pieces=[];
+    for(let r=0;r<rows;r++){
+      for(let c=0;c<cols;c++){
+        pieces.push({r:r,c:c});
+      }
+    }
+    shuffle(pieces);
+    drawPuzzle();
+  };
+
+  let empty={r:rows-1,c:cols-1}; // pieza vacía
+  function drawPuzzle(){
+    ctx.clearRect(0,0,size,size);
+    pieces.forEach((p,i)=>{
+      const r=Math.floor(i/cols);
+      const c=i%cols;
+      if(p.r!==rows-1 || p.c!==cols-1){
+        ctx.drawImage(img,
+          p.c*pieceSize,p.r*pieceSize,pieceSize,pieceSize,
+          c*pieceSize,r*pieceSize,pieceSize,pieceSize);
+      }
+    });
+  }
+
+  canvas.onclick=function(e){
+    const x=Math.floor(e.offsetX/pieceSize);
+    const y=Math.floor(e.offsetY/pieceSize);
+    const idx=y*cols+x;
+    const p=pieces[idx];
+    if((Math.abs(empty.r - p.r)+Math.abs(empty.c - p.c))===1){
+      // mover
+      const emptyIdx=pieces.findIndex(piece=>piece.r===empty.r && piece.c===empty.c);
+      pieces[emptyIdx]=p;
+      pieces[idx]={r:empty.r,c:empty.c};
+      empty=p;
+      drawPuzzle();
+      comprobarVictoria();
+    }
+  };
+
+  function comprobarVictoria(){
+    let correcto=true;
+    pieces.forEach((p,i)=>{
+      if(p.r!==Math.floor(i/cols) || p.c!==i%cols){correcto=false;}
+    });
+    if(correcto){
+      setTimeout(()=>alert("🎉 ¡Completaste el rompecabezas!"),200);
+    }
+  }
+
+  function shuffle(arr){
+    for(let i=arr.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [arr[i],arr[j]]=[arr[j],arr[i]];
+    }
+  }
+}
+
+
+  
 /* --- Confeti --- */
 function checkFechasEspeciales(){
   const hoy=new Date();
