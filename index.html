@@ -421,87 +421,158 @@ document.addEventListener("DOMContentLoaded",()=>{
   document.getElementById("cerrarCarta").addEventListener("click",()=>{ cartaModal.style.display='none'; });
 });
 
-/* --- Rompecabezas 3x3 --- */
-function iniciarPuzzle(){
-  const canvas=document.getElementById("puzzleCanvas");
-  const ctx=canvas.getContext("2d");
-  const size=300;
-  const rows=3, cols=3;
-  const pieceSize=size/rows;
-  const img=new Image();
-  img.src="puzzle.jpg";
-  let pieces=[];
 
-  img.onload=function(){
-    // Crear piezas mezcladas
-    pieces=[];
-    for(let r=0;r<rows;r++){
-      for(let c=0;c<cols;c++){
-        pieces.push({r:r,c:c});
-      }
-    }
-    shuffle(pieces);
+
+
+
+
+  
+ /* --- Rompecabezas 3x3 (arrastrar y soltar) --- */
+function iniciarPuzzle() {
+
+  const canvas = document.getElementById("puzzleCanvas");
+  const ctx = canvas.getContext("2d");
+
+  const rows = 3, cols = 3;
+  const size = canvas.width;
+  let pieceSize = size / cols;
+
+  let img = new Image();
+  img.src = "recuerdos.jpg";
+
+  let pieces = [];
+  let draggingPiece = null;
+  let offsetX = 0, offsetY = 0;
+  let dragX = 0, dragY = 0;
+
+  img.onload = function () {
+    initPuzzle();
     drawPuzzle();
   };
 
-  let empty={r:rows-1,c:cols-1}; // pieza vacía
-  function drawPuzzle(){
-  ctx.clearRect(0,0,size,size);
-  pieces.forEach((p,i)=>{
-    const r = Math.floor(i/cols);
-    const c = i % cols;
+  function initPuzzle() {
+    pieces = [];
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        pieces.push({ r: r, c: c });
+      }
+    }
+    shuffle(pieces);
+  }
 
-    if(p.r !== rows-1 || p.c !== cols-1){
-      // 🔹 Ajustar imagen para que siempre se recorte al centro
+  function drawPuzzle() {
+    ctx.clearRect(0, 0, size, size);
+    pieces.forEach((p, i) => {
+      if (p === draggingPiece) return;
+      const r = Math.floor(i / cols);
+      const c = i % cols;
+
       const imgSize = Math.min(img.width, img.height);
       const sx = (img.width - imgSize) / 2;
       const sy = (img.height - imgSize) / 2;
 
       ctx.drawImage(
         img,
-        sx + p.c * imgSize/cols, sy + p.r * imgSize/rows, imgSize/cols, imgSize/rows,
+        sx + p.c * imgSize / cols, sy + p.r * imgSize / rows, imgSize / cols, imgSize / rows,
         c * pieceSize, r * pieceSize, pieceSize, pieceSize
       );
+    });
+
+    if (draggingPiece) {
+      ctx.globalAlpha = 0.8;
+      ctx.drawImage(
+        img,
+        draggingPiece.c * img.width / cols, draggingPiece.r * img.height / rows, img.width / cols, img.height / rows,
+        dragX - offsetX, dragY - offsetY, pieceSize, pieceSize
+      );
+      ctx.globalAlpha = 1;
     }
-  });
-}
+  }
 
+  function startDrag(x, y) {
+    const gridX = Math.floor(x / pieceSize);
+    const gridY = Math.floor(y / pieceSize);
+    const idx = gridY * cols + gridX;
+    draggingPiece = pieces[idx];
+    dragX = x;
+    dragY = y;
+    offsetX = x - gridX * pieceSize;
+    offsetY = y - gridY * pieceSize;
+    drawPuzzle();
+  }
 
-  canvas.onclick=function(e){
-    const x=Math.floor(e.offsetX/pieceSize);
-    const y=Math.floor(e.offsetY/pieceSize);
-    const idx=y*cols+x;
-    const p=pieces[idx];
-    if((Math.abs(empty.r - p.r)+Math.abs(empty.c - p.c))===1){
-      // mover
-      const emptyIdx=pieces.findIndex(piece=>piece.r===empty.r && piece.c===empty.c);
-      pieces[emptyIdx]=p;
-      pieces[idx]={r:empty.r,c:empty.c};
-      empty=p;
+  function moveDrag(x, y) {
+    if (draggingPiece) {
+      dragX = x;
+      dragY = y;
+      drawPuzzle();
+    }
+  }
+
+  function endDrag(x, y) {
+    if (draggingPiece) {
+      const newX = Math.floor(x / pieceSize);
+      const newY = Math.floor(y / pieceSize);
+      const idx = newY * cols + newX;
+
+      const oldIdx = pieces.indexOf(draggingPiece);
+      [pieces[oldIdx], pieces[idx]] = [pieces[idx], pieces[oldIdx]];
+
+      draggingPiece = null;
       drawPuzzle();
       comprobarVictoria();
     }
-  };
+  }
 
-  function comprobarVictoria(){
-    let correcto=true;
-    pieces.forEach((p,i)=>{
-      if(p.r!==Math.floor(i/cols) || p.c!==i%cols){correcto=false;}
+  // ---- Eventos de mouse ----
+  canvas.addEventListener("mousedown", e => startDrag(e.offsetX, e.offsetY));
+  canvas.addEventListener("mousemove", e => moveDrag(e.offsetX, e.offsetY));
+  canvas.addEventListener("mouseup", e => endDrag(e.offsetX, e.offsetY));
+
+  // ---- Eventos de touch ----
+  canvas.addEventListener("touchstart", e => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.touches[0].clientX - rect.left;
+    const y = e.touches[0].clientY - rect.top;
+    startDrag(x, y);
+  }, { passive: true });
+
+  canvas.addEventListener("touchmove", e => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.touches[0].clientX - rect.left;
+    const y = e.touches[0].clientY - rect.top;
+    moveDrag(x, y);
+  }, { passive: true });
+
+  canvas.addEventListener("touchend", e => {
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.changedTouches[0]?.clientX || 0) - rect.left;
+    const y = (e.changedTouches[0]?.clientY || 0) - rect.top;
+    endDrag(x, y);
+  }, { passive: true });
+
+  function comprobarVictoria() {
+    let correcto = true;
+    pieces.forEach((p, i) => {
+      if (p.r !== Math.floor(i / cols) || p.c !== i % cols) { correcto = false; }
     });
-    if(correcto){
-      setTimeout(()=>alert("🎉 ¡Completaste el rompecabezas!"),200);
+    if (correcto) {
+      setTimeout(() => alert("🎉 ¡Completaste el rompecabezas!"), 200);
     }
   }
 
-  function shuffle(arr){
-    for(let i=arr.length-1;i>0;i--){
-      const j=Math.floor(Math.random()*(i+1));
-      [arr[i],arr[j]]=[arr[j],arr[i]];
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
     }
   }
 }
 
 
+
+
+  
   
 /* --- Confeti --- */
 function checkFechasEspeciales(){
