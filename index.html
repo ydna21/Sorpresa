@@ -97,6 +97,9 @@
 </div>
 <div class="final-message" id="finalMessage">Gracias por dejarme formar parte de tu vida❤️</div>
 
+
+
+  
 <!-- Pantalla de recuerdos -->
 <div id="recuerdosScreen">
   <canvas id="canvasRecuerdos"></canvas>
@@ -108,21 +111,20 @@
     </ul>
     <button id="btnRegresarRecuerdos">⬅️ Regresar</button>
     <button id="btnRompecabezas">🧩 Rompecabezas</button>
-    <button id="btnCarta">💌 Carta secreta</button>
+<button id="btnCarta">💌 Carta secreta</button>
   </div>
 </div>
-
-<!-- 🔹 Rompecabezas Drag & Drop -->
+<!-- 🔹 Nuevo apartado para el rompecabezas -->
 <div id="puzzleScreen" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
   background:black;z-index:30;flex-direction:column;align-items:center;justify-content:center;">
-  <div id="puzzleContainer" style="position:relative;width:300px;height:300px;border:4px solid #ff69b4;
-    border-radius:10px;box-shadow:0 0 20px #ff69b4;"></div>
+  <canvas id="puzzleCanvas" width="300" height="300"
+    style="border:4px solid #ff69b4;border-radius:10px;box-shadow:0 0 20px #ff69b4;"></canvas>
   <button id="btnRegresarPuzzle" style="margin-top:20px;padding:12px 25px;
     font-size:1.2rem;background:#ff69b4;color:white;border:none;border-radius:12px;
     cursor:pointer;box-shadow:0 0 15px #ff69b4;">⬅️ Regresar</button>
 </div>
 
-<!-- Carta secreta modal -->
+<!-- 🔹 Carta secreta modal -->
 <div id="cartaModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
   background:rgba(0,0,0,0.8);z-index:40;flex-direction:column;align-items:center;justify-content:center;
   text-align:center;padding:20px;">
@@ -139,6 +141,10 @@
   </div>
 </div>
 
+
+
+
+  
 <!-- Pantalla de fotos -->
 <div id="fotosScreen">
   <canvas id="canvasFotos"></canvas>
@@ -269,7 +275,6 @@ function lanzarExplosionYFrase(ctx,canvas){
 
 /* --- Cambio de pantallas --- */
 document.addEventListener("DOMContentLoaded",()=>{
-
   const btnRecuerdos=document.getElementById("btnRecuerdos");
   const btnFotos=document.getElementById("btnFotos");
   const btnRegresarRecuerdos=document.getElementById("btnRegresarRecuerdos");
@@ -287,8 +292,115 @@ document.addEventListener("DOMContentLoaded",()=>{
 
   btnRegresarRecuerdos.addEventListener("click",()=>{regresarPantalla();});
   btnRegresarFotos.addEventListener("click",()=>{regresarPantalla();});
+});
 
+function mostrarPantalla(id){
+  document.getElementById('contenido').style.display='none';
+  document.getElementById('contador').style.display='none';
+  document.getElementById('tiempoTotal').style.display='none';
+  document.getElementById('finalMessage').style.display='none';
+  document.getElementById(id).style.display='flex';
+}
+
+function regresarPantalla(){
+  document.getElementById('recuerdosScreen').style.display='none';
+  document.getElementById('fotosScreen').style.display='none';
+  document.getElementById('contenido').style.display='flex';
+  document.getElementById('contador').style.display='block';
+  document.getElementById('tiempoTotal').style.display='block';
+  document.getElementById('finalMessage').style.display='none';
+  const canvas=document.getElementById('canvas');
+  const ctx=canvas.getContext('2d');
+  lanzarExplosionYFrase(ctx,canvas);
+}
+
+function iniciarLluviaRecuerdos(){
+  const canvas=document.getElementById('canvasRecuerdos');
+  const ctx=canvas.getContext('2d');
+  canvas.width=window.innerWidth;
+  canvas.height=window.innerHeight;
+  ctx.font="16px monospace";
+  const drops=new Array(Math.floor(canvas.width/32)).fill(1);
+  function draw(){
+    ctx.fillStyle="rgba(0,0,0,0.1)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle="#ff69b4";
+    drops.forEach((drop,i)=>{
+      const x=i*32;
+      const y=drop*12;
+      ctx.fillText("TE AMO",x,y);
+      if(y>canvas.height && Math.random()>0.98) drops[i]=0;
+      drops[i]+=0.7;
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+/* --- Fotos cayendo --- */
+function iniciarLluviaFotos(){
+  const canvas=document.getElementById('canvasFotos');
+  const ctx=canvas.getContext('2d');
+  canvas.width=window.innerWidth;
+  canvas.height=window.innerHeight;
+
+  const totalFotos=30;
+  const fotos=[];
+  for(let i=1;i<=totalFotos;i++){
+    const img=new Image();
+    img.src=`fotos/foto${i}.jpg`;
+    const f={
+      img:img,
+      x:Math.random()*canvas.width,
+      y:Math.random()*canvas.height,
+      speed:1+Math.random()*1.5,
+      size:50+Math.random()*50
+    };
+    fotos.push(f);
+    img.addEventListener('click',()=>mostrarFotoGrande(img.src));
+  }
+
+  canvas.addEventListener('click',function(e){
+    const rect=canvas.getBoundingClientRect();
+    const mx=e.clientX-rect.left;
+    const my=e.clientY-rect.top;
+    fotos.forEach(f=>{
+      if(mx>f.x && mx<f.x+f.size && my>f.y && my<f.y+f.size){
+        mostrarFotoGrande(f.img.src);
+      }
+    });
+  });
+
+  function draw(){
+    ctx.fillStyle="rgba(0,0,0,0.1)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    fotos.forEach(f=>{
+      if(f.img.complete){ ctx.drawImage(f.img,f.x,f.y,f.size,f.size); }
+      f.y+=f.speed;
+      if(f.y>canvas.height){
+        f.y=-f.size;
+        f.x=Math.random()*canvas.width;
+      }
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+function mostrarFotoGrande(src){
+  const overlay=document.getElementById('fotoGrandeOverlay');
+  document.getElementById('fotoGrande').src=src;
+  overlay.style.display='flex';
+}
+document.getElementById('cerrarFoto').addEventListener('click',()=>{
+  document.getElementById('fotoGrandeOverlay').style.display='none';
+});
+
+
+
+  
   /* --- Botones nuevos dentro de Recuerdos --- */
+document.addEventListener("DOMContentLoaded",()=>{
   const btnPuzzle=document.getElementById("btnRompecabezas");
   const btnCarta=document.getElementById("btnCarta");
   const puzzleScreen=document.getElementById("puzzleScreen");
@@ -297,7 +409,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   btnPuzzle.addEventListener("click",()=>{
     document.getElementById('recuerdosScreen').style.display='none';
     puzzleScreen.style.display='flex';
-    iniciarPuzzleDragDrop(); // 🟢 CAMBIO
+    iniciarPuzzle();
   });
 
   document.getElementById("btnRegresarPuzzle").addEventListener("click",()=>{
@@ -307,83 +419,81 @@ document.addEventListener("DOMContentLoaded",()=>{
 
   btnCarta.addEventListener("click",()=>{ cartaModal.style.display='flex'; });
   document.getElementById("cerrarCarta").addEventListener("click",()=>{ cartaModal.style.display='none'; });
-
 });
 
-/* --- Rompecabezas Drag & Drop 3x3 --- */
-function iniciarPuzzleDragDrop(){
-  const container=document.getElementById("puzzleContainer");
-  container.innerHTML=""; // limpiar
+/* --- Rompecabezas 3x3 --- */
+function iniciarPuzzle(){
+  const canvas=document.getElementById("puzzleCanvas");
+  const ctx=canvas.getContext("2d");
   const size=300;
   const rows=3, cols=3;
   const pieceSize=size/rows;
   const img=new Image();
   img.src="puzzle.jpg";
+  let pieces=[];
 
   img.onload=function(){
-    const pieces=[];
+    // Crear piezas mezcladas
+    pieces=[];
     for(let r=0;r<rows;r++){
       for(let c=0;c<cols;c++){
-        const piece=document.createElement("div");
-        piece.style.width=pieceSize+"px";
-        piece.style.height=pieceSize+"px";
-        piece.style.backgroundImage=`url(${img.src})`;
-        piece.style.backgroundPosition=`-${c*pieceSize}px -${r*pieceSize}px`;
-        piece.style.position="absolute";
-        piece.style.left=c*pieceSize+"px";
-        piece.style.top=r*pieceSize+"px";
-        piece.draggable=true;
-        piece.dataset.r=r;
-        piece.dataset.c=c;
-        container.appendChild(piece);
-        pieces.push(piece);
+        pieces.push({r:r,c:c});
       }
     }
-
-    // Mezclar piezas
-    pieces.sort(()=>Math.random()-0.5);
-    pieces.forEach((p,i)=>{
-      p.style.left=(i%cols)*pieceSize+"px";
-      p.style.top=Math.floor(i/cols)*pieceSize+"px";
-    });
-
-    let dragged=null;
-
-    pieces.forEach(p=>{
-      p.addEventListener("dragstart",(e)=>{
-        dragged=p;
-      });
-      p.addEventListener("dragover",(e)=>{
-        e.preventDefault();
-      });
-      p.addEventListener("drop",(e)=>{
-        e.preventDefault();
-        if(dragged && dragged!==p){
-          const tmpLeft=p.style.left;
-          const tmpTop=p.style.top;
-          p.style.left=dragged.style.left;
-          p.style.top=dragged.style.top;
-          dragged.style.left=tmpLeft;
-          dragged.style.top=tmpTop;
-          checkPuzzleCompletion(pieces,rows,cols,pieceSize);
-        }
-      });
-    });
+    shuffle(pieces);
+    drawPuzzle();
   };
-}
 
-function checkPuzzleCompletion(pieces,rows,cols,pieceSize){
-  let correcto=true;
-  pieces.forEach((p)=>{
-    const left=parseInt(p.style.left)/pieceSize;
-    const top=parseInt(p.style.top)/pieceSize;
-    if(parseInt(p.dataset.c)!==left || parseInt(p.dataset.r)!==top){
-      correcto=false;
+  let empty={r:rows-1,c:cols-1}; // pieza vacía
+  function drawPuzzle(){
+    ctx.clearRect(0,0,size,size);
+    pieces.forEach((p,i)=>{
+      const r=Math.floor(i/cols);
+      const c=i%cols;
+      if(p.r!==rows-1 || p.c!==cols-1){
+        ctx.drawImage(img,
+          p.c*pieceSize,p.r*pieceSize,pieceSize,pieceSize,
+          c*pieceSize,r*pieceSize,pieceSize,pieceSize);
+      }
+    });
+  }
+
+  canvas.onclick=function(e){
+    const x=Math.floor(e.offsetX/pieceSize);
+    const y=Math.floor(e.offsetY/pieceSize);
+    const idx=y*cols+x;
+    const p=pieces[idx];
+    if((Math.abs(empty.r - p.r)+Math.abs(empty.c - p.c))===1){
+      // mover
+      const emptyIdx=pieces.findIndex(piece=>piece.r===empty.r && piece.c===empty.c);
+      pieces[emptyIdx]=p;
+      pieces[idx]={r:empty.r,c:empty.c};
+      empty=p;
+      drawPuzzle();
+      comprobarVictoria();
     }
-  });
-  if(correcto){ setTimeout(()=>alert("🎉 ¡Completaste el rompecabezas!"),200); }
+  };
+
+  function comprobarVictoria(){
+    let correcto=true;
+    pieces.forEach((p,i)=>{
+      if(p.r!==Math.floor(i/cols) || p.c!==i%cols){correcto=false;}
+    });
+    if(correcto){
+      setTimeout(()=>alert("🎉 ¡Completaste el rompecabezas!"),200);
+    }
+  }
+
+  function shuffle(arr){
+    for(let i=arr.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [arr[i],arr[j]]=[arr[j],arr[i]];
+    }
+  }
 }
 
+
+  
 /* --- Confeti --- */
 function checkFechasEspeciales(){
   const hoy=new Date();
