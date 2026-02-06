@@ -146,8 +146,10 @@
 <canvas id="canvas"></canvas>
 
 <script>
-let lluviaPrincipalIniciada=false;
+/* --- VARIABLES GLOBALES DE CONTROL --- */
+let lluviaPrincipalIniciada = false;
 let idAnimacionConfeti = null;
+let idAnimacionFotos = null; // NUEVA variable para controlar las fotos
 
 /* --- Funciones Principales --- */
 function iniciarSorpresa(){
@@ -162,7 +164,7 @@ function iniciarSorpresa(){
     iniciarAnimacion();
     lluviaPrincipalIniciada=true;
   }
-  // Al iniciar, pasamos "true" para que SI muestre el texto
+  // Al inicio: Confeti SÍ, Mensaje SÍ (true)
   checkFechasEspeciales(true);
 }
 
@@ -281,12 +283,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   btnFotos.addEventListener("click",()=>{
     mostrarPantalla('fotosScreen');
-    detenerConfeti(); // Detener para evitar LAG
+    detenerConfeti(); 
     iniciarLluviaFotos();
   });
 
   btnRegresarRecuerdos.addEventListener("click",()=>{regresarPantalla();});
-  btnRegresarFotos.addEventListener("click",()=>{regresarPantalla();});
+  
+  // AL REGRESAR DE FOTOS: Detenemos la lluvia de fotos y reactivamos confeti
+  btnRegresarFotos.addEventListener("click",()=>{
+    detenerLluviaFotos(); // <--- IMPORTANTE: Detener fotos para liberar memoria
+    regresarPantalla();
+  });
 
   btnPuzzle.addEventListener("click", () => {
     document.getElementById('recuerdosScreen').style.display = 'none';
@@ -327,7 +334,7 @@ function regresarPantalla(){
   const ctx=canvas.getContext('2d');
   lanzarExplosionYFrase(ctx,canvas);
   
-  // Al regresar, pasamos "false" para que REACTIVE el confeti, PERO NO el texto
+  // Al regresar: Confeti SÍ, Mensaje NO (false)
   checkFechasEspeciales(false);
 }
 
@@ -354,8 +361,23 @@ function iniciarLluviaRecuerdos(){
   draw();
 }
 
-/* --- Fotos cayendo --- */
+/* --- Fotos cayendo (CON CONTROL DE MEMORIA) --- */
+function detenerLluviaFotos(){
+  // Si hay animación corriendo, la cancelamos
+  if(idAnimacionFotos){
+    cancelAnimationFrame(idAnimacionFotos);
+    idAnimacionFotos = null;
+  }
+  // Limpiamos el canvas para que no queden fotos congeladas
+  const canvas = document.getElementById('canvasFotos');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width, canvas.height);
+}
+
 function iniciarLluviaFotos(){
+  // Primero limpiamos cualquier proceso anterior por seguridad
+  detenerLluviaFotos();
+
   const canvas=document.getElementById('canvasFotos');
   const ctx=canvas.getContext('2d');
   canvas.width=window.innerWidth;
@@ -399,7 +421,8 @@ function iniciarLluviaFotos(){
         f.x=Math.random()*canvas.width;
       }
     });
-    requestAnimationFrame(draw);
+    // Guardamos el ID de la animación
+    idAnimacionFotos = requestAnimationFrame(draw);
   }
   draw();
 }
@@ -521,7 +544,7 @@ function checkFechasEspeciales(mostrarTexto = true){
   // PRUEBA PARA HOY DÍA 6
   if(d===6){ mensaje="🎉 Prueba de Confeti Infinito 💖"; }
 
-  // Si hay mensaje, lanzamos confeti (y pasamos la opción de mostrar texto o no)
+  // Si hay mensaje, llamamos a la función
   if(mensaje){ lanzarConfeti(mensaje, mostrarTexto); }
 }
 
@@ -533,28 +556,31 @@ function detenerConfeti(){
   const canvas=document.getElementById('confetiCanvas');
   const ctx=canvas.getContext('2d');
   ctx.clearRect(0,0,canvas.width,canvas.height);
+  
+  // Asegurar que el texto se oculte
+  document.getElementById('confetiMensaje').style.display = 'none';
 }
 
 function lanzarConfeti(mensaje, mostrarTexto){
-  // Si ya hay animación corriendo, no hacemos nada (protección)
-  if(idAnimacionConfeti) return;
-
-  const canvas=document.getElementById('confetiCanvas');
-  const ctx=canvas.getContext('2d');
-  const msg=document.getElementById('confetiMensaje');
-  canvas.width=window.innerWidth;
-  canvas.height=window.innerHeight;
+  const msg = document.getElementById('confetiMensaje');
+  const canvas = document.getElementById('confetiCanvas');
+  const ctx = canvas.getContext('2d');
   
-  // SOLO mostramos el texto si mostrarTexto es true
+  // CONTROL DE TEXTO
   if (mostrarTexto) {
-    msg.innerText=mensaje;
-    msg.style.display='block';
-    setTimeout(()=>{ msg.style.display='none'; }, 5000);
+    msg.innerText = mensaje;
+    msg.style.display = 'block';
+    setTimeout(()=>{ msg.style.display = 'none'; }, 5000);
   } else {
-    // Si es false, nos aseguramos que esté oculto
-    msg.style.display='none';
+    // Si no queremos texto, lo ocultamos a la fuerza
+    msg.style.display = 'none';
   }
 
+  // Si la animación YA está corriendo, NO la reiniciamos (para no duplicar partículas)
+  if(idAnimacionConfeti) return;
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
   const confetis=[];
   for(let i=0;i<200;i++){
     confetis.push({
