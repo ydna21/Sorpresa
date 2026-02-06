@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sorpresa</title>
+<title>Sorpresa para ti</title>
 <style>
   body{margin:0;background:black;overflow:hidden;font-family:'Courier New',monospace;}
   /* Inicio */
@@ -56,33 +56,21 @@
 
   /* Confeti */
   #confetiCanvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:100;}
-  /* --- NUEVO globo de mensaje --- */
   #confetiMensaje{
-    position:fixed;
-    top:50%;left:50%;
-    transform:translate(-50%,-50%);
-    background:rgba(255,255,255,0.9);
-    color:#ff69b4;
-    font-size:2rem;
-    font-weight:bold;
-    text-align:center;
-    padding:30px 40px;
-    border-radius:20px;
-    box-shadow:0 0 30px #ff69b4;
-    z-index:101;
-    display:none;
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+    background:rgba(255,255,255,0.9);color:#ff69b4;font-size:2rem;font-weight:bold;
+    text-align:center;padding:30px 40px;border-radius:20px;box-shadow:0 0 30px #ff69b4;
+    z-index:101;display:none;
   }
 </style>
 </head>
 <body>
 
-<!-- Pantalla de inicio -->
 <div id="inicio">
   <h1>🎁 Tengo algo especial para ti</h1>
   <button onclick="iniciarSorpresa()">Haz clic para abrir</button>
 </div>
 
-<!-- Pantalla principal -->
 <div id="contador"></div>
 <div id="tiempoTotal"></div>
 <div class="overlay" id="contenido">
@@ -97,10 +85,6 @@
 </div>
 <div class="final-message" id="finalMessage">Gracias por dejarme formar parte de tu vida❤️</div>
 
-
-
-  
-<!-- Pantalla de recuerdos -->
 <div id="recuerdosScreen">
   <canvas id="canvasRecuerdos"></canvas>
   <div id="recuerdosContent">
@@ -111,10 +95,10 @@
     </ul>
     <button id="btnRegresarRecuerdos">⬅️ Regresar</button>
     <button id="btnRompecabezas">🧩 Rompecabezas</button>
-<button id="btnCarta">💌 Carta secreta</button>
+    <button id="btnCarta" style="display:none;">💌 Carta secreta</button>
   </div>
 </div>
-<!-- 🔹 Nuevo apartado para el rompecabezas -->
+
 <div id="puzzleScreen" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
   background:black;z-index:30;flex-direction:column;align-items:center;justify-content:center;">
   <canvas id="puzzleCanvas" width="300" height="300"
@@ -124,7 +108,6 @@
     cursor:pointer;box-shadow:0 0 15px #ff69b4;">⬅️ Regresar</button>
 </div>
 
-<!-- 🔹 Carta secreta modal -->
 <div id="cartaModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
   background:rgba(0,0,0,0.8);z-index:40;flex-direction:column;align-items:center;justify-content:center;
   text-align:center;padding:20px;">
@@ -141,11 +124,6 @@
   </div>
 </div>
 
-
-
-
-  
-<!-- Pantalla de fotos -->
 <div id="fotosScreen">
   <canvas id="canvasFotos"></canvas>
   <div id="fotosContent">
@@ -154,13 +132,11 @@
   </div>
 </div>
 
-<!-- Overlay para foto grande -->
 <div id="fotoGrandeOverlay">
   <img id="fotoGrande" src="" alt="Foto grande">
   <button id="cerrarFoto">Cerrar</button>
 </div>
 
-<!-- Confeti -->
 <canvas id="confetiCanvas"></canvas>
 <div id="confetiMensaje"></div>
 
@@ -171,6 +147,8 @@
 
 <script>
 let lluviaPrincipalIniciada=false;
+
+/* --- Funciones Principales --- */
 function iniciarSorpresa(){
   document.getElementById('inicio').style.display='none';
   document.getElementById('contenido').style.display='flex';
@@ -273,13 +251,31 @@ function lanzarExplosionYFrase(ctx,canvas){
   },1000);
 }
 
-/* --- Cambio de pantallas --- */
-document.addEventListener("DOMContentLoaded",()=>{
+/* --- Control de Pantallas y Botones --- */
+document.addEventListener("DOMContentLoaded", () => {
   const btnRecuerdos=document.getElementById("btnRecuerdos");
   const btnFotos=document.getElementById("btnFotos");
   const btnRegresarRecuerdos=document.getElementById("btnRegresarRecuerdos");
   const btnRegresarFotos=document.getElementById("btnRegresarFotos");
+  
+  // Elementos Carta Secreta
+  const btnPuzzle = document.getElementById("btnRompecabezas");
+  const btnCarta = document.getElementById("btnCarta");
+  const puzzleScreen = document.getElementById("puzzleScreen");
+  const cartaModal = document.getElementById("cartaModal");
 
+  // --- LÓGICA DE FECHA PARA LA CARTA ---
+  const hoy = new Date();
+  const esAniversario = (hoy.getDate() === 11 && hoy.getMonth() === 7); 
+  // Mes 7 es Agosto (Enero es 0)
+
+  if (esAniversario) {
+    btnCarta.style.display = "inline-block"; // Se muestra SOLO el 11 de Agosto
+  } else {
+    btnCarta.style.display = "none";
+  }
+
+  // Navegación Básica
   btnRecuerdos.addEventListener("click",()=>{
     mostrarPantalla('recuerdosScreen');
     iniciarLluviaRecuerdos();
@@ -292,6 +288,26 @@ document.addEventListener("DOMContentLoaded",()=>{
 
   btnRegresarRecuerdos.addEventListener("click",()=>{regresarPantalla();});
   btnRegresarFotos.addEventListener("click",()=>{regresarPantalla();});
+
+  // Navegación Puzzle y Carta
+  btnPuzzle.addEventListener("click", () => {
+    document.getElementById('recuerdosScreen').style.display = 'none';
+    puzzleScreen.style.display = 'flex';
+    iniciarPuzzle();
+  });
+
+  document.getElementById("btnRegresarPuzzle").addEventListener("click", () => {
+    puzzleScreen.style.display = 'none';
+    document.getElementById('recuerdosScreen').style.display = 'flex';
+  });
+
+  btnCarta.addEventListener("click", () => {
+    cartaModal.style.display = 'flex';
+  });
+  
+  document.getElementById("cerrarCarta").addEventListener("click", () => {
+    cartaModal.style.display = 'none';
+  });
 });
 
 function mostrarPantalla(id){
@@ -396,36 +412,7 @@ document.getElementById('cerrarFoto').addEventListener('click',()=>{
   document.getElementById('fotoGrandeOverlay').style.display='none';
 });
 
-
-
-  
-  /* --- Botones nuevos dentro de Recuerdos --- */
-document.addEventListener("DOMContentLoaded",()=>{
-  const btnPuzzle=document.getElementById("btnRompecabezas");
-  const btnCarta=document.getElementById("btnCarta");
-  const puzzleScreen=document.getElementById("puzzleScreen");
-  const cartaModal=document.getElementById("cartaModal");
-
-  btnPuzzle.addEventListener("click",()=>{
-    document.getElementById('recuerdosScreen').style.display='none';
-    puzzleScreen.style.display='flex';
-    iniciarPuzzle();
-  });
-
-  document.getElementById("btnRegresarPuzzle").addEventListener("click",()=>{
-    puzzleScreen.style.display='none';
-    document.getElementById('recuerdosScreen').style.display='flex';
-  });
-
-  btnCarta.addEventListener("click",()=>{ cartaModal.style.display='flex'; });
-  document.getElementById("cerrarCarta").addEventListener("click",()=>{ cartaModal.style.display='none'; });
-});
-
-
-
-
-  
-/* --- Rompecabezas 3x3 CORREGIDO --- */
+/* --- Rompecabezas CORREGIDO --- */
 function iniciarPuzzle(){
   const canvas = document.getElementById("puzzleCanvas");
   const ctx = canvas.getContext("2d");
@@ -433,27 +420,19 @@ function iniciarPuzzle(){
   const rows = 3, cols = 3;
   const pieceSize = size / rows;
   const img = new Image();
-  // Asegúrate que esta imagen exista
   img.src = "puzzle.jpg"; 
 
-  // Representación del tablero (índices del 0 al 8)
   let board = []; 
-  let emptyIndex = 8; // El índice 8 es la esquina inferior derecha (el hueco)
+  let emptyIndex = 8; 
 
   img.onload = function(){
-    // 1. Crear el tablero ordenado
     board = [];
-    for(let i=0; i<rows*cols; i++){
-      board.push(i); // Guardamos el índice original de la pieza
-    }
-    // 2. Mezclar (Haciendo movimientos válidos para asegurar que tenga solución)
+    for(let i=0; i<rows*cols; i++) board.push(i);
     shuffleBoard();
-    // 3. Dibujar
     drawPuzzle();
   };
 
   function shuffleBoard() {
-    // Hacemos 100 movimientos aleatorios válidos para desordenarlo
     for (let i = 0; i < 100; i++) {
       const neighbors = getNeighbors(emptyIndex);
       const randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
@@ -466,42 +445,29 @@ function iniciarPuzzle(){
     const r = Math.floor(idx / cols);
     const c = idx % cols;
     const neighbors = [];
-    
-    if (r > 0) neighbors.push(idx - cols); // Arriba
-    if (r < rows - 1) neighbors.push(idx + cols); // Abajo
-    if (c > 0) neighbors.push(idx - 1); // Izquierda
-    if (c < cols - 1) neighbors.push(idx + 1); // Derecha
-    
+    if (r > 0) neighbors.push(idx - cols); 
+    if (r < rows - 1) neighbors.push(idx + cols); 
+    if (c > 0) neighbors.push(idx - 1); 
+    if (c < cols - 1) neighbors.push(idx + 1); 
     return neighbors;
   }
 
   function drawPuzzle(){
     ctx.clearRect(0, 0, size, size);
-    
     board.forEach((pieceOriginalIndex, currentPosIndex) => {
-      // Si es la pieza vacía (la última, índice 8), no dibujamos nada
       if (pieceOriginalIndex === rows * cols - 1) return;
-
-      // Calcular dónde va esta pieza en el tablero actual
       const drawRow = Math.floor(currentPosIndex / cols);
       const drawCol = currentPosIndex % cols;
-
-      // Calcular qué parte de la imagen original debemos recortar
       const imgRow = Math.floor(pieceOriginalIndex / cols);
       const imgCol = pieceOriginalIndex % cols;
-      
       const imgSize = Math.min(img.width, img.height);
-      const sx = (img.width - imgSize) / 2; // Centrar recorte
+      const sx = (img.width - imgSize) / 2;
       const sy = (img.height - imgSize) / 2;
-
-      // Dibujar la pieza
       ctx.drawImage(
         img,
-        sx + imgCol * (imgSize/cols), sy + imgRow * (imgSize/rows), (imgSize/cols), (imgSize/rows), // Origen
-        drawCol * pieceSize, drawRow * pieceSize, pieceSize, pieceSize // Destino
+        sx + imgCol * (imgSize/cols), sy + imgRow * (imgSize/rows), (imgSize/cols), (imgSize/rows),
+        drawCol * pieceSize, drawRow * pieceSize, pieceSize, pieceSize
       );
-
-      // Borde rosa
       ctx.strokeStyle = "#ff69b4";
       ctx.strokeRect(drawCol * pieceSize, drawRow * pieceSize, pieceSize, pieceSize);
     });
@@ -511,11 +477,8 @@ function iniciarPuzzle(){
     const col = Math.floor(x / pieceSize);
     const row = Math.floor(y / pieceSize);
     const clickedIndex = row * cols + col;
-
-    // Verificar si el clic es vecino del hueco
     const neighbors = getNeighbors(emptyIndex);
     if (neighbors.includes(clickedIndex)) {
-      // Intercambiar
       swap(emptyIndex, clickedIndex);
       emptyIndex = clickedIndex;
       drawPuzzle();
@@ -528,42 +491,27 @@ function iniciarPuzzle(){
   }
 
   function checkWin() {
-    // Verificar si cada pieza está en su posición original (board[i] == i)
     const isWin = board.every((val, index) => val === index);
     if (isWin) {
       setTimeout(() => alert("🎉 ¡Felicidades mi amor! Completaste el rompecabezas 💖"), 200);
     }
   }
 
-  // --- Eventos ---
-  // Mouse
-  canvas.onmousedown = (e) => {
-    handleClick(e.offsetX, e.offsetY);
-  };
-  
-  // Táctil (Móviles)
+  canvas.onmousedown = (e) => { handleClick(e.offsetX, e.offsetY); };
   canvas.ontouchstart = (e) => {
-    e.preventDefault(); // Evitar scroll
+    e.preventDefault();
     const rect = canvas.getBoundingClientRect();
-    const touch = e.touches[0];
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
-    handleClick(x, y);
+    handleClick(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top);
   };
 }
 
-
-
-  
-
-  
 /* --- Confeti --- */
 function checkFechasEspeciales(){
   const hoy=new Date();
   const d=hoy.getDate();
   const m=hoy.getMonth(); // 0 enero
   let mensaje=null;
-  if(d===9){ mensaje="Feliz otro mes más juntos 💖"; }
+  if(d===6){ mensaje="Feliz otro mes más juntos 💖"; }
   if(d===11){ mensaje="Feliz otro mes más juntos 💖"; }
   if(d===11 && m===7){ mensaje="🎉 Feliz aniversario 💖, otro año mas junto a ti💖"; }
   if(d===8 && m===6){ mensaje="🎂 Feliz cumpleaños amor 💖"; }
