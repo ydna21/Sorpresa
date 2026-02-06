@@ -165,6 +165,7 @@ function iniciarSorpresa(){
 }
 
 function calcularDiasJuntos(){
+  // Fecha inicio relación: 11 Agosto 2023
   const inicio=new Date("2023-08-11T20:00:00");
   const hoy=new Date();
   const diff=hoy-inicio;
@@ -266,11 +267,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- LÓGICA DE FECHA PARA LA CARTA ---
   const hoy = new Date();
-  const esAniversario = (hoy.getDate() === 11 && hoy.getMonth() === 7); 
-  // Mes 7 es Agosto (Enero es 0)
+  const esAniversario = (hoy.getDate() === 11 && hoy.getMonth() === 7); // 11 Agosto
 
   if (esAniversario) {
-    btnCarta.style.display = "inline-block"; // Se muestra SOLO el 11 de Agosto
+    btnCarta.style.display = "inline-block"; // Solo visible el 11 de Agosto
   } else {
     btnCarta.style.display = "none";
   }
@@ -412,7 +412,7 @@ document.getElementById('cerrarFoto').addEventListener('click',()=>{
   document.getElementById('fotoGrandeOverlay').style.display='none';
 });
 
-/* --- Rompecabezas CORREGIDO --- */
+/* --- Rompecabezas CORREGIDO Y FUNCIONAL --- */
 function iniciarPuzzle(){
   const canvas = document.getElementById("puzzleCanvas");
   const ctx = canvas.getContext("2d");
@@ -505,17 +505,22 @@ function iniciarPuzzle(){
   };
 }
 
-/* --- Confeti --- */
+/* --- Confeti Infinito --- */
 function checkFechasEspeciales(){
   const hoy=new Date();
   const d=hoy.getDate();
   const m=hoy.getMonth(); // 0 enero
   let mensaje=null;
-  if(d===6){ mensaje="Feliz otro mes más juntos 💖"; }
+  
+  // -- FECHAS REALES --
   if(d===11){ mensaje="Feliz otro mes más juntos 💖"; }
   if(d===11 && m===7){ mensaje="🎉 Feliz aniversario 💖, otro año mas junto a ti💖"; }
   if(d===8 && m===6){ mensaje="🎂 Feliz cumpleaños amor 💖"; }
   if(d===10 && m===1){ mensaje="🎂 Feliz cumpleaños 🎉"; }
+
+  // -- PRUEBA PARA HOY DÍA 6 --
+  if(d===6){ mensaje="🎉 Prueba de Confeti Infinito 💖"; }
+
   if(mensaje){ lanzarConfeti(mensaje); }
 }
 
@@ -525,8 +530,11 @@ function lanzarConfeti(mensaje){
   const msg=document.getElementById('confetiMensaje');
   canvas.width=window.innerWidth;
   canvas.height=window.innerHeight;
+  
+  // Mostrar mensaje y ocultarlo a los 5 segundos
   msg.innerText=mensaje;
   msg.style.display='block';
+  setTimeout(()=>{ msg.style.display='none'; }, 5000);
 
   const confetis=[];
   for(let i=0;i<200;i++){
@@ -540,9 +548,8 @@ function lanzarConfeti(mensaje){
     });
   }
 
-  let start=performance.now();
-  function draw(now){
-    const elapsed=now-start;
+  // Bucle infinito (sin parar)
+  function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     confetis.forEach(c=>{
       ctx.beginPath();
@@ -551,17 +558,13 @@ function lanzarConfeti(mensaje){
       ctx.fill();
       c.x+=c.dx;
       c.y+=c.dy;
+      // Rebote infinito
       if(c.y>canvas.height) c.y=-10;
       if(c.x>canvas.width || c.x<0) c.dx*=-1;
     });
-    if(elapsed<5000){ // dura 5 segundos
-      requestAnimationFrame(draw);
-    } else {
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      msg.style.display='none';
-    }
+    requestAnimationFrame(draw);
   }
-  requestAnimationFrame(draw);
+  draw();
 }
 </script>
 </body>
