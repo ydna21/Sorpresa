@@ -147,7 +147,7 @@
 
 <script>
 let lluviaPrincipalIniciada=false;
-let idAnimacionConfeti = null; // Variable global para controlar el confeti
+let idAnimacionConfeti = null;
 
 /* --- Funciones Principales --- */
 function iniciarSorpresa(){
@@ -162,7 +162,8 @@ function iniciarSorpresa(){
     iniciarAnimacion();
     lluviaPrincipalIniciada=true;
   }
-  checkFechasEspeciales();
+  // Al iniciar, pasamos "true" para que SI muestre el texto
+  checkFechasEspeciales(true);
 }
 
 function calcularDiasJuntos(){
@@ -259,13 +260,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnRegresarRecuerdos=document.getElementById("btnRegresarRecuerdos");
   const btnRegresarFotos=document.getElementById("btnRegresarFotos");
   
-  // Elementos Carta Secreta
   const btnPuzzle = document.getElementById("btnRompecabezas");
   const btnCarta = document.getElementById("btnCarta");
   const puzzleScreen = document.getElementById("puzzleScreen");
   const cartaModal = document.getElementById("cartaModal");
 
-  // --- LÓGICA DE FECHA PARA LA CARTA ---
   const hoy = new Date();
   const esAniversario = (hoy.getDate() === 11 && hoy.getMonth() === 7); 
 
@@ -275,23 +274,20 @@ document.addEventListener("DOMContentLoaded", () => {
     btnCarta.style.display = "none";
   }
 
-  // Navegación Básica
   btnRecuerdos.addEventListener("click",()=>{
     mostrarPantalla('recuerdosScreen');
     iniciarLluviaRecuerdos();
   });
 
-  // --- AQUÍ ESTÁ EL CAMBIO PARA EVITAR LAG ---
   btnFotos.addEventListener("click",()=>{
     mostrarPantalla('fotosScreen');
-    detenerConfeti(); // <--- Detiene el confeti al entrar
+    detenerConfeti(); // Detener para evitar LAG
     iniciarLluviaFotos();
   });
 
   btnRegresarRecuerdos.addEventListener("click",()=>{regresarPantalla();});
   btnRegresarFotos.addEventListener("click",()=>{regresarPantalla();});
 
-  // Navegación Puzzle y Carta
   btnPuzzle.addEventListener("click", () => {
     document.getElementById('recuerdosScreen').style.display = 'none';
     puzzleScreen.style.display = 'flex';
@@ -331,8 +327,8 @@ function regresarPantalla(){
   const ctx=canvas.getContext('2d');
   lanzarExplosionYFrase(ctx,canvas);
   
-  // --- AL REGRESAR, VOLVEMOS A VERIFICAR SI HAY QUE LANZAR CONFETI ---
-  checkFechasEspeciales();
+  // Al regresar, pasamos "false" para que REACTIVE el confeti, PERO NO el texto
+  checkFechasEspeciales(false);
 }
 
 function iniciarLluviaRecuerdos(){
@@ -510,8 +506,8 @@ function iniciarPuzzle(){
   };
 }
 
-/* --- Confeti Infinito y Controlado --- */
-function checkFechasEspeciales(){
+/* --- Confeti Controlado y Mensajes --- */
+function checkFechasEspeciales(mostrarTexto = true){
   const hoy=new Date();
   const d=hoy.getDate();
   const m=hoy.getMonth(); 
@@ -525,10 +521,10 @@ function checkFechasEspeciales(){
   // PRUEBA PARA HOY DÍA 6
   if(d===6){ mensaje="🎉 Prueba de Confeti Infinito 💖"; }
 
-  if(mensaje){ lanzarConfeti(mensaje); }
+  // Si hay mensaje, lanzamos confeti (y pasamos la opción de mostrar texto o no)
+  if(mensaje){ lanzarConfeti(mensaje, mostrarTexto); }
 }
 
-// Nueva función para DETENER el confeti
 function detenerConfeti(){
   if(idAnimacionConfeti){
     cancelAnimationFrame(idAnimacionConfeti);
@@ -536,11 +532,11 @@ function detenerConfeti(){
   }
   const canvas=document.getElementById('confetiCanvas');
   const ctx=canvas.getContext('2d');
-  ctx.clearRect(0,0,canvas.width,canvas.height); // Limpia la pantalla
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 }
 
-function lanzarConfeti(mensaje){
-  // Si ya hay confeti corriendo, no lanzamos otro encima (ahorrar memoria)
+function lanzarConfeti(mensaje, mostrarTexto){
+  // Si ya hay animación corriendo, no hacemos nada (protección)
   if(idAnimacionConfeti) return;
 
   const canvas=document.getElementById('confetiCanvas');
@@ -549,10 +545,15 @@ function lanzarConfeti(mensaje){
   canvas.width=window.innerWidth;
   canvas.height=window.innerHeight;
   
-  // Mostrar mensaje solo 5 segundos
-  msg.innerText=mensaje;
-  msg.style.display='block';
-  setTimeout(()=>{ msg.style.display='none'; }, 5000);
+  // SOLO mostramos el texto si mostrarTexto es true
+  if (mostrarTexto) {
+    msg.innerText=mensaje;
+    msg.style.display='block';
+    setTimeout(()=>{ msg.style.display='none'; }, 5000);
+  } else {
+    // Si es false, nos aseguramos que esté oculto
+    msg.style.display='none';
+  }
 
   const confetis=[];
   for(let i=0;i<200;i++){
@@ -578,7 +579,6 @@ function lanzarConfeti(mensaje){
       if(c.y>canvas.height) c.y=-10;
       if(c.x>canvas.width || c.x<0) c.dx*=-1;
     });
-    // Guardamos el ID para poder detenerlo luego
     idAnimacionConfeti = requestAnimationFrame(draw);
   }
   draw();
