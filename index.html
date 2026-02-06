@@ -421,7 +421,11 @@ document.addEventListener("DOMContentLoaded",()=>{
   document.getElementById("cerrarCarta").addEventListener("click",()=>{ cartaModal.style.display='none'; });
 });
 
-/* --- Rompecabezas 3x3 arrastrable --- */
+
+
+
+  
+/* --- Rompecabezas 3x3 CORREGIDO --- */
 function iniciarPuzzle(){
   const canvas = document.getElementById("puzzleCanvas");
   const ctx = canvas.getContext("2d");
@@ -429,93 +433,128 @@ function iniciarPuzzle(){
   const rows = 3, cols = 3;
   const pieceSize = size / rows;
   const img = new Image();
-  img.src = "puzzle.jpg";
+  // Asegúrate que esta imagen exista
+  img.src = "puzzle.jpg"; 
 
-  let pieces = [];
-  let empty = { r: rows - 1, c: cols - 1 };
-  let draggingPiece = null;
+  // Representación del tablero (índices del 0 al 8)
+  let board = []; 
+  let emptyIndex = 8; // El índice 8 es la esquina inferior derecha (el hueco)
 
   img.onload = function(){
-    pieces = [];
-    for(let r=0; r<rows; r++){
-      for(let c=0; c<cols; c++){
-        if(r === rows-1 && c === cols-1) continue; // pieza vacía
-        pieces.push({r, c});
-      }
+    // 1. Crear el tablero ordenado
+    board = [];
+    for(let i=0; i<rows*cols; i++){
+      board.push(i); // Guardamos el índice original de la pieza
     }
-    shuffle(pieces);
+    // 2. Mezclar (Haciendo movimientos válidos para asegurar que tenga solución)
+    shuffleBoard();
+    // 3. Dibujar
     drawPuzzle();
   };
 
-  function drawPuzzle(){
-    ctx.clearRect(0,0,size,size);
-    pieces.forEach((p,i)=>{
-      const r = Math.floor(i/cols);
-      const c = i % cols;
-      const imgSize = Math.min(img.width,img.height);
-      const sx = (img.width-imgSize)/2;
-      const sy = (img.height-imgSize)/2;
+  function shuffleBoard() {
+    // Hacemos 100 movimientos aleatorios válidos para desordenarlo
+    for (let i = 0; i < 100; i++) {
+      const neighbors = getNeighbors(emptyIndex);
+      const randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
+      swap(emptyIndex, randomNeighbor);
+      emptyIndex = randomNeighbor;
+    }
+  }
 
+  function getNeighbors(idx) {
+    const r = Math.floor(idx / cols);
+    const c = idx % cols;
+    const neighbors = [];
+    
+    if (r > 0) neighbors.push(idx - cols); // Arriba
+    if (r < rows - 1) neighbors.push(idx + cols); // Abajo
+    if (c > 0) neighbors.push(idx - 1); // Izquierda
+    if (c < cols - 1) neighbors.push(idx + 1); // Derecha
+    
+    return neighbors;
+  }
+
+  function drawPuzzle(){
+    ctx.clearRect(0, 0, size, size);
+    
+    board.forEach((pieceOriginalIndex, currentPosIndex) => {
+      // Si es la pieza vacía (la última, índice 8), no dibujamos nada
+      if (pieceOriginalIndex === rows * cols - 1) return;
+
+      // Calcular dónde va esta pieza en el tablero actual
+      const drawRow = Math.floor(currentPosIndex / cols);
+      const drawCol = currentPosIndex % cols;
+
+      // Calcular qué parte de la imagen original debemos recortar
+      const imgRow = Math.floor(pieceOriginalIndex / cols);
+      const imgCol = pieceOriginalIndex % cols;
+      
+      const imgSize = Math.min(img.width, img.height);
+      const sx = (img.width - imgSize) / 2; // Centrar recorte
+      const sy = (img.height - imgSize) / 2;
+
+      // Dibujar la pieza
       ctx.drawImage(
         img,
-        sx + p.c * imgSize/cols, sy + p.r * imgSize/rows, imgSize/cols, imgSize/rows,
-        c * pieceSize, r * pieceSize, pieceSize, pieceSize
+        sx + imgCol * (imgSize/cols), sy + imgRow * (imgSize/rows), (imgSize/cols), (imgSize/rows), // Origen
+        drawCol * pieceSize, drawRow * pieceSize, pieceSize, pieceSize // Destino
       );
+
+      // Borde rosa
       ctx.strokeStyle = "#ff69b4";
-      ctx.strokeRect(c*pieceSize, r*pieceSize, pieceSize, pieceSize);
+      ctx.strokeRect(drawCol * pieceSize, drawRow * pieceSize, pieceSize, pieceSize);
     });
   }
 
-  function getPieceAt(x, y){
-    const col = Math.floor(x/pieceSize);
-    const row = Math.floor(y/pieceSize);
-    const idx = row*cols + col;
-    return {idx, row, col};
-  }
+  function handleClick(x, y) {
+    const col = Math.floor(x / pieceSize);
+    const row = Math.floor(y / pieceSize);
+    const clickedIndex = row * cols + col;
 
-  function movePiece(idx){
-    const p = pieces[idx];
-    if(Math.abs(empty.r - p.r) + Math.abs(empty.c - p.c) === 1){
-      const emptyIdx = pieces.findIndex(piece => piece.r === empty.r && piece.c === empty.c);
-      pieces[emptyIdx] = p;
-      pieces[idx] = {r: empty.r, c: empty.c};
-      empty = p;
+    // Verificar si el clic es vecino del hueco
+    const neighbors = getNeighbors(emptyIndex);
+    if (neighbors.includes(clickedIndex)) {
+      // Intercambiar
+      swap(emptyIndex, clickedIndex);
+      emptyIndex = clickedIndex;
       drawPuzzle();
-      comprobarVictoria();
+      checkWin();
     }
   }
 
-  function comprobarVictoria(){
-    let correcto = true;
-    pieces.forEach((p,i)=>{
-      if(p.r !== Math.floor(i/cols) || p.c !== i%cols) correcto=false;
-    });
-    if(correcto) setTimeout(()=>alert("🎉 ¡Completaste el rompecabezas!"),200);
+  function swap(i, j) {
+    [board[i], board[j]] = [board[j], board[i]];
   }
 
-  function shuffle(arr){
-    for(let i=arr.length-1;i>0;i--){
-      const j=Math.floor(Math.random()*(i+1));
-      [arr[i],arr[j]]=[arr[j],arr[i]];
+  function checkWin() {
+    // Verificar si cada pieza está en su posición original (board[i] == i)
+    const isWin = board.every((val, index) => val === index);
+    if (isWin) {
+      setTimeout(() => alert("🎉 ¡Felicidades mi amor! Completaste el rompecabezas 💖"), 200);
     }
   }
 
-  // Eventos mouse/táctil
-  canvas.addEventListener("mousedown", e => {
-    const {idx} = getPieceAt(e.offsetX, e.offsetY);
-    movePiece(idx);
-  });
-  canvas.addEventListener("touchstart", e => {
+  // --- Eventos ---
+  // Mouse
+  canvas.onmousedown = (e) => {
+    handleClick(e.offsetX, e.offsetY);
+  };
+  
+  // Táctil (Móviles)
+  canvas.ontouchstart = (e) => {
+    e.preventDefault(); // Evitar scroll
     const rect = canvas.getBoundingClientRect();
     const touch = e.touches[0];
     const x = touch.clientX - rect.left;
     const y = touch.clientY - rect.top;
-    const {idx} = getPieceAt(x, y);
-    movePiece(idx);
-  });
+    handleClick(x, y);
+  };
 }
 
 
+
+  
 
   
 /* --- Confeti --- */
