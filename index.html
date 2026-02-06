@@ -1,3 +1,19 @@
+¡Tienes toda la razón! El navegador está intentando dibujar el confeti infinito + la lluvia de fotos + las animaciones de fondo al mismo tiempo, y eso consume mucha memoria gráfica (GPU), lo que causa el "lag" (lentitud).
+
+La solución es justo la que propones: **apagar el confeti al entrar a fotos y volverlo a encender al salir**.
+
+Aquí tienes el código **completo y optimizado**.
+
+### ¿Qué cambios hice?
+
+1. Creé una "llave de paso" (`idAnimacionConfeti`) para poder controlar el confeti.
+2. Agregué la función `detenerConfeti()` que limpia la pantalla y frena el proceso cuando entras a **Fotos**.
+3. Modifiqué el botón de "Regresar" para que verifique la fecha y vuelva a lanzar el confeti automáticamente.
+4. **Mantuve la fecha de prueba (día 6)** para que veas que funciona ahora mismo.
+
+Copia y pega todo el código:
+
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -147,6 +163,7 @@
 
 <script>
 let lluviaPrincipalIniciada=false;
+let idAnimacionConfeti = null; // Variable global para controlar el confeti
 
 /* --- Funciones Principales --- */
 function iniciarSorpresa(){
@@ -165,7 +182,6 @@ function iniciarSorpresa(){
 }
 
 function calcularDiasJuntos(){
-  // Fecha inicio relación: 11 Agosto 2023
   const inicio=new Date("2023-08-11T20:00:00");
   const hoy=new Date();
   const diff=hoy-inicio;
@@ -267,10 +283,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- LÓGICA DE FECHA PARA LA CARTA ---
   const hoy = new Date();
-  const esAniversario = (hoy.getDate() === 11 && hoy.getMonth() === 7); // 11 Agosto
+  const esAniversario = (hoy.getDate() === 11 && hoy.getMonth() === 7); 
 
   if (esAniversario) {
-    btnCarta.style.display = "inline-block"; // Solo visible el 11 de Agosto
+    btnCarta.style.display = "inline-block"; 
   } else {
     btnCarta.style.display = "none";
   }
@@ -281,8 +297,10 @@ document.addEventListener("DOMContentLoaded", () => {
     iniciarLluviaRecuerdos();
   });
 
+  // --- AQUÍ ESTÁ EL CAMBIO PARA EVITAR LAG ---
   btnFotos.addEventListener("click",()=>{
     mostrarPantalla('fotosScreen');
+    detenerConfeti(); // <--- Detiene el confeti al entrar
     iniciarLluviaFotos();
   });
 
@@ -328,6 +346,9 @@ function regresarPantalla(){
   const canvas=document.getElementById('canvas');
   const ctx=canvas.getContext('2d');
   lanzarExplosionYFrase(ctx,canvas);
+  
+  // --- AL REGRESAR, VOLVEMOS A VERIFICAR SI HAY QUE LANZAR CONFETI ---
+  checkFechasEspeciales();
 }
 
 function iniciarLluviaRecuerdos(){
@@ -412,7 +433,7 @@ document.getElementById('cerrarFoto').addEventListener('click',()=>{
   document.getElementById('fotoGrandeOverlay').style.display='none';
 });
 
-/* --- Rompecabezas CORREGIDO Y FUNCIONAL --- */
+/* --- Rompecabezas CORREGIDO --- */
 function iniciarPuzzle(){
   const canvas = document.getElementById("puzzleCanvas");
   const ctx = canvas.getContext("2d");
@@ -505,33 +526,46 @@ function iniciarPuzzle(){
   };
 }
 
-/* --- Confeti Infinito --- */
+/* --- Confeti Infinito y Controlado --- */
 function checkFechasEspeciales(){
   const hoy=new Date();
   const d=hoy.getDate();
-  const m=hoy.getMonth(); // 0 enero
+  const m=hoy.getMonth(); 
   let mensaje=null;
   
-  // -- FECHAS REALES --
   if(d===11){ mensaje="Feliz otro mes más juntos 💖"; }
   if(d===11 && m===7){ mensaje="🎉 Feliz aniversario 💖, otro año mas junto a ti💖"; }
   if(d===8 && m===6){ mensaje="🎂 Feliz cumpleaños amor 💖"; }
   if(d===10 && m===1){ mensaje="🎂 Feliz cumpleaños 🎉"; }
 
-  // -- PRUEBA PARA HOY DÍA 6 --
+  // PRUEBA PARA HOY DÍA 6
   if(d===6){ mensaje="🎉 Prueba de Confeti Infinito 💖"; }
 
   if(mensaje){ lanzarConfeti(mensaje); }
 }
 
+// Nueva función para DETENER el confeti
+function detenerConfeti(){
+  if(idAnimacionConfeti){
+    cancelAnimationFrame(idAnimacionConfeti);
+    idAnimacionConfeti = null;
+  }
+  const canvas=document.getElementById('confetiCanvas');
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height); // Limpia la pantalla
+}
+
 function lanzarConfeti(mensaje){
+  // Si ya hay confeti corriendo, no lanzamos otro encima (ahorrar memoria)
+  if(idAnimacionConfeti) return;
+
   const canvas=document.getElementById('confetiCanvas');
   const ctx=canvas.getContext('2d');
   const msg=document.getElementById('confetiMensaje');
   canvas.width=window.innerWidth;
   canvas.height=window.innerHeight;
   
-  // Mostrar mensaje y ocultarlo a los 5 segundos
+  // Mostrar mensaje solo 5 segundos
   msg.innerText=mensaje;
   msg.style.display='block';
   setTimeout(()=>{ msg.style.display='none'; }, 5000);
@@ -548,7 +582,6 @@ function lanzarConfeti(mensaje){
     });
   }
 
-  // Bucle infinito (sin parar)
   function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     confetis.forEach(c=>{
@@ -558,14 +591,15 @@ function lanzarConfeti(mensaje){
       ctx.fill();
       c.x+=c.dx;
       c.y+=c.dy;
-      // Rebote infinito
       if(c.y>canvas.height) c.y=-10;
       if(c.x>canvas.width || c.x<0) c.dx*=-1;
     });
-    requestAnimationFrame(draw);
+    // Guardamos el ID para poder detenerlo luego
+    idAnimacionConfeti = requestAnimationFrame(draw);
   }
   draw();
 }
 </script>
 </body>
 </html>
+
