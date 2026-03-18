@@ -54,7 +54,8 @@
 <script>
 // VARIABLES GLOBALES
 let scene, camera, renderer, controls;
-let width, height, sun, planets = [];
+let width, height, sun;
+let detailedPlanets = []; // Nueva estructura para planetas únicos
 let shootingStars = [];
 
 function init() {
@@ -63,28 +64,23 @@ function init() {
 
   // 1. Escena 
   scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x000000); // Fondo negro profundo
 
-  // 2. Fondo del Universo (AÑADIMOS UNA NEBULOSA REAL)
-  const textureLoader = new THREE.TextureLoader();
-  // Esta textura añade un fondo galáctico complejo (blues, purples, pinks)
-  const backgroundTexture = textureLoader.load('https://dl.dropboxusercontent.com/s/7t7i03848w481d6/nebula_background_texture.jpg');
-  scene.background = backgroundTexture;
-
-  // 3. Cámara 
+  // 2. Cámara 
   camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 10000);
-  camera.position.set(0, 150, 400); 
+  camera.position.set(0, 300, 600); // Más elevada y lejana para ver más
 
-  // 4. Renderer 
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  // 3. Renderer 
+  renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(width, height);
   document.getElementById('threeCanvas').appendChild(renderer.domElement);
 
-  // 5. Controles
+  // 4. Controles
   controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true; 
   controls.dampingFactor = 0.05;
-  controls.minDistance = 100;
-  controls.maxDistance = 3000; // Un poco más lejos para apreciar el fondo
+  controls.minDistance = 150;
+  controls.maxDistance = 4000;
 
   // --- Creación de Objetos ---
 
@@ -95,43 +91,82 @@ function init() {
   scene.add(sun);
   
   // Luces
-  const sunLight = new THREE.PointLight(0xff69b4, 2, 1000); 
+  const sunLight = new THREE.PointLight(0xff69b4, 3, 2000); // Brillo rosa más potente
   scene.add(sunLight);
-  const ambientLight = new THREE.AmbientLight(0x404040, 1); // Luz suave
+  const ambientLight = new THREE.AmbientLight(0x404040, 0.8); // Luz suave
   scene.add(ambientLight);
 
-  // Planetas
-  const planetColors = [0xffb6c1, 0x87cefa, 0xdda0dd, 0xffdab9, 0x98fb98];
+  // --- DISEÑO DE PLANETAS DETALLADOS ---
+  // Creamos un sistema más poblado y único (8 planetas)
   
-  for (let i = 0; i < 5; i++) {
-    const pRadius = 10 + Math.random() * 15;
-    const pGeometry = new THREE.SphereGeometry(pRadius, 32, 32);
-    const pMaterial = new THREE.MeshStandardMaterial({ 
-        color: planetColors[i % planetColors.length], 
-        roughness: 0.4 
-    });
-    const planet = new THREE.Mesh(pGeometry, pMaterial);
-    
-    const distance = 160 + i * 100; // Más separación para ver mejor
-    const angle = Math.random() * Math.PI * 2; 
-    const speed = 0.005 + Math.random() * 0.01; 
-
-    planet.position.set(Math.cos(angle) * distance, 0, Math.sin(angle) * distance);
-    
-    planets.push({ mesh: planet, distance, angle, speed, selfRotation: 0.01 + Math.random()*0.02 });
-    scene.add(planet);
-
-    createOrbitRing(distance);
-  }
+  // Planeta 1: Pequeño y rocoso (Mercurio-ish)
+  createDetailedPlanet(10, 0xffb6c1, 150, 0.015);
+  // Planeta 2: Medio y texturizado (Venus-ish)
+  createDetailedPlanet(15, 0xdda0dd, 200, 0.012, 0.4);
+  // Planeta 3: Medio y rocoso (Tierra-ish)
+  createDetailedPlanet(18, 0x87cefa, 260, 0.010, 0.2);
+  // Planeta 4: Pequeño y rocoso (Marte-ish)
+  createDetailedPlanet(12, 0xffdab9, 310, 0.009);
   
+  // Planeta 5: GIGANTE GASEOSO CON ANILLOS (Saturno-ish)
+  const ringPlanetMesh = createDetailedPlanet(50, 0x98fb98, 500, 0.006, 0.1, true);
+  
+  // Planeta 6: Gigante gaseoso medio
+  createDetailedPlanet(40, 0xd8bfd8, 650, 0.005, 0.1);
+  // Planeta 7: Medio y helado
+  createDetailedPlanet(30, 0xafeeee, 800, 0.004);
+  // Planeta 8: Medio y helado
+  createDetailedPlanet(28, 0xb0c4de, 950, 0.0035);
+
   // AÑADIMOS EL SISTEMA DE ESTRELLAS FUGACES
   createShootingStars();
+}
+
+// Función para crear un planeta con parámetros detallados
+function createDetailedPlanet(radius, color, distance, speed, roughness=0.5, hasRing=false) {
+    const geometry = new THREE.SphereGeometry(radius, 32, 32);
+    const material = new THREE.MeshStandardMaterial({ color: color, roughness: roughness, metalness: 0.1 });
+    const mesh = new THREE.Mesh(geometry, material);
+    
+    const angle = Math.random() * Math.PI * 2;
+    mesh.position.set(Math.cos(angle) * distance, 0, Math.sin(angle) * distance);
+    
+    detailedPlanets.push({ mesh: mesh, distance, angle, speed, selfRotation: 0.01 + Math.random()*0.02 });
+    scene.add(mesh);
+    
+    createOrbitRing(distance);
+
+    if (hasRing) {
+        createSaturnRing(mesh, radius);
+    }
+    
+    return mesh;
+}
+
+// Función para crear un anillo alrededor de un planeta específico
+function createSaturnRing(planetMesh, planetRadius) {
+    // Geometría del anillo (aplanada)
+    const ringGeometry = new THREE.RingGeometry(planetRadius + 10, planetRadius + 40, 128);
+    
+    // Material del anillo con transparencia y color sutil
+    const ringMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0xff69b4, // Anillos rosas sutiles
+        side: THREE.DoubleSide, 
+        transparent: true, 
+        opacity: 0.2
+    });
+    const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+    
+    // Lo hacemos plano y lo inclinamos ligeramente
+    ring.rotation.x = Math.PI / 2.1; 
+    
+    planetMesh.add(ring); // El anillo es hijo del planeta, lo sigue en su órbita
 }
 
 // Anillo de órbita (Línea sutil)
 function createOrbitRing(distance) {
   const ringGeometry = new THREE.RingGeometry(distance - 0.5, distance + 0.5, 128);
-  const ringMaterial = new THREE.MeshBasicMaterial({ color: 0xff69b4, side: THREE.DoubleSide, transparent: true, opacity: 0.15 });
+  const ringMaterial = new THREE.MeshBasicMaterial({ color: 0xff69b4, side: THREE.DoubleSide, transparent: true, opacity: 0.1 });
   const ring = new THREE.Mesh(ringGeometry, ringMaterial);
   ring.rotation.x = Math.PI / 2; // Plano horizontal
   scene.add(ring);
@@ -142,29 +177,26 @@ function createShootingStars() {
     const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1 });
     const starGeometry = new THREE.SphereGeometry(1, 4, 4);
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 15; i++) { // Unas cuantas más
         const star = new THREE.Mesh(starGeometry, starMaterial.clone());
-        resetShootingStar(star); // Posición inicial aleatoria lejana
+        resetShootingStar(star); 
         shootingStars.push(star);
         scene.add(star);
     }
 }
 
-// Restablecer la posición de una estrella fugaz para que vuelva a cruzar
 function resetShootingStar(star) {
-    // Posición inicial aleatoria lejos en el borde de la escena
     star.position.set(
-        (Math.random() - 0.5) * 4000,
-        (Math.random() - 0.5) * 4000,
-        (Math.random() - 0.5) * 4000
+        (Math.random() - 0.5) * 6000,
+        (Math.random() - 0.5) * 6000,
+        (Math.random() - 0.5) * 6000
     );
-    // Velocidad de cruce rápida y aleatoria
     star.userData.velocity = new THREE.Vector3(
-        (Math.random() - 0.5) * 40,
-        (Math.random() - 0.5) * 40,
-        (Math.random() - 0.5) * 40
+        (Math.random() - 0.5) * 60, // Más rápidas
+        (Math.random() - 0.5) * 60,
+        (Math.random() - 0.5) * 60
     );
-    star.material.opacity = 0; // Oculta al restablecer
+    star.material.opacity = 0; 
 }
 
 // Bucle de animación 
@@ -172,12 +204,12 @@ function animate() {
   requestAnimationFrame(animate);
   controls.update();
 
-  // Animar planetas
-  planets.forEach(p => {
+  // Animar planetas detallados
+  detailedPlanets.forEach(p => {
     p.angle += p.speed;
     p.mesh.position.x = Math.cos(p.angle) * p.distance;
     p.mesh.position.z = Math.sin(p.angle) * p.distance;
-    p.mesh.rotation.y += p.selfRotation;
+    p.mesh.rotation.y += p.selfRotation; // Rotación propia
   });
   
   // Rotación del Sol
@@ -185,19 +217,16 @@ function animate() {
   
   // ANIMAR ESTRELLAS FUGACES
   shootingStars.forEach(star => {
-      // Mover la estrella
       star.position.add(star.userData.velocity);
       
-      // Controlar la opacidad (aparecer y desaparecer rápido)
       const distanceToCenter = star.position.distanceTo(scene.position);
-      if (distanceToCenter < 1000 && distanceToCenter > 100) {
+      if (distanceToCenter < 2000 && distanceToCenter > 100) {
           star.material.opacity = Math.min(star.material.opacity + 0.1, 1);
       } else {
           star.material.opacity = Math.max(star.material.opacity - 0.1, 0);
       }
       
-      // Si se aleja mucho, resetearla
-      if (distanceToCenter > 2000 || Math.abs(star.position.y) > 2000) {
+      if (distanceToCenter > 3000 || Math.abs(star.position.y) > 3000) {
           resetShootingStar(star);
       }
   });
