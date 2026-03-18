@@ -7,7 +7,7 @@
 <style>
   body { margin: 0; background: black; overflow: hidden; font-family: 'Courier New', monospace; color: white; }
   
-  /* --- NUEVA PANTALLA DE ENTRADA CON ESTILO CÓSMICO --- */
+  /* --- PANTALLA DE ENTRADA --- */
   #pantallaEntrada {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: black; z-index: 999; display: flex; flex-direction: column;
@@ -15,11 +15,26 @@
     transition: opacity 1s ease;
   }
   #pantallaEntrada h2 { font-size: 2rem; text-shadow: 0 0 15px #ff69b4; text-align: center; padding: 0 20px;}
+  
+  /* ESTILOS DEL BOTÓN (Inicia apagado y bloqueado) */
   #btnEmpezarUniverso {
     margin-top: 30px; padding: 15px 40px; font-size: 1.5rem; background: #ff1493;
-    color: white; border: none; border-radius: 50px; cursor: pointer;
-    box-shadow: 0 0 25px #ff1493; animation: latidoEntrada 1.5s infinite;
+    color: white; border: none; border-radius: 50px; 
+    box-shadow: 0 0 25px #ff1493;
+    opacity: 0.5; /* Opacidad baja al inicio */
+    cursor: not-allowed; /* Cursor de "espera" */
+    pointer-events: none; /* Bloquea los clics */
+    transition: all 0.5s ease;
   }
+  
+  /* Clase que se añade cuando pasan los 4 segundos */
+  #btnEmpezarUniverso.listo {
+    opacity: 1;
+    cursor: pointer;
+    pointer-events: auto; /* Permite hacer clic */
+    animation: latidoEntrada 1.5s infinite;
+  }
+
   @keyframes latidoEntrada {
     0% { transform: scale(1); }
     50% { transform: scale(1.1); }
@@ -34,7 +49,7 @@
     z-index: 2; display: flex; flex-direction: column;
     align-items: center; text-align: center;
     pointer-events: none;
-    opacity: 0; /* Empieza oculto para revelarse tras el viaje */
+    opacity: 0; 
     transition: opacity 2s ease;
   }
   
@@ -67,8 +82,8 @@
 </audio>
 
 <div id="pantallaEntrada">
-  <h2>✨ Viajando por el agujero negro... ✨</h2>
-  <button id="btnEmpezarUniverso">🚀 Entrar al Universo</button>
+  <h2>✨ Preparando el viaje espacial... ✨</h2>
+  <button id="btnEmpezarUniverso">Cargando motores... (4s)</button>
 </div>
 
 <div id="threeCanvas"></div>
@@ -83,50 +98,49 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
 <script>
-// VARIABLES GLOBALES 3D
-let scene, camera, renderer, controls, sun;
-let width, height, starfield, systemRotationGroup;
-let detailedPlanets = []; 
-let photoStars = []; 
-let activeExplosions = []; 
-const textureLoader = new THREE.TextureLoader();
+// --- LÓGICA DEL BOTÓN DE 4 SEGUNDOS ---
+let contadorCarga = 4;
+const btnEmpezar = document.getElementById('btnEmpezarUniverso');
 
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
+const intervaloCarga = setInterval(() => {
+    contadorCarga--;
+    if (contadorCarga > 0) {
+        btnEmpezar.innerText = `Cargando motores... (${contadorCarga}s)`;
+    } else {
+        clearInterval(intervaloCarga);
+        btnEmpezar.innerText = "🚀 Entrar al Universo";
+        btnEmpezar.classList.add("listo"); // Añade animación y permite el clic
+        document.querySelector('#pantallaEntrada h2').innerText = "✨ El universo está listo ✨";
+    }
+}, 1000);
 
 // --- ESTADO DE VIAJE ESPACIAL ---
 let enViaje = false;
 let viajeProgress = 0;
-const viajeDuration = 3000; // 3 segundos de viaje dramático
+const viajeDuration = 3000;
 
-// --- CONTROL DE LA PANTALLA DE ENTRADA Y MÚSICA ---
 document.getElementById('btnEmpezarUniverso').addEventListener('click', function() {
-    // 1. Reproducir la música
     document.getElementById('musica2').play();
-    
-    // 2. Iniciar el viaje por el agujero negro
     enViaje = true;
-    
-    // Deshabilitamos controles temporalmente para que no arruinen el viaje
     controls.enabled = false;
     
-    // 3. Desvanecer la pantalla de entrada suavemente
     const pantalla = document.getElementById('pantallaEntrada');
     pantalla.style.opacity = '0';
     
     setTimeout(() => {
         pantalla.style.display = 'none';
-        
-        // Revelamos el mensaje de cumpleaños suavemente
         document.getElementById('mainContent').style.opacity = '1';
-        
-        // Reactivamos los controles para que pueda explorar
         controls.enabled = true;
         enViaje = false;
-    }, viajeDuration + 500); // Un poco después de que acabe el viaje
+        
+        // Al terminar el viaje en PC, nos aseguramos de que el FOV de la cámara vuelva a la normalidad
+        if (!esCelular) {
+            camera.fov = 75;
+            camera.updateProjectionMatrix();
+        }
+    }, viajeDuration + 500); 
 });
 
-// --- EL PASTEL COMO BOTÓN DE RETORNO ---
 document.getElementById('pastelBtn').addEventListener('click', () => {
     window.location.href = 'index.html';
 });
@@ -135,7 +149,6 @@ document.getElementById('pastelBtn').addEventListener('click', () => {
 const eleccion = localStorage.getItem('dispositivoElegido');
 const esCelular = (eleccion === 'celular') || (window.innerWidth < 768 && eleccion !== 'pc');
 
-// --- FUERZA BRUTA PARA ACHICAR LETRAS, ANIMAR EL PASTEL Y OCULTAR EL BOTÓN VIEJO ---
 if (esCelular) {
     const titulo = document.getElementById('tituloCumple');
     const parrafo = document.getElementById('parrafoCumple');
@@ -159,6 +172,16 @@ if (esCelular) {
     document.getElementById('pastelBtn').style.display = "none";
 }
 
+// VARIABLES GLOBALES 3D
+let scene, camera, renderer, controls, sun;
+let width, height, starfield, systemRotationGroup;
+let detailedPlanets = []; 
+let photoStars = []; 
+let activeExplosions = []; 
+const textureLoader = new THREE.TextureLoader();
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
 function init() {
   width = window.innerWidth;
   height = window.innerHeight;
@@ -167,9 +190,9 @@ function init() {
   scene.background = new THREE.Color(0x000000);
   scene.fog = new THREE.FogExp2(0x000000, 0.0001); 
 
-  // --- CÁMARA INICIALMENTE LEJOS PARA EL VIAJE ---
+  // CÁMARA INICIALMENTE LEJOS
   camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 30000);
-  camera.position.set(0, 1000, 5000); // Mucho más lejos y elevada para empezar el viaje
+  camera.position.set(0, 1000, 5000); 
 
   renderer = new THREE.WebGLRenderer({ antialias: false }); 
   renderer.setSize(width, height);
@@ -182,23 +205,19 @@ function init() {
   controls.minDistance = 150;
   controls.maxDistance = 12000;
 
-  // --- GRUPO DE ROTACIÓN DEL SISTEMA SOLAR (Crucial para el efecto de agujero negro) ---
   systemRotationGroup = new THREE.Group();
   scene.add(systemRotationGroup);
 
-  // SOL CENTRAL
   const sunGeometry = new THREE.SphereGeometry(60, 32, 32);
   const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffdf00 });
   sun = new THREE.Mesh(sunGeometry, sunMaterial);
-  systemRotationGroup.add(sun); // Añadir al grupo
+  systemRotationGroup.add(sun); 
   
-  // Luces
   const sunLight = new THREE.PointLight(0xff69b4, 4, 3000); 
   sun.add(sunLight);
   const ambientLight = new THREE.AmbientLight(0x404040, 1.2); 
   scene.add(ambientLight);
 
-  // PLANETAS
   createDetailedPlanet(10, 0xffb6c1, 150, 0.015);
   createDetailedPlanet(15, 0xdda0dd, 200, 0.012);
   createDetailedPlanet(18, 0x87cefa, 260, 0.010);
@@ -224,14 +243,14 @@ function createDetailedPlanet(radius, color, distance, speed, hasRing=false) {
     const angle = Math.random() * Math.PI * 2;
     mesh.position.set(Math.cos(angle) * distance, 0, Math.sin(angle) * distance);
     detailedPlanets.push({ mesh: mesh, distance, angle, speed, selfRotation: 0.01 + Math.random()*0.02 });
-    systemRotationGroup.add(mesh); // Añadir al grupo
+    systemRotationGroup.add(mesh); 
     
     createOrbitRing(distance);
     if (hasRing) createSaturnRing(mesh, radius);
 }
 
 function createSaturnRing(planetMesh, planetRadius) {
-    const ringGeometry = new THREE.RingGeometry(planetRadius + 10, planetRadius + 60, 128);
+    const ringGeometry = new THREE.RingGeometry(planetRadius + 10, planetRadius + 60, esCelular ? 32 : 128);
     const ringMaterial = new THREE.MeshBasicMaterial({ color: 0xff69b4, side: THREE.DoubleSide, transparent: true, opacity: 0.25 });
     const ring = new THREE.Mesh(ringGeometry, ringMaterial);
     ring.rotation.x = Math.PI / 2.1; 
@@ -239,11 +258,11 @@ function createSaturnRing(planetMesh, planetRadius) {
 }
 
 function createOrbitRing(distance) {
-  const ringGeometry = new THREE.RingGeometry(distance - 0.5, distance + 0.5, 128);
+  const ringGeometry = new THREE.RingGeometry(distance - 0.5, distance + 0.5, esCelular ? 64 : 128);
   const ringMaterial = new THREE.MeshBasicMaterial({ color: 0xff69b4, side: THREE.DoubleSide, transparent: true, opacity: 0.1 });
   const ring = new THREE.Mesh(ringGeometry, ringMaterial);
   ring.rotation.x = Math.PI / 2;
-  systemRotationGroup.add(ring); // Añadir al grupo
+  systemRotationGroup.add(ring); 
 }
 
 function createStarfield() {
@@ -256,7 +275,7 @@ function createStarfield() {
     starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsPositions, 3));
     const starsMaterial = new THREE.PointsMaterial({ size: esCelular ? 4 : 3, color: 0xffffff, transparent: true, opacity: 0.8 });
     starfield = new THREE.Points(starsGeometry, starsMaterial);
-    scene.add(starfield); // Las estrellas están FUERA del grupo de rotación para dar contraste
+    scene.add(starfield); 
 }
 
 function createRealisticLocalizedFog() {
@@ -280,7 +299,7 @@ function createRealisticLocalizedFog() {
         fogMaterial.needsUpdate = true;
     });
     const localizedFogMesh = new THREE.Points(fogParticlesGeometry, fogMaterial);
-    scene.add(localizedFogMesh); // La niebla también está FUERA para dar profundidad
+    scene.add(localizedFogMesh); 
 }
 
 function loadPhotoStars() {
@@ -296,7 +315,7 @@ function loadPhotoStars() {
             sprite.scale.set(150, 150, 1);
             sprite.userData.pulseOpacity = 0.5 + Math.random() * 0.5;
             photoStars.push(sprite);
-            systemRotationGroup.add(sprite); // Las fotos SÍ están en el grupo de rotación
+            systemRotationGroup.add(sprite); 
         }, undefined, () => {});
     }
 }
@@ -324,8 +343,8 @@ function triggerSunExplosion() {
     heartParticles.material.map = heartTexture;
     const teAmoParticles = new THREE.Points(geometry, material.clone());
     teAmoParticles.material.map = teAmoTexture;
-    systemRotationGroup.add(heartParticles); // Añadir al grupo
-    systemRotationGroup.add(teAmoParticles); // Añadir al grupo
+    systemRotationGroup.add(heartParticles); 
+    systemRotationGroup.add(teAmoParticles); 
     const startTime = Date.now();
     const lifeSpan = 4000; 
     activeExplosions.push({ geometry, material: heartParticles.material, teAmoMaterial: teAmoParticles.material, positions: geometry.getAttribute('position').array, velocities, totalExplosionParticles, heartMesh: heartParticles, teAmoMesh: teAmoParticles, startTime, lifeSpan });
@@ -371,7 +390,6 @@ function onSunTouch(e) {
   }
 }
 
-// NUEVAS VARIABLES DE TIEMPO PARA LA ANIMACIÓN
 let prevTime = Date.now();
 
 function animate() {
@@ -379,44 +397,60 @@ function animate() {
   controls.update();
   
   const time = Date.now();
-  const delta = (time - prevTime) / 1000; // Segundos desde el último frame
+  const delta = (time - prevTime) / 1000; 
   prevTime = time;
 
-  // ANIMACIÓN BASE (Giro sutil normal)
+  // ANIMACIÓN DE ESTRELLAS Y SOL
   sun.rotation.y += 0.002;
-  starfield.rotation.y += 0.0001;
-
+  
   photoStars.forEach(sprite => {
       if (Math.random() < 0.01) sprite.userData.pulseOpacity = 0.6 + Math.random() * 0.4;
       sprite.material.opacity = THREE.MathUtils.lerp(sprite.material.opacity, sprite.userData.pulseOpacity, 0.05);
   });
 
-  // --- NUEVO: ANIMACIÓN DE VIAJE POR EL AGUJERO NEGRO ---
+  // --- LÓGICA DE VIAJE ESPACIAL ---
   if (enViaje) {
-      viajeProgress = Math.min(viajeProgress + delta * 1000, viajeDuration);
+      viajeProgress += delta * 1000;
+      if (viajeProgress > viajeDuration) viajeProgress = viajeDuration;
       const ratio = viajeProgress / viajeDuration;
       
-      // 1. ZOOM Hacia Adentro dramático (Curva exponencial suave)
-      const targetX = 0;
-      const targetY = 300;
-      const targetZ = 1100;
-      const t = Math.pow(ratio, 2); // Cae rápido al principio
+      const targetX = 0; const targetY = 300; const targetZ = 1100;
+      const t = Math.pow(ratio, 2); 
       
+      // La cámara viaja hacia el sol (Esto pasa en PC y celular)
       camera.position.x = THREE.MathUtils.lerp(0, targetX, t);
       camera.position.y = THREE.MathUtils.lerp(1000, targetY, t);
       camera.position.z = THREE.MathUtils.lerp(5000, targetZ, t);
       
-      // 2. GIRO RÁPIDO DEL SISTEMA SOLAR (Efecto túnel)
-      // El sistema gira extremadamente rápido y se frena
-      const speed = 5 * (1 - ratio) + 0.1; // Gira muy rápido al inicio
-      systemRotationGroup.rotation.y += speed * delta;
+      if (!esCelular) {
+          // --- EFECTOS PRO SOLO PARA PC (Agujero Negro / Hiperespacio) ---
+          
+          // 1. Distorsión de FOV: El espacio se alarga al máximo en el medio del viaje
+          const warpFov = Math.sin(ratio * Math.PI) * 50; 
+          camera.fov = 75 + warpFov;
+          camera.updateProjectionMatrix();
+
+          // 2. Las estrellas de fondo giran en espiral envolvente
+          starfield.rotation.z += 5 * (1 - ratio) * delta;
+
+          // 3. El sistema solar rota a una velocidad vertiginosa hacia ti
+          const speed = 12 * (1 - ratio) + 0.1;
+          systemRotationGroup.rotation.y += speed * delta;
+
+      } else {
+          // --- EFECTOS CELULAR (Más sutiles para no dar lag) ---
+          starfield.rotation.y += 0.0001;
+          const speed = 4 * (1 - ratio) + 0.1; 
+          systemRotationGroup.rotation.y += speed * delta;
+      }
       
   } else {
-      // Si no estamos en viaje, el sistema solar tiene su giro sutil normal
+      // Movimiento normal cuando no hay viaje
+      starfield.rotation.y += 0.0001;
       systemRotationGroup.rotation.y += 0.001;
   }
 
-  // Animación de Planetas (órbitas)
+  // Animación de Planetas
   detailedPlanets.forEach(p => {
     p.angle += p.speed;
     p.mesh.position.x = Math.cos(p.angle) * p.distance;
