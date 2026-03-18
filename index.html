@@ -10,47 +10,50 @@
   #inicio{position:fixed;width:100%;height:100%;
     background:linear-gradient(to top,#000,#330033);
     display:flex;align-items:center;justify-content:center;
-    flex-direction:column;z-index:10;color:white;}
-  #inicio button{padding:20px 40px;font-size:1.5rem;
+    flex-direction:column;z-index:10;color:white; text-align: center; padding: 20px;}
+  
+  .botones-inicio { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
+  #inicio button{padding:15px 30px;font-size:1.2rem;
     background:#ff69b4;color:white;border:none;border-radius:15px;
-    cursor:pointer;box-shadow:0 0 20px #ff69b4;margin-top:20px;}
+    cursor:pointer;box-shadow:0 0 20px #ff69b4; font-weight: bold;}
+    
   /* Contadores */
   #contador{position:absolute;top:10px;left:50%;transform:translateX(-50%);
-    color:white;font-size:1.2rem;z-index:4;background:rgba(0,0,0,0.4);
-    padding:8px 40px;border-radius:10px;text-align:center;min-width:280px;display:none;}
+    color:white;font-size:1.1rem;z-index:4;background:rgba(0,0,0,0.4);
+    padding:8px 20px;border-radius:10px;text-align:center;min-width:260px;display:none; white-space: nowrap;}
   #tiempoTotal{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);
-    color:#ff69b4;font-size:1.1rem;z-index:11;background:rgba(0,0,0,0.4);
-    padding:8px 15px;border-radius:10px;text-align:center;white-space:pre-line;display:none;}
+    color:#ff69b4;font-size:1rem;z-index:11;background:rgba(0,0,0,0.4);
+    padding:8px 15px;border-radius:10px;text-align:center;white-space:pre-line;display:none; width: 90%; max-width: 400px;}
   /* Pantalla principal */
   .overlay{position:absolute;top:0;left:0;width:100%;height:100%;
     z-index:2;display:none;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
-  .center-image{width:200px;height:auto;border-radius:10px;margin-bottom:20px;
+  .center-image{width:180px;height:auto;border-radius:10px;margin-bottom:20px;
     box-shadow:0 0 20px #ff69b4;}
-  .center-message{color:#ff69b4;font-size:2rem;text-align:center;}
+  .center-message{color:#ff69b4;font-size:1.8rem;text-align:center;}
   .btn{margin-top:15px;padding:10px 20px;font-size:1rem;background:#ff69b4;
     color:white;border:none;border-radius:10px;cursor:pointer;
     box-shadow:0 0 10px #ff69b4;pointer-events:auto;}
   #listaRecuerdos{display:none;list-style:none;margin-top:15px;padding:0;
     color:white;text-align:center;font-size:1.1rem;pointer-events:auto;}
   .final-message{position:absolute;top:40%;left:50%;
-    transform:translate(-50%,-50%);font-size:2rem;color:white;
+    transform:translate(-50%,-50%);font-size:1.5rem;color:white;
     text-shadow:2px 2px 4px #000,-1px -1px 2px #ff69b4;
-    z-index:3;text-align:center;display:none;}
+    z-index:3;text-align:center;display:none; width: 90%;}
 
   /* Pantallas */
   #recuerdosScreen,#fotosScreen{display:none;position:fixed;top:0;left:0;width:100%;height:100%;
     background:black;z-index:20;flex-direction:column;align-items:center;justify-content:center;}
   #canvasRecuerdos,#canvasFotos{position:absolute;top:0;left:0;width:100%;height:100%;z-index:19;}
-  #recuerdosContent,#fotosContent{position:relative;z-index:21;text-align:center;}
-  #recuerdosContent h2,#fotosContent h2{color:#ff69b4;font-size:2rem;margin-bottom:20px;}
-  #recuerdosContent ul{list-style:none;padding:0;margin-bottom:20px;color:white;font-size:1.2rem;}
-  #recuerdosContent button,#fotosContent button{padding:12px 25px;font-size:1.2rem;background:#ff69b4;
-    color:white;border:none;border-radius:12px;cursor:pointer;box-shadow:0 0 15px #ff69b4; margin: 10px 5px;}
+  #recuerdosContent,#fotosContent{position:relative;z-index:21;text-align:center; padding: 20px;}
+  #recuerdosContent h2,#fotosContent h2{color:#ff69b4;font-size:1.8rem;margin-bottom:20px;}
+  #recuerdosContent ul{list-style:none;padding:0;margin-bottom:20px;color:white;font-size:1.1rem;}
+  #recuerdosContent button,#fotosContent button{padding:10px 20px;font-size:1.1rem;background:#ff69b4;
+    color:white;border:none;border-radius:12px;cursor:pointer;box-shadow:0 0 15px #ff69b4; margin: 8px 5px;}
 
   /* Overlay foto grande */
   #fotoGrandeOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;
     background:rgba(0,0,0,0.8);z-index:50;align-items:center;justify-content:center;flex-direction:column;}
-  #fotoGrandeOverlay img{max-width:80%;max-height:80%;border-radius:15px;box-shadow:0 0 30px #ff69b4;}
+  #fotoGrandeOverlay img{max-width:90%;max-height:80%;border-radius:15px;box-shadow:0 0 30px #ff69b4;}
   #cerrarFoto{margin-top:20px;padding:10px 25px;font-size:1.2rem;background:#ff69b4;color:white;
     border:none;border-radius:12px;cursor:pointer;box-shadow:0 0 15px #ff69b4;}
 
@@ -58,9 +61,9 @@
   #confetiCanvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:100;}
   #confetiMensaje{
     position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-    background:rgba(255,255,255,0.9);color:#ff69b4;font-size:2rem;font-weight:bold;
-    text-align:center;padding:30px 40px;border-radius:20px;box-shadow:0 0 30px #ff69b4;
-    z-index:101;display:none;
+    background:rgba(255,255,255,0.9);color:#ff69b4;font-size:1.5rem;font-weight:bold;
+    text-align:center;padding:20px 30px;border-radius:20px;box-shadow:0 0 30px #ff69b4;
+    z-index:101;display:none; width: 80%; max-width: 400px;
   }
 </style>
 </head>
@@ -68,7 +71,10 @@
 
 <div id="inicio">
   <h1>🎁 Tengo algo especial para ti</h1>
-  <button onclick="iniciarSorpresa()">Haz clic para abrir</button>
+  <div class="botones-inicio">
+    <button onclick="elegirDispositivo('celular')">📱 Abrir en Celular</button>
+    <button onclick="elegirDispositivo('pc')">💻 Abrir en PC</button>
+  </div>
 </div>
 
 <div id="contador"></div>
@@ -97,7 +103,7 @@
       <button id="btnRegresarRecuerdos">⬅️ Regresar</button>
       <button id="btnRompecabezas">🧩 Rompecabezas</button>
     </div>
-    <div>
+    <div style="margin-top: 10px;">
       <button id="btnCarta" style="display:none;">💌 Carta secreta</button>
       <button id="btnNivelEspecial" style="display:none; background:#ff1493; box-shadow:0 0 25px #ff1493;">🎁 NIVEL ESPECIAL 🎂</button>
     </div>
@@ -107,7 +113,7 @@
 <div id="puzzleScreen" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
   background:black;z-index:30;flex-direction:column;align-items:center;justify-content:center;">
   <canvas id="puzzleCanvas" width="300" height="300"
-    style="border:4px solid #ff69b4;border-radius:10px;box-shadow:0 0 20px #ff69b4;"></canvas>
+    style="border:4px solid #ff69b4;border-radius:10px;box-shadow:0 0 20px #ff69b4; max-width: 90%;"></canvas>
   <button id="btnRegresarPuzzle" style="margin-top:20px;padding:12px 25px;
     font-size:1.2rem;background:#ff69b4;color:white;border:none;border-radius:12px;
     cursor:pointer;box-shadow:0 0 15px #ff69b4;">⬅️ Regresar</button>
@@ -116,10 +122,10 @@
 <div id="cartaModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
   background:rgba(0,0,0,0.8);z-index:40;flex-direction:column;align-items:center;justify-content:center;
   text-align:center;padding:20px;">
-  <div style="background:white;color:#ff69b4;padding:30px 40px;border-radius:20px;
-      box-shadow:0 0 30px #ff69b4;max-width:500px;">
+  <div style="background:white;color:#ff69b4;padding:30px 20px;border-radius:20px;
+      box-shadow:0 0 30px #ff69b4;max-width:90%;">
     <h2>💌 Carta para ti 💖</h2>
-    <p style="font-size:1.1rem;">
+    <p style="font-size:1rem;">
       Mi amor, cada momento contigo hace que mi corazón lata más fuerte.
       Gracias por cada sonrisa, cada mirada y cada instante que compartimos.
       Eres mi razón de ser y siempre lo serás. 💖
@@ -154,7 +160,14 @@
 /* --- VARIABLES GLOBALES DE CONTROL --- */
 let lluviaPrincipalIniciada = false;
 let idAnimacionConfeti = null;
-let idAnimacionFotos = null; // NUEVA variable para controlar las fotos
+let idAnimacionFotos = null; 
+
+/* --- FUNCIÓN PARA GUARDAR LA ELECCIÓN --- */
+function elegirDispositivo(tipo) {
+  // Guarda 'celular' o 'pc' en el navegador
+  localStorage.setItem('dispositivoElegido', tipo);
+  iniciarSorpresa();
+}
 
 /* --- Funciones Principales --- */
 function iniciarSorpresa(){
@@ -169,7 +182,6 @@ function iniciarSorpresa(){
     iniciarAnimacion();
     lluviaPrincipalIniciada=true;
   }
-  // Al inicio: Confeti SÍ, Mensaje SÍ (true)
   checkFechasEspeciales(true);
 }
 
@@ -269,14 +281,13 @@ document.addEventListener("DOMContentLoaded", () => {
   
   const btnPuzzle = document.getElementById("btnRompecabezas");
   const btnCarta = document.getElementById("btnCarta");
-  const btnNivelEspecial = document.getElementById("btnNivelEspecial"); // BOTÓN NUEVO
+  const btnNivelEspecial = document.getElementById("btnNivelEspecial"); 
 
   const puzzleScreen = document.getElementById("puzzleScreen");
   const cartaModal = document.getElementById("cartaModal");
 
   const hoy = new Date();
   
-  // Lógica para Aniversario (11 de Agosto)
   const esAniversario = (hoy.getDate() === 11 && hoy.getMonth() === 7); 
   if (esAniversario) {
     btnCarta.style.display = "inline-block"; 
@@ -284,9 +295,7 @@ document.addEventListener("DOMContentLoaded", () => {
     btnCarta.style.display = "none";
   }
 
-  // Lógica para Cumpleaños (8 de Julio)
-  
-  const esCumpleanos = true;
+  const esCumpleanos = (hoy.getDate() === 8 && hoy.getMonth() === 6);
   if (esCumpleanos) {
     btnNivelEspecial.style.display = "inline-block";
   } else {
@@ -306,14 +315,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   btnRegresarRecuerdos.addEventListener("click",()=>{regresarPantalla();});
   
-  // Redirección del botón especial
   btnNivelEspecial.addEventListener("click", () => {
     window.location.href = "cumpleanos_solar.html";
   });
   
-  // AL REGRESAR DE FOTOS: Detenemos la lluvia de fotos y reactivamos confeti
   btnRegresarFotos.addEventListener("click",()=>{
-    detenerLluviaFotos(); // <--- IMPORTANTE: Detener fotos para liberar memoria
+    detenerLluviaFotos();
     regresarPantalla();
   });
 
@@ -355,8 +362,6 @@ function regresarPantalla(){
   const canvas=document.getElementById('canvas');
   const ctx=canvas.getContext('2d');
   lanzarExplosionYFrase(ctx,canvas);
-  
-  // Al regresar: Confeti SÍ, Mensaje NO (false)
   checkFechasEspeciales(false);
 }
 
@@ -383,23 +388,18 @@ function iniciarLluviaRecuerdos(){
   draw();
 }
 
-/* --- Fotos cayendo (CON CONTROL DE MEMORIA) --- */
 function detenerLluviaFotos(){
-  // Si hay animación corriendo, la cancelamos
   if(idAnimacionFotos){
     cancelAnimationFrame(idAnimacionFotos);
     idAnimacionFotos = null;
   }
-  // Limpiamos el canvas para que no queden fotos congeladas
   const canvas = document.getElementById('canvasFotos');
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0,0,canvas.width, canvas.height);
 }
 
 function iniciarLluviaFotos(){
-  // Primero limpiamos cualquier proceso anterior por seguridad
   detenerLluviaFotos();
-
   const canvas=document.getElementById('canvasFotos');
   const ctx=canvas.getContext('2d');
   canvas.width=window.innerWidth;
@@ -443,7 +443,6 @@ function iniciarLluviaFotos(){
         f.x=Math.random()*canvas.width;
       }
     });
-    // Guardamos el ID de la animación
     idAnimacionFotos = requestAnimationFrame(draw);
   }
   draw();
@@ -458,7 +457,6 @@ document.getElementById('cerrarFoto').addEventListener('click',()=>{
   document.getElementById('fotoGrandeOverlay').style.display='none';
 });
 
-/* --- Rompecabezas CORREGIDO --- */
 function iniciarPuzzle(){
   const canvas = document.getElementById("puzzleCanvas");
   const ctx = canvas.getContext("2d");
@@ -551,7 +549,6 @@ function iniciarPuzzle(){
   };
 }
 
-/* --- Confeti Controlado y Mensajes --- */
 function checkFechasEspeciales(mostrarTexto = true){
   const hoy=new Date();
   const d=hoy.getDate();
@@ -563,7 +560,6 @@ function checkFechasEspeciales(mostrarTexto = true){
   if(d===8 && m===6){ mensaje="🎂 Feliz cumpleaños amor 💖"; }
   if(d===10 && m===1){ mensaje="🎂 Feliz cumpleaños 🎉"; }
 
-  // Si hay mensaje, llamamos a la función
   if(mensaje){ lanzarConfeti(mensaje, mostrarTexto); }
 }
 
@@ -575,8 +571,6 @@ function detenerConfeti(){
   const canvas=document.getElementById('confetiCanvas');
   const ctx=canvas.getContext('2d');
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  
-  // Asegurar que el texto se oculte
   document.getElementById('confetiMensaje').style.display = 'none';
 }
 
@@ -585,17 +579,14 @@ function lanzarConfeti(mensaje, mostrarTexto){
   const canvas = document.getElementById('confetiCanvas');
   const ctx = canvas.getContext('2d');
   
-  // CONTROL DE TEXTO
   if (mostrarTexto) {
     msg.innerText = mensaje;
     msg.style.display = 'block';
     setTimeout(()=>{ msg.style.display = 'none'; }, 5000);
   } else {
-    // Si no queremos texto, lo ocultamos a la fuerza
     msg.style.display = 'none';
   }
 
-  // Si la animación YA está corriendo, NO la reiniciamos (para no duplicar partículas)
   if(idAnimacionConfeti) return;
 
   canvas.width = window.innerWidth;
