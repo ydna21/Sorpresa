@@ -7,12 +7,12 @@
 <style>
   body { margin: 0; background: black; overflow: hidden; font-family: 'Courier New', monospace; color: white; }
   
-  /* --- NUEVA PANTALLA DE ENTRADA --- */
+  /* --- NUEVA PANTALLA DE ENTRADA CON ESTILO CÓSMICO --- */
   #pantallaEntrada {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: black; z-index: 999; display: flex; flex-direction: column;
     align-items: center; justify-content: center; color: #ff69b4;
-    transition: opacity 1s ease; /* Para que se desvanezca suavemente */
+    transition: opacity 1s ease;
   }
   #pantallaEntrada h2 { font-size: 2rem; text-shadow: 0 0 15px #ff69b4; text-align: center; padding: 0 20px;}
   #btnEmpezarUniverso {
@@ -34,6 +34,8 @@
     z-index: 2; display: flex; flex-direction: column;
     align-items: center; text-align: center;
     pointer-events: none;
+    opacity: 0; /* Empieza oculto para revelarse tras el viaje */
+    transition: opacity 2s ease;
   }
   
   h1 { font-size: 3.5rem; color: #fff; text-shadow: 0 0 20px #ff69b4, 0 0 30px #ff1493; margin-bottom: 10px; animation: glow 2s ease-in-out infinite alternate; margin-top: 0; }
@@ -65,7 +67,7 @@
 </audio>
 
 <div id="pantallaEntrada">
-  <h2>✨ Viajando a un nuevo nivel... ✨</h2>
+  <h2>✨ Viajando por el agujero negro... ✨</h2>
   <button id="btnEmpezarUniverso">🚀 Entrar al Universo</button>
 </div>
 
@@ -81,19 +83,47 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
 <script>
+// VARIABLES GLOBALES 3D
+let scene, camera, renderer, controls, sun;
+let width, height, starfield, systemRotationGroup;
+let detailedPlanets = []; 
+let photoStars = []; 
+let activeExplosions = []; 
+const textureLoader = new THREE.TextureLoader();
+
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+// --- ESTADO DE VIAJE ESPACIAL ---
+let enViaje = false;
+let viajeProgress = 0;
+const viajeDuration = 3000; // 3 segundos de viaje dramático
+
 // --- CONTROL DE LA PANTALLA DE ENTRADA Y MÚSICA ---
 document.getElementById('btnEmpezarUniverso').addEventListener('click', function() {
-    // 1. Reproducir la música (ahora sí lo permite porque el usuario hizo clic)
+    // 1. Reproducir la música
     document.getElementById('musica2').play();
     
-    // 2. Desvanecer la pantalla de entrada
+    // 2. Iniciar el viaje por el agujero negro
+    enViaje = true;
+    
+    // Deshabilitamos controles temporalmente para que no arruinen el viaje
+    controls.enabled = false;
+    
+    // 3. Desvanecer la pantalla de entrada suavemente
     const pantalla = document.getElementById('pantallaEntrada');
     pantalla.style.opacity = '0';
     
-    // 3. Eliminarla completamente después del desvanecimiento (1 segundo)
     setTimeout(() => {
         pantalla.style.display = 'none';
-    }, 1000);
+        
+        // Revelamos el mensaje de cumpleaños suavemente
+        document.getElementById('mainContent').style.opacity = '1';
+        
+        // Reactivamos los controles para que pueda explorar
+        controls.enabled = true;
+        enViaje = false;
+    }, viajeDuration + 500); // Un poco después de que acabe el viaje
 });
 
 // --- EL PASTEL COMO BOTÓN DE RETORNO ---
@@ -126,20 +156,8 @@ if (esCelular) {
     
     contenedor.style.bottom = "50px"; 
 } else {
-    // Si NO es celular, ocultamos el pastel (porque tenemos el botón grande de regresar)
     document.getElementById('pastelBtn').style.display = "none";
 }
-
-// VARIABLES GLOBALES 3D
-let scene, camera, renderer, controls, sun;
-let width, height, starfield;
-let detailedPlanets = []; 
-let photoStars = []; 
-let activeExplosions = []; 
-const textureLoader = new THREE.TextureLoader();
-
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
 
 function init() {
   width = window.innerWidth;
@@ -149,8 +167,9 @@ function init() {
   scene.background = new THREE.Color(0x000000);
   scene.fog = new THREE.FogExp2(0x000000, 0.0001); 
 
+  // --- CÁMARA INICIALMENTE LEJOS PARA EL VIAJE ---
   camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 30000);
-  camera.position.set(0, 300, 1100);
+  camera.position.set(0, 1000, 5000); // Mucho más lejos y elevada para empezar el viaje
 
   renderer = new THREE.WebGLRenderer({ antialias: false }); 
   renderer.setSize(width, height);
@@ -163,17 +182,23 @@ function init() {
   controls.minDistance = 150;
   controls.maxDistance = 12000;
 
+  // --- GRUPO DE ROTACIÓN DEL SISTEMA SOLAR (Crucial para el efecto de agujero negro) ---
+  systemRotationGroup = new THREE.Group();
+  scene.add(systemRotationGroup);
+
   // SOL CENTRAL
   const sunGeometry = new THREE.SphereGeometry(60, 32, 32);
   const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffdf00 });
   sun = new THREE.Mesh(sunGeometry, sunMaterial);
-  scene.add(sun);
+  systemRotationGroup.add(sun); // Añadir al grupo
   
+  // Luces
   const sunLight = new THREE.PointLight(0xff69b4, 4, 3000); 
-  scene.add(sunLight);
+  sun.add(sunLight);
   const ambientLight = new THREE.AmbientLight(0x404040, 1.2); 
   scene.add(ambientLight);
 
+  // PLANETAS
   createDetailedPlanet(10, 0xffb6c1, 150, 0.015);
   createDetailedPlanet(15, 0xdda0dd, 200, 0.012);
   createDetailedPlanet(18, 0x87cefa, 260, 0.010);
@@ -199,74 +224,63 @@ function createDetailedPlanet(radius, color, distance, speed, hasRing=false) {
     const angle = Math.random() * Math.PI * 2;
     mesh.position.set(Math.cos(angle) * distance, 0, Math.sin(angle) * distance);
     detailedPlanets.push({ mesh: mesh, distance, angle, speed, selfRotation: 0.01 + Math.random()*0.02 });
-    scene.add(mesh);
+    systemRotationGroup.add(mesh); // Añadir al grupo
     
-    const ringGeo = new THREE.RingGeometry(distance - 0.5, distance + 0.5, esCelular ? 32 : 64);
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0xff69b4, side: THREE.DoubleSide, transparent: true, opacity: 0.1 });
-    const orbitRing = new THREE.Mesh(ringGeo, ringMat);
-    orbitRing.rotation.x = Math.PI / 2;
-    scene.add(orbitRing);
+    createOrbitRing(distance);
+    if (hasRing) createSaturnRing(mesh, radius);
+}
 
-    if (hasRing) {
-        const saturnRingGeo = new THREE.RingGeometry(radius + 10, radius + 40, esCelular ? 32 : 64);
-        const saturnRingMat = new THREE.MeshBasicMaterial({ color: 0xff69b4, side: THREE.DoubleSide, transparent: true, opacity: 0.3 });
-        const saturnRing = new THREE.Mesh(saturnRingGeo, saturnRingMat);
-        saturnRing.rotation.x = Math.PI / 2.1; 
-        mesh.add(saturnRing); 
-    }
+function createSaturnRing(planetMesh, planetRadius) {
+    const ringGeometry = new THREE.RingGeometry(planetRadius + 10, planetRadius + 60, 128);
+    const ringMaterial = new THREE.MeshBasicMaterial({ color: 0xff69b4, side: THREE.DoubleSide, transparent: true, opacity: 0.25 });
+    const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+    ring.rotation.x = Math.PI / 2.1; 
+    planetMesh.add(ring); 
+}
+
+function createOrbitRing(distance) {
+  const ringGeometry = new THREE.RingGeometry(distance - 0.5, distance + 0.5, 128);
+  const ringMaterial = new THREE.MeshBasicMaterial({ color: 0xff69b4, side: THREE.DoubleSide, transparent: true, opacity: 0.1 });
+  const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+  ring.rotation.x = Math.PI / 2;
+  systemRotationGroup.add(ring); // Añadir al grupo
 }
 
 function createStarfield() {
     const starsGeometry = new THREE.BufferGeometry();
     const starsPositions = [];
     const numEstrellas = esCelular ? 3000 : 8000;
-    
     for (let i = 0; i < numEstrellas; i++) { 
         starsPositions.push((Math.random() - 0.5) * 18000, (Math.random() - 0.5) * 18000, (Math.random() - 0.5) * 18000);
     }
     starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsPositions, 3));
     const starsMaterial = new THREE.PointsMaterial({ size: esCelular ? 4 : 3, color: 0xffffff, transparent: true, opacity: 0.8 });
     starfield = new THREE.Points(starsGeometry, starsMaterial);
-    scene.add(starfield);
+    scene.add(starfield); // Las estrellas están FUERA del grupo de rotación para dar contraste
 }
 
 function createRealisticLocalizedFog() {
     const fogParticlesGeometry = new THREE.BufferGeometry();
     const fogPositions = [];
     const fogColors = [];
-
     const totalFogParticles = esCelular ? 300 : 600; 
     const nebulaBaseColor = new THREE.Color(0xff69b4); 
     const nebulaAltColor = new THREE.Color(0x87cefa); 
-
     const origin = new THREE.Vector3(4000, 500, -4000);
     for (let i = 0; i < totalFogParticles; i++) {
-        fogPositions.push(
-            origin.x + (Math.random() - 0.5) * 2000,
-            origin.y + (Math.random() - 0.5) * 1500,
-            origin.z + (Math.random() - 0.5) * 2000
-        );
+        fogPositions.push(origin.x + (Math.random() - 0.5) * 2000, origin.y + (Math.random() - 0.5) * 1500, origin.z + (Math.random() - 0.5) * 2000);
         const colorRatio = Math.random();
-        fogColors.push(
-            THREE.MathUtils.lerp(nebulaBaseColor.r, nebulaAltColor.r, colorRatio),
-            THREE.MathUtils.lerp(nebulaBaseColor.g, nebulaAltColor.g, colorRatio),
-            THREE.MathUtils.lerp(nebulaBaseColor.b, nebulaAltColor.b, colorRatio)
-        );
+        fogColors.push(THREE.MathUtils.lerp(nebulaBaseColor.r, nebulaAltColor.r, colorRatio), THREE.MathUtils.lerp(nebulaBaseColor.g, nebulaAltColor.g, colorRatio), THREE.MathUtils.lerp(nebulaBaseColor.b, nebulaAltColor.b, colorRatio));
     }
     fogParticlesGeometry.setAttribute('position', new THREE.Float32BufferAttribute(fogPositions, 3));
     fogParticlesGeometry.setAttribute('color', new THREE.Float32BufferAttribute(fogColors, 3));
-    
-    const fogMaterial = new THREE.PointsMaterial({ 
-        size: 50, vertexColors: true, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending 
-    });
-    
+    const fogMaterial = new THREE.PointsMaterial({ size: 50, vertexColors: true, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending });
     textureLoader.load('https://dl.dropboxusercontent.com/s/7t7i03848w481d6/nebula_background_texture.jpg', (texture) => {
         fogMaterial.map = texture; 
         fogMaterial.needsUpdate = true;
     });
-
     const localizedFogMesh = new THREE.Points(fogParticlesGeometry, fogMaterial);
-    scene.add(localizedFogMesh);
+    scene.add(localizedFogMesh); // La niebla también está FUERA para dar profundidad
 }
 
 function loadPhotoStars() {
@@ -282,7 +296,7 @@ function loadPhotoStars() {
             sprite.scale.set(150, 150, 1);
             sprite.userData.pulseOpacity = 0.5 + Math.random() * 0.5;
             photoStars.push(sprite);
-            scene.add(sprite);
+            systemRotationGroup.add(sprite); // Las fotos SÍ están en el grupo de rotación
         }, undefined, () => {});
     }
 }
@@ -293,7 +307,6 @@ function triggerSunExplosion() {
     const positions = [];
     const velocities = []; 
     const sizes = [];
-    
     for (let i = 0; i < totalExplosionParticles; i++) {
         positions.push(0, 0, 0); 
         const v = new THREE.Vector3((Math.random() - 0.5), (Math.random() - 0.5), (Math.random() - 0.5));
@@ -301,42 +314,21 @@ function triggerSunExplosion() {
         velocities.push(v.x, v.y, v.z);
         sizes.push(30 + Math.random() * 20); 
     }
-    
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     geometry.setAttribute('size', new THREE.Float32BufferAttribute(sizes, 1));
     geometry.setAttribute('velocity', new THREE.Float32BufferAttribute(velocities, 3));
-
     const heartTexture = createGlowShapeTexture("💖");
     const teAmoTexture = createGlowTextTexture("TE AMO");
-    
-    const material = new THREE.PointsMaterial({
-        size: 50, transparent: true, opacity: 1, depthWrite: false, blending: THREE.AdditiveBlending 
-    });
-
+    const material = new THREE.PointsMaterial({ size: 50, transparent: true, opacity: 1, depthWrite: false, blending: THREE.AdditiveBlending });
     const heartParticles = new THREE.Points(geometry, material.clone());
     heartParticles.material.map = heartTexture;
-    
     const teAmoParticles = new THREE.Points(geometry, material.clone());
     teAmoParticles.material.map = teAmoTexture;
-    
-    scene.add(heartParticles);
-    scene.add(teAmoParticles);
-    
+    systemRotationGroup.add(heartParticles); // Añadir al grupo
+    systemRotationGroup.add(teAmoParticles); // Añadir al grupo
     const startTime = Date.now();
     const lifeSpan = 4000; 
-    
-    activeExplosions.push({ 
-        geometry, 
-        material: heartParticles.material, 
-        teAmoMaterial: teAmoParticles.material,
-        positions: geometry.getAttribute('position').array,
-        velocities,
-        totalExplosionParticles,
-        heartMesh: heartParticles,
-        teAmoMesh: teAmoParticles,
-        startTime,
-        lifeSpan 
-    });
+    activeExplosions.push({ geometry, material: heartParticles.material, teAmoMaterial: teAmoParticles.material, positions: geometry.getAttribute('position').array, velocities, totalExplosionParticles, heartMesh: heartParticles, teAmoMesh: teAmoParticles, startTime, lifeSpan });
 }
 
 function createGlowShapeTexture(char) {
@@ -379,17 +371,18 @@ function onSunTouch(e) {
   }
 }
 
+// NUEVAS VARIABLES DE TIEMPO PARA LA ANIMACIÓN
+let prevTime = Date.now();
+
 function animate() {
   requestAnimationFrame(animate);
   controls.update();
-
-  detailedPlanets.forEach(p => {
-    p.angle += p.speed;
-    p.mesh.position.x = Math.cos(p.angle) * p.distance;
-    p.mesh.position.z = Math.sin(p.angle) * p.distance;
-    p.mesh.rotation.y += p.selfRotation; 
-  });
   
+  const time = Date.now();
+  const delta = (time - prevTime) / 1000; // Segundos desde el último frame
+  prevTime = time;
+
+  // ANIMACIÓN BASE (Giro sutil normal)
   sun.rotation.y += 0.002;
   starfield.rotation.y += 0.0001;
 
@@ -398,22 +391,53 @@ function animate() {
       sprite.material.opacity = THREE.MathUtils.lerp(sprite.material.opacity, sprite.userData.pulseOpacity, 0.05);
   });
 
+  // --- NUEVO: ANIMACIÓN DE VIAJE POR EL AGUJERO NEGRO ---
+  if (enViaje) {
+      viajeProgress = Math.min(viajeProgress + delta * 1000, viajeDuration);
+      const ratio = viajeProgress / viajeDuration;
+      
+      // 1. ZOOM Hacia Adentro dramático (Curva exponencial suave)
+      const targetX = 0;
+      const targetY = 300;
+      const targetZ = 1100;
+      const t = Math.pow(ratio, 2); // Cae rápido al principio
+      
+      camera.position.x = THREE.MathUtils.lerp(0, targetX, t);
+      camera.position.y = THREE.MathUtils.lerp(1000, targetY, t);
+      camera.position.z = THREE.MathUtils.lerp(5000, targetZ, t);
+      
+      // 2. GIRO RÁPIDO DEL SISTEMA SOLAR (Efecto túnel)
+      // El sistema gira extremadamente rápido y se frena
+      const speed = 5 * (1 - ratio) + 0.1; // Gira muy rápido al inicio
+      systemRotationGroup.rotation.y += speed * delta;
+      
+  } else {
+      // Si no estamos en viaje, el sistema solar tiene su giro sutil normal
+      systemRotationGroup.rotation.y += 0.001;
+  }
+
+  // Animación de Planetas (órbitas)
+  detailedPlanets.forEach(p => {
+    p.angle += p.speed;
+    p.mesh.position.x = Math.cos(p.angle) * p.distance;
+    p.mesh.position.z = Math.sin(p.angle) * p.distance;
+    p.mesh.rotation.y += p.selfRotation; 
+  });
+
+  // Animación Explosión
   const currentTime = Date.now();
   for (let i = activeExplosions.length - 1; i >= 0; i--) {
       const exp = activeExplosions[i];
       const elapsed = currentTime - exp.startTime;
-      
       if (elapsed > exp.lifeSpan) {
-          scene.remove(exp.heartMesh); scene.remove(exp.teAmoMesh); exp.geometry.dispose(); exp.material.dispose(); exp.teAmoMaterial.dispose();
+          systemRotationGroup.remove(exp.heartMesh); systemRotationGroup.remove(exp.teAmoMesh); exp.geometry.dispose(); exp.material.dispose(); exp.teAmoMaterial.dispose();
           activeExplosions.splice(i, 1);
           continue;
       }
-
       const ratio = elapsed / exp.lifeSpan;
       const opacity = 1 - Math.pow(ratio, 2); 
       exp.material.opacity = opacity;
       exp.teAmoMaterial.opacity = opacity;
-
       for (let j = 0; j < exp.totalExplosionParticles; j++) {
           exp.positions[j * 3] += exp.velocities[j * 3]; 
           exp.positions[j * 3 + 1] += exp.velocities[j * 3 + 1]; 
