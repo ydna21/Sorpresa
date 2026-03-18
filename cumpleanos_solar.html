@@ -13,15 +13,10 @@
     pointer-events: none; padding-bottom: 50px;
   }
   
-  /* Tamaños para computadora (PC) */
-  h1 { 
-    font-size: 3.5rem; color: #fff; text-shadow: 0 0 20px #ff69b4, 0 0 30px #ff1493; 
-    margin-bottom: 10px; animation: glow 2s ease-in-out infinite alternate; 
-  }
-  p { 
-    font-size: 1.5rem; color: #ffb6c1; max-width: 600px; margin-top: 0; 
-  }
-
+  /* ESTILOS BASE (Se sobreescribirán por JS si elige Celular) */
+  h1 { font-size: 3.5rem; color: #fff; text-shadow: 0 0 20px #ff69b4, 0 0 30px #ff1493; margin-bottom: 10px; animation: glow 2s ease-in-out infinite alternate; }
+  p { font-size: 1.5rem; color: #ffb6c1; max-width: 600px; margin-top: 0; }
+  
   @keyframes glow {
     from { text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #ff69b4; }
     to { text-shadow: 0 0 20px #fff, 0 0 30px #ffb6c1, 0 0 40px #ff1493; }
@@ -32,14 +27,6 @@
     box-shadow: 0 0 15px rgba(255, 105, 180, 0.5); pointer-events: auto; transition: all 0.3s;
   }
   .btn-regresar:hover { background: #ff69b4; color: white; box-shadow: 0 0 30px #ff69b4; }
-
-  /* NUEVO: Ajustes automáticos para Celulares */
-  @media (max-width: 768px) {
-    h1 { font-size: 2rem; margin-bottom: 5px; }
-    p { font-size: 1.1rem; max-width: 90%; padding: 0 15px; }
-    #mainContent { padding-bottom: 30px; }
-    .btn-regresar { padding: 10px 20px; font-size: 1rem; margin-top: 20px; }
-  }
 </style>
 </head>
 <body>
@@ -47,15 +34,40 @@
 <div id="threeCanvas"></div>
 
 <div id="mainContent">
-  <h1>¡Feliz Cumpleaños! 🎂💖</h1>
-  <p>Eres el sol que ilumina mi universo. Que este nuevo año cumplas muchas cosas y sigamos siempre juntos❤️</p>
-  <button class="btn-regresar" onclick="window.location.href='index.html'">⬅️ Regresar al inicio</button>
+  <h1 id="tituloCumple">¡Feliz Cumpleaños! 🎂💖</h1>
+  <p id="parrafoCumple">Eres el sol que ilumina mi universo. Que este nuevo año cumplas muchas cosas y sigamos siempre juntos❤️</p>
+  <button id="btnVolver" class="btn-regresar" onclick="window.location.href='index.html'">⬅️ Regresar al inicio</button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
 <script>
+// --- LEER LA ELECCIÓN DEL USUARIO ---
+const eleccion = localStorage.getItem('dispositivoElegido');
+// Consideramos celular si explícitamente eligió celular, o si no eligió pero la pantalla es muy pequeña.
+const esCelular = (eleccion === 'celular') || (window.innerWidth < 768 && eleccion !== 'pc');
+
+// --- FUERZA BRUTA PARA ACHICAR LETRAS SI ES CELULAR ---
+if (esCelular) {
+    document.addEventListener("DOMContentLoaded", () => {
+        const titulo = document.getElementById('tituloCumple');
+        const parrafo = document.getElementById('parrafoCumple');
+        const boton = document.getElementById('btnVolver');
+        const contenedor = document.getElementById('mainContent');
+        
+        titulo.style.fontSize = "1.8rem";      // Letra mucho más chiquita
+        titulo.style.marginBottom = "5px";
+        parrafo.style.fontSize = "1.1rem";     // Párrafo chiquito
+        parrafo.style.maxWidth = "90%";
+        parrafo.style.padding = "0 15px";
+        contenedor.style.paddingBottom = "30px";
+        boton.style.padding = "10px 20px";
+        boton.style.fontSize = "1rem";
+        boton.style.marginTop = "20px";
+    });
+}
+
 // VARIABLES GLOBALES
 let scene, camera, renderer, controls, sun;
 let width, height, starfield;
@@ -66,9 +78,6 @@ const textureLoader = new THREE.TextureLoader();
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
-
-// DETECTAMOS SI ES UN CELULAR PARA OPTIMIZAR
-const esCelular = window.innerWidth < 768;
 
 function init() {
   width = window.innerWidth;
@@ -83,6 +92,7 @@ function init() {
 
   renderer = new THREE.WebGLRenderer({ antialias: false }); 
   renderer.setSize(width, height);
+  // Optimización de resolución basada en la elección
   renderer.setPixelRatio(esCelular ? 1 : Math.min(window.devicePixelRatio, 2)); 
   document.getElementById('threeCanvas').appendChild(renderer.domElement);
 
