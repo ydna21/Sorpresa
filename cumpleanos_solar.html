@@ -55,8 +55,9 @@
 // VARIABLES GLOBALES
 let scene, camera, renderer, controls;
 let width, height, sun;
-let detailedPlanets = []; // Nueva estructura para planetas únicos
+let detailedPlanets = []; // Planetas que orbitan el Sol
 let shootingStars = [];
+let distantGlowingBodies = []; // Nuevos cuerpos lejanos y fijos
 
 function init() {
   width = window.innerWidth;
@@ -64,15 +65,20 @@ function init() {
 
   // 1. Escena 
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x000000); // Fondo negro profundo
+  scene.background = new THREE.Color(0x000000); // Negro profundo
+
+  // EFECTO DE NIEBLA CÓSMICA sutil para dar profundidad a lo lejos
+  // Esto hace que lo muy lejano se vea borroso, aumentando la sensación de inmensidad
+  scene.fog = new THREE.FogExp2(0x000000, 0.00015);
 
   // 2. Cámara 
-  camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 10000);
-  camera.position.set(0, 300, 600); // Más elevada y lejana para ver más
+  camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 20000); // Aumentamos plano lejano
+  camera.position.set(0, 300, 900); // Más elevada y lejana
 
   // 3. Renderer 
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(width, height);
+  renderer.shadowMap.enabled = true; // Permite sombras si las necesitamos
   document.getElementById('threeCanvas').appendChild(renderer.domElement);
 
   // 4. Controles
@@ -80,49 +86,44 @@ function init() {
   controls.enableDamping = true; 
   controls.dampingFactor = 0.05;
   controls.minDistance = 150;
-  controls.maxDistance = 4000;
+  controls.maxDistance = 8000; // Zoom máximo para ver lo muy lejano
 
   // --- Creación de Objetos ---
 
-  // Sol Central
+  // Sol Central (Ya tiene brillo rosa)
   const sunGeometry = new THREE.SphereGeometry(60, 32, 32);
   const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffdf00 });
   sun = new THREE.Mesh(sunGeometry, sunMaterial);
   scene.add(sun);
   
   // Luces
-  const sunLight = new THREE.PointLight(0xff69b4, 3, 2000); // Brillo rosa más potente
+  const sunLight = new THREE.PointLight(0xff69b4, 4, 3000); // Rosa muy potente
   scene.add(sunLight);
-  const ambientLight = new THREE.AmbientLight(0x404040, 0.8); // Luz suave
+  const ambientLight = new THREE.AmbientLight(0x404040, 0.9); // Luz ambiente
   scene.add(ambientLight);
 
-  // --- DISEÑO DE PLANETAS DETALLADOS ---
-  // Creamos un sistema más poblado y único (8 planetas)
-  
-  // Planeta 1: Pequeño y rocoso (Mercurio-ish)
-  createDetailedPlanet(10, 0xffb6c1, 150, 0.015);
-  // Planeta 2: Medio y texturizado (Venus-ish)
-  createDetailedPlanet(15, 0xdda0dd, 200, 0.012, 0.4);
-  // Planeta 3: Medio y rocoso (Tierra-ish)
-  createDetailedPlanet(18, 0x87cefa, 260, 0.010, 0.2);
-  // Planeta 4: Pequeño y rocoso (Marte-ish)
-  createDetailedPlanet(12, 0xffdab9, 310, 0.009);
-  
-  // Planeta 5: GIGANTE GASEOSO CON ANILLOS (Saturno-ish)
-  const ringPlanetMesh = createDetailedPlanet(50, 0x98fb98, 500, 0.006, 0.1, true);
-  
-  // Planeta 6: Gigante gaseoso medio
-  createDetailedPlanet(40, 0xd8bfd8, 650, 0.005, 0.1);
-  // Planeta 7: Medio y helado
-  createDetailedPlanet(30, 0xafeeee, 800, 0.004);
-  // Planeta 8: Medio y helado
-  createDetailedPlanet(28, 0xb0c4de, 950, 0.0035);
+  // --- SISTEMA SOLAR POBLADO (Orbitan el Sol) ---
+  createDetailedPlanet(10, 0xffb6c1, 150, 0.015);   // Mercurio-ish
+  createDetailedPlanet(15, 0xdda0dd, 200, 0.012, 0.4); // Venus-ish
+  createDetailedPlanet(18, 0x87cefa, 260, 0.010, 0.2); // Tierra-ish
+  createDetailedPlanet(12, 0xffdab9, 310, 0.009);   // Marte-ish
+  // Gigante con anillos
+  createDetailedPlanet(50, 0x98fb98, 500, 0.006, 0.1, true); // Saturno-ish
+  createDetailedPlanet(40, 0xd8bfd8, 650, 0.005, 0.1); // Júpiter-ish
+  createDetailedPlanet(30, 0xafeeee, 800, 0.004);   // Urano-ish
+  createDetailedPlanet(28, 0xb0c4de, 950, 0.0035);  // Neptuno-ish
 
-  // AÑADIMOS EL SISTEMA DE ESTRELLAS FUGACES
+  // --- NUEVO: FONDO DE ESTRELLAS REALES Y BRILLANTES ---
+  createStarfield();
+
+  // --- NUEVO: CUERPOS LEJANOS, FIJOS Y BRILLANTES (Glowing) ---
+  createDistantGlowingPlanets();
+
+  // Sistema de estrellas fugaces
   createShootingStars();
 }
 
-// Función para crear un planeta con parámetros detallados
+// Función para crear un planeta con parámetros detallados (orbitando el sol)
 function createDetailedPlanet(radius, color, distance, speed, roughness=0.5, hasRing=false) {
     const geometry = new THREE.SphereGeometry(radius, 32, 32);
     const material = new THREE.MeshStandardMaterial({ color: color, roughness: roughness, metalness: 0.1 });
@@ -145,39 +146,101 @@ function createDetailedPlanet(radius, color, distance, speed, roughness=0.5, has
 
 // Función para crear un anillo alrededor de un planeta específico
 function createSaturnRing(planetMesh, planetRadius) {
-    // Geometría del anillo (aplanada)
-    const ringGeometry = new THREE.RingGeometry(planetRadius + 10, planetRadius + 40, 128);
-    
-    // Material del anillo con transparencia y color sutil
+    const ringGeometry = new THREE.RingGeometry(planetRadius + 10, planetRadius + 60, 128); // Anillos más grandes
     const ringMaterial = new THREE.MeshBasicMaterial({ 
-        color: 0xff69b4, // Anillos rosas sutiles
+        color: 0xff69b4, 
         side: THREE.DoubleSide, 
         transparent: true, 
-        opacity: 0.2
+        opacity: 0.25 // Un poco más visible
     });
     const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-    
-    // Lo hacemos plano y lo inclinamos ligeramente
     ring.rotation.x = Math.PI / 2.1; 
-    
-    planetMesh.add(ring); // El anillo es hijo del planeta, lo sigue en su órbita
+    planetMesh.add(ring); 
 }
 
-// Anillo de órbita (Línea sutil)
+// Anillo de órbita sutil
 function createOrbitRing(distance) {
   const ringGeometry = new THREE.RingGeometry(distance - 0.5, distance + 0.5, 128);
   const ringMaterial = new THREE.MeshBasicMaterial({ color: 0xff69b4, side: THREE.DoubleSide, transparent: true, opacity: 0.1 });
   const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-  ring.rotation.x = Math.PI / 2; // Plano horizontal
+  ring.rotation.x = Math.PI / 2;
   scene.add(ring);
 }
 
-// Crear sistema de estrellas fugaces rápidas
+// NUEVO: Crea un campo de estrellas tridimensional masivo
+function createStarfield() {
+    const starsGeometry = new THREE.BufferGeometry();
+    const starsPositions = [];
+    const starsColors = [];
+
+    // 10,000 estrellas para que se vea muy poblado
+    for (let i = 0; i < 10000; i++) {
+        // Posiciones aleatorias extremadamente lejanas para rodear la escena
+        const x = (Math.random() - 0.5) * 15000;
+        const y = (Math.random() - 0.5) * 15000;
+        const z = (Math.random() - 0.5) * 15000;
+        starsPositions.push(x, y, z);
+        
+        // Colores sutiles (blancos, azules muy claros, amarillos muy claros)
+        starsColors.push(1, 1, 1); // Blanco por defecto
+    }
+    
+    starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsPositions, 3));
+    starsGeometry.setAttribute('color', new THREE.Float32BufferAttribute(starsColors, 3));
+    
+    // Material de partículas: Brillan contra el fondo negro
+    const starsMaterial = new THREE.PointsMaterial({ 
+        size: 4, // Un poco más grandes para que "exploten"
+        vertexColors: true, 
+        transparent: true, 
+        opacity: 0.9,
+        blending: THREE.AdditiveBlending // Hace que brillen al superponerse
+    });
+    const starfieldMesh = new THREE.Points(starsGeometry, starsMaterial);
+    scene.add(starfieldMesh);
+}
+
+// NUEVO: Crea cuerpos lejanos, fijos y brillantes (Glowing Distant Bodies)
+function createDistantGlowingPlanets() {
+    // Material " Glowing Basic" : emite luz propia, no necesita luces de escena
+    const glowMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0xffffff, // Blanco puro brillante
+        transparent: true,
+        opacity: 1
+    });
+    
+    // Unos 20 cuerpos lejanos y fijos
+    for (let i = 0; i < 20; i++) {
+        // Diferentes tamaños pequeños para dar sensación de lejanía extrema
+        const pRadius = 5 + Math.random() * 8;
+        const geometry = new THREE.SphereGeometry(pRadius, 16, 16); // Menos detalle para rendimiento
+        
+        // Clonamos el material para aplicar variaciones de brillo individual si queremos
+        const mesh = new THREE.Mesh(geometry, glowMaterial.clone());
+        
+        // Posiciones extremadamente lejanas pero dentro del plano de niebla (3000-6000)
+        // No están en el plano orbital (Y=0), están dispersos por todo el "cielo"
+        const distance = 3000 + Math.random() * 3000;
+        const x = (Math.random() - 0.5) * distance * 2;
+        const y = (Math.random() - 0.5) * distance * 1.5; // Dispersión en Y
+        const z = (Math.random() - 0.5) * distance * 2;
+        mesh.position.set(x, y, z);
+        
+        // Añadimos un pequeño PointLight *rosa sutil* child para que parezca que tienen halo
+        const haloLight = new THREE.PointLight(0xff69b4, 0.5, 200);
+        mesh.add(haloLight);
+        
+        distantGlowingBodies.push(mesh);
+        scene.add(mesh);
+    }
+}
+
+// Crear sistema de estrellas fugaces
 function createShootingStars() {
     const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1 });
     const starGeometry = new THREE.SphereGeometry(1, 4, 4);
 
-    for (let i = 0; i < 15; i++) { // Unas cuantas más
+    for (let i = 0; i < 15; i++) {
         const star = new THREE.Mesh(starGeometry, starMaterial.clone());
         resetShootingStar(star); 
         shootingStars.push(star);
@@ -187,14 +250,14 @@ function createShootingStars() {
 
 function resetShootingStar(star) {
     star.position.set(
-        (Math.random() - 0.5) * 6000,
-        (Math.random() - 0.5) * 6000,
-        (Math.random() - 0.5) * 6000
+        (Math.random() - 0.5) * 10000,
+        (Math.random() - 0.5) * 10000,
+        (Math.random() - 0.5) * 10000
     );
     star.userData.velocity = new THREE.Vector3(
-        (Math.random() - 0.5) * 60, // Más rápidas
-        (Math.random() - 0.5) * 60,
-        (Math.random() - 0.5) * 60
+        (Math.random() - 0.5) * 80, // Más rápidas
+        (Math.random() - 0.5) * 80,
+        (Math.random() - 0.5) * 80
     );
     star.material.opacity = 0; 
 }
@@ -204,7 +267,7 @@ function animate() {
   requestAnimationFrame(animate);
   controls.update();
 
-  // Animar planetas detallados
+  // Animar planetas detallados (orbitando el sol)
   detailedPlanets.forEach(p => {
     p.angle += p.speed;
     p.mesh.position.x = Math.cos(p.angle) * p.distance;
@@ -215,18 +278,27 @@ function animate() {
   // Rotación del Sol
   sun.rotation.y += 0.002;
   
+  // NUEVO: Animar cuerpos lejanos y brillantes (parpadeo sutil)
+  distantGlowingBodies.forEach(body => {
+      // Pequeño efecto de parpadeo aleatorio en la opacidad
+      if (Math.random() < 0.01) { // 1% de probabilidad por frame
+          body.material.opacity = 0.5 + Math.random() * 0.5; // Brillo entre 50% y 100%
+      }
+  });
+  
   // ANIMAR ESTRELLAS FUGACES
   shootingStars.forEach(star => {
       star.position.add(star.userData.velocity);
       
       const distanceToCenter = star.position.distanceTo(scene.position);
-      if (distanceToCenter < 2000 && distanceToCenter > 100) {
+      // Ajustamos el rango de visibilidad para que crucen la niebla
+      if (distanceToCenter < 5000 && distanceToCenter > 100) {
           star.material.opacity = Math.min(star.material.opacity + 0.1, 1);
       } else {
           star.material.opacity = Math.max(star.material.opacity - 0.1, 0);
       }
       
-      if (distanceToCenter > 3000 || Math.abs(star.position.y) > 3000) {
+      if (distanceToCenter > 8000 || Math.abs(star.position.y) > 8000) {
           resetShootingStar(star);
       }
   });
