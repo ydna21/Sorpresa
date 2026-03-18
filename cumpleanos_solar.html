@@ -6,9 +6,29 @@
 <title>Un Universo para Ti 💖</title>
 <style>
   body { margin: 0; background: black; overflow: hidden; font-family: 'Courier New', monospace; color: white; }
+  
+  /* --- NUEVA PANTALLA DE ENTRADA --- */
+  #pantallaEntrada {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: black; z-index: 999; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; color: #ff69b4;
+    transition: opacity 1s ease; /* Para que se desvanezca suavemente */
+  }
+  #pantallaEntrada h2 { font-size: 2rem; text-shadow: 0 0 15px #ff69b4; text-align: center; padding: 0 20px;}
+  #btnEmpezarUniverso {
+    margin-top: 30px; padding: 15px 40px; font-size: 1.5rem; background: #ff1493;
+    color: white; border: none; border-radius: 50px; cursor: pointer;
+    box-shadow: 0 0 25px #ff1493; animation: latidoEntrada 1.5s infinite;
+  }
+  @keyframes latidoEntrada {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+
+  /* --- RESTO DEL UNIVERSO --- */
   #threeCanvas { display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
   
-  /* CAMBIO AQUÍ: Usamos position absolute desde el fondo para evitar el problema del celular */
   #mainContent {
     position: absolute; bottom: 60px; left: 0; width: 100%;
     z-index: 2; display: flex; flex-direction: column;
@@ -16,7 +36,6 @@
     pointer-events: none;
   }
   
-  /* ESTILOS BASE */
   h1 { font-size: 3.5rem; color: #fff; text-shadow: 0 0 20px #ff69b4, 0 0 30px #ff1493; margin-bottom: 10px; animation: glow 2s ease-in-out infinite alternate; margin-top: 0; }
   p { font-size: 1.5rem; color: #ffb6c1; max-width: 600px; margin-top: 0; margin-bottom: 0; }
   
@@ -24,6 +43,13 @@
     from { text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #ff69b4; }
     to { text-shadow: 0 0 20px #fff, 0 0 30px #ffb6c1, 0 0 40px #ff1493; }
   }
+
+  @keyframes latidoPastel {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+  }
+
   .btn-regresar {
     margin-top: 25px; padding: 15px 30px; font-size: 1.2rem; background: transparent;
     border: 2px solid #ff69b4; color: #ff69b4; border-radius: 50px; cursor: pointer;
@@ -34,10 +60,19 @@
 </head>
 <body>
 
+<audio id="musica2" loop>
+  <source src="musica2.mp3" type="audio/mpeg">
+</audio>
+
+<div id="pantallaEntrada">
+  <h2>✨ Viajando a un nuevo nivel... ✨</h2>
+  <button id="btnEmpezarUniverso">🚀 Entrar al Universo</button>
+</div>
+
 <div id="threeCanvas"></div>
 
 <div id="mainContent">
-  <h1 id="tituloCumple">¡Feliz Cumpleaños! 🎂💖</h1>
+  <h1 id="tituloCumple">¡Feliz Cumpleaños! <span id="pastelBtn" style="cursor:pointer; pointer-events:auto;" title="Toca para regresar">🎂</span>💖</h1>
   <p id="parrafoCumple">Eres el sol que ilumina mi universo. Que este nuevo año cumplas muchas cosas y sigamos siempre juntos❤️</p>
   <button id="btnVolver" class="btn-regresar" onclick="window.location.href='index.html'">⬅️ Regresar al inicio</button>
 </div>
@@ -46,34 +81,56 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
 <script>
+// --- CONTROL DE LA PANTALLA DE ENTRADA Y MÚSICA ---
+document.getElementById('btnEmpezarUniverso').addEventListener('click', function() {
+    // 1. Reproducir la música (ahora sí lo permite porque el usuario hizo clic)
+    document.getElementById('musica2').play();
+    
+    // 2. Desvanecer la pantalla de entrada
+    const pantalla = document.getElementById('pantallaEntrada');
+    pantalla.style.opacity = '0';
+    
+    // 3. Eliminarla completamente después del desvanecimiento (1 segundo)
+    setTimeout(() => {
+        pantalla.style.display = 'none';
+    }, 1000);
+});
+
+// --- EL PASTEL COMO BOTÓN DE RETORNO ---
+document.getElementById('pastelBtn').addEventListener('click', () => {
+    window.location.href = 'index.html';
+});
+
 // --- LEER LA ELECCIÓN DEL USUARIO ---
 const eleccion = localStorage.getItem('dispositivoElegido');
 const esCelular = (eleccion === 'celular') || (window.innerWidth < 768 && eleccion !== 'pc');
 
-// --- FUERZA BRUTA PARA ACHICAR LETRAS Y SUBIR EL BOTÓN SI ES CELULAR ---
+// --- FUERZA BRUTA PARA ACHICAR LETRAS, ANIMAR EL PASTEL Y OCULTAR EL BOTÓN VIEJO ---
 if (esCelular) {
-    document.addEventListener("DOMContentLoaded", () => {
-        const titulo = document.getElementById('tituloCumple');
-        const parrafo = document.getElementById('parrafoCumple');
-        const boton = document.getElementById('btnVolver');
-        const contenedor = document.getElementById('mainContent');
-        
-        titulo.style.fontSize = "1.8rem";      
-        titulo.style.marginBottom = "5px";
-        parrafo.style.fontSize = "1.1rem";     
-        parrafo.style.maxWidth = "90%";
-        parrafo.style.padding = "0 15px";
-        
-        // SOLUCIÓN: Subimos todo el bloque 100px hacia arriba para que la barra no lo tape
-        contenedor.style.bottom = "100px"; 
-        
-        boton.style.padding = "10px 20px";
-        boton.style.fontSize = "1rem";
-        boton.style.marginTop = "20px";
-    });
+    const titulo = document.getElementById('tituloCumple');
+    const parrafo = document.getElementById('parrafoCumple');
+    const boton = document.getElementById('btnVolver');
+    const contenedor = document.getElementById('mainContent');
+    const pastel = document.getElementById('pastelBtn');
+    
+    titulo.style.fontSize = "1.8rem";      
+    titulo.style.marginBottom = "5px";
+    parrafo.style.fontSize = "1.1rem";     
+    parrafo.style.maxWidth = "90%";
+    parrafo.style.padding = "0 15px";
+    
+    boton.style.display = "none"; 
+    
+    pastel.style.display = "inline-block";
+    pastel.style.animation = "latidoPastel 1.5s infinite";
+    
+    contenedor.style.bottom = "50px"; 
+} else {
+    // Si NO es celular, ocultamos el pastel (porque tenemos el botón grande de regresar)
+    document.getElementById('pastelBtn').style.display = "none";
 }
 
-// VARIABLES GLOBALES
+// VARIABLES GLOBALES 3D
 let scene, camera, renderer, controls, sun;
 let width, height, starfield;
 let detailedPlanets = []; 
