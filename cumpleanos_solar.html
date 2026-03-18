@@ -12,8 +12,16 @@
     align-items: center; justify-content: flex-end; height: 100vh; text-align: center;
     pointer-events: none; padding-bottom: 50px;
   }
-  h1 { font-size: 3.5rem; color: #fff; text-shadow: 0 0 20px #ff69b4, 0 0 30px #ff1493; margin-bottom: 10px; animation: glow 2s ease-in-out infinite alternate; }
-  p { font-size: 1.5rem; color: #ffb6c1; max-width: 600px; margin-top: 0; }
+  
+  /* Tamaños para computadora (PC) */
+  h1 { 
+    font-size: 3.5rem; color: #fff; text-shadow: 0 0 20px #ff69b4, 0 0 30px #ff1493; 
+    margin-bottom: 10px; animation: glow 2s ease-in-out infinite alternate; 
+  }
+  p { 
+    font-size: 1.5rem; color: #ffb6c1; max-width: 600px; margin-top: 0; 
+  }
+
   @keyframes glow {
     from { text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #ff69b4; }
     to { text-shadow: 0 0 20px #fff, 0 0 30px #ffb6c1, 0 0 40px #ff1493; }
@@ -24,6 +32,14 @@
     box-shadow: 0 0 15px rgba(255, 105, 180, 0.5); pointer-events: auto; transition: all 0.3s;
   }
   .btn-regresar:hover { background: #ff69b4; color: white; box-shadow: 0 0 30px #ff69b4; }
+
+  /* NUEVO: Ajustes automáticos para Celulares */
+  @media (max-width: 768px) {
+    h1 { font-size: 2rem; margin-bottom: 5px; }
+    p { font-size: 1.1rem; max-width: 90%; padding: 0 15px; }
+    #mainContent { padding-bottom: 30px; }
+    .btn-regresar { padding: 10px 20px; font-size: 1rem; margin-top: 20px; }
+  }
 </style>
 </head>
 <body>
@@ -32,7 +48,7 @@
 
 <div id="mainContent">
   <h1>¡Feliz Cumpleaños! 🎂💖</h1>
-  <p>Eres el sol que ilumina mi universo. Que este nuevo año cumplas muchas cosas y sigamos siempre juntos❤️.</p>
+  <p>Eres el sol que ilumina mi universo. Que este nuevo año cumplas muchas cosas y sigamos siempre juntos❤️</p>
   <button class="btn-regresar" onclick="window.location.href='index.html'">⬅️ Regresar al inicio</button>
 </div>
 
@@ -67,7 +83,6 @@ function init() {
 
   renderer = new THREE.WebGLRenderer({ antialias: false }); 
   renderer.setSize(width, height);
-  // OPTIMIZACIÓN CLAVE: Limitamos la resolución en celulares para evitar lag
   renderer.setPixelRatio(esCelular ? 1 : Math.min(window.devicePixelRatio, 2)); 
   document.getElementById('threeCanvas').appendChild(renderer.domElement);
 
@@ -107,7 +122,7 @@ function init() {
 }
 
 function createDetailedPlanet(radius, color, distance, speed, hasRing=false) {
-    const geometry = new THREE.SphereGeometry(radius, esCelular ? 12 : 16, esCelular ? 12 : 16); // Menos polígonos en cell
+    const geometry = new THREE.SphereGeometry(radius, esCelular ? 12 : 16, esCelular ? 12 : 16);
     const material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6 });
     const mesh = new THREE.Mesh(geometry, material);
     const angle = Math.random() * Math.PI * 2;
@@ -133,7 +148,6 @@ function createDetailedPlanet(radius, color, distance, speed, hasRing=false) {
 function createStarfield() {
     const starsGeometry = new THREE.BufferGeometry();
     const starsPositions = [];
-    // OPTIMIZACIÓN: 3000 estrellas en celular, 8000 en PC
     const numEstrellas = esCelular ? 3000 : 8000;
     
     for (let i = 0; i < numEstrellas; i++) { 
@@ -150,7 +164,6 @@ function createRealisticLocalizedFog() {
     const fogPositions = [];
     const fogColors = [];
 
-    // OPTIMIZACIÓN: Mitad de partículas de niebla en celular
     const totalFogParticles = esCelular ? 300 : 600; 
     const nebulaBaseColor = new THREE.Color(0xff69b4); 
     const nebulaAltColor = new THREE.Color(0x87cefa); 
@@ -204,7 +217,6 @@ function loadPhotoStars() {
 }
 
 function triggerSunExplosion() {
-    // OPTIMIZACIÓN: Menos partículas de explosión en celular
     const totalExplosionParticles = esCelular ? 250 : 500; 
     const geometry = new THREE.BufferGeometry();
     const positions = [];
