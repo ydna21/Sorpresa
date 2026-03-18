@@ -32,7 +32,7 @@
 
 <div id="mainContent">
   <h1>¡Feliz Cumpleaños! 🎂💖</h1>
-  <p>Eres el sol que ilumina mi universo. Que este nuevo año esté lleno de órbitas de felicidad.</p>
+  <p>Eres el sol que ilumina mi universo. Que este nuevo año cumplas muchas cosas y sigamos siempre juntos❤️.</p>
   <button class="btn-regresar" onclick="window.location.href='index.html'">⬅️ Regresar al inicio</button>
 </div>
 
@@ -51,6 +51,9 @@ const textureLoader = new THREE.TextureLoader();
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
+// DETECTAMOS SI ES UN CELULAR PARA OPTIMIZAR
+const esCelular = window.innerWidth < 768;
+
 function init() {
   width = window.innerWidth;
   height = window.innerHeight;
@@ -64,7 +67,8 @@ function init() {
 
   renderer = new THREE.WebGLRenderer({ antialias: false }); 
   renderer.setSize(width, height);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
+  // OPTIMIZACIÓN CLAVE: Limitamos la resolución en celulares para evitar lag
+  renderer.setPixelRatio(esCelular ? 1 : Math.min(window.devicePixelRatio, 2)); 
   document.getElementById('threeCanvas').appendChild(renderer.domElement);
 
   controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -97,14 +101,13 @@ function init() {
   createRealisticLocalizedFog();
   loadPhotoStars();
 
-  // EVENTOS PARA EL CLIC EN EL SOL (CORREGIDOS PARA PC)
   const canvasElement = document.getElementById('threeCanvas');
-  canvasElement.addEventListener('click', onSunClick); // 'click' funciona perfecto en PC sin interferir con el arrastre
+  canvasElement.addEventListener('click', onSunClick); 
   canvasElement.addEventListener('touchstart', onSunTouch, { passive: false });
 }
 
 function createDetailedPlanet(radius, color, distance, speed, hasRing=false) {
-    const geometry = new THREE.SphereGeometry(radius, 16, 16); 
+    const geometry = new THREE.SphereGeometry(radius, esCelular ? 12 : 16, esCelular ? 12 : 16); // Menos polígonos en cell
     const material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6 });
     const mesh = new THREE.Mesh(geometry, material);
     const angle = Math.random() * Math.PI * 2;
@@ -112,14 +115,14 @@ function createDetailedPlanet(radius, color, distance, speed, hasRing=false) {
     detailedPlanets.push({ mesh: mesh, distance, angle, speed, selfRotation: 0.01 + Math.random()*0.02 });
     scene.add(mesh);
     
-    const ringGeo = new THREE.RingGeometry(distance - 0.5, distance + 0.5, 64);
+    const ringGeo = new THREE.RingGeometry(distance - 0.5, distance + 0.5, esCelular ? 32 : 64);
     const ringMat = new THREE.MeshBasicMaterial({ color: 0xff69b4, side: THREE.DoubleSide, transparent: true, opacity: 0.1 });
     const orbitRing = new THREE.Mesh(ringGeo, ringMat);
     orbitRing.rotation.x = Math.PI / 2;
     scene.add(orbitRing);
 
     if (hasRing) {
-        const saturnRingGeo = new THREE.RingGeometry(radius + 10, radius + 40, 64);
+        const saturnRingGeo = new THREE.RingGeometry(radius + 10, radius + 40, esCelular ? 32 : 64);
         const saturnRingMat = new THREE.MeshBasicMaterial({ color: 0xff69b4, side: THREE.DoubleSide, transparent: true, opacity: 0.3 });
         const saturnRing = new THREE.Mesh(saturnRingGeo, saturnRingMat);
         saturnRing.rotation.x = Math.PI / 2.1; 
@@ -130,11 +133,14 @@ function createDetailedPlanet(radius, color, distance, speed, hasRing=false) {
 function createStarfield() {
     const starsGeometry = new THREE.BufferGeometry();
     const starsPositions = [];
-    for (let i = 0; i < 8000; i++) { 
+    // OPTIMIZACIÓN: 3000 estrellas en celular, 8000 en PC
+    const numEstrellas = esCelular ? 3000 : 8000;
+    
+    for (let i = 0; i < numEstrellas; i++) { 
         starsPositions.push((Math.random() - 0.5) * 18000, (Math.random() - 0.5) * 18000, (Math.random() - 0.5) * 18000);
     }
     starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsPositions, 3));
-    const starsMaterial = new THREE.PointsMaterial({ size: 3, color: 0xffffff, transparent: true, opacity: 0.8 });
+    const starsMaterial = new THREE.PointsMaterial({ size: esCelular ? 4 : 3, color: 0xffffff, transparent: true, opacity: 0.8 });
     starfield = new THREE.Points(starsGeometry, starsMaterial);
     scene.add(starfield);
 }
@@ -144,7 +150,8 @@ function createRealisticLocalizedFog() {
     const fogPositions = [];
     const fogColors = [];
 
-    const totalFogParticles = 600; 
+    // OPTIMIZACIÓN: Mitad de partículas de niebla en celular
+    const totalFogParticles = esCelular ? 300 : 600; 
     const nebulaBaseColor = new THREE.Color(0xff69b4); 
     const nebulaAltColor = new THREE.Color(0x87cefa); 
 
@@ -197,7 +204,8 @@ function loadPhotoStars() {
 }
 
 function triggerSunExplosion() {
-    const totalExplosionParticles = 500; 
+    // OPTIMIZACIÓN: Menos partículas de explosión en celular
+    const totalExplosionParticles = esCelular ? 250 : 500; 
     const geometry = new THREE.BufferGeometry();
     const positions = [];
     const velocities = []; 
@@ -275,13 +283,11 @@ function onSunClick(e) {
   mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
   const intersects = raycaster.intersectObject(sun);
-  // Si le damos clic al sol, activamos la explosión
   if (intersects.length > 0) triggerSunExplosion();
 }
 
 function onSunTouch(e) {
   if (e.touches.length > 0) {
-    // Tomamos la coordenada del primer dedo
     mouse.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
