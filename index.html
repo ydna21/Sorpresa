@@ -45,7 +45,7 @@
   #recuerdosContent h2,#fotosContent h2{color:#ff69b4;font-size:2rem;margin-bottom:20px;}
   #recuerdosContent ul{list-style:none;padding:0;margin-bottom:20px;color:white;font-size:1.2rem;}
   #recuerdosContent button,#fotosContent button{padding:12px 25px;font-size:1.2rem;background:#ff69b4;
-    color:white;border:none;border-radius:12px;cursor:pointer;box-shadow:0 0 15px #ff69b4; margin: 10px 0;}
+    color:white;border:none;border-radius:12px;cursor:pointer;box-shadow:0 0 15px #ff69b4; margin: 10px 5px;}
 
   /* Overlay foto grande */
   #fotoGrandeOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;
@@ -93,9 +93,14 @@
       <li>15 de julio 2023 – Nuestro reencuentro y detalle 💖</li>
       <li>21 de julio 2023 – Primera salida para volver a conocernos ✨</li>
     </ul>
-    <button id="btnRegresarRecuerdos">⬅️ Regresar</button>
-    <button id="btnRompecabezas">🧩 Rompecabezas</button>
-    <button id="btnCarta" style="display:none;">💌 Carta secreta</button>
+    <div>
+      <button id="btnRegresarRecuerdos">⬅️ Regresar</button>
+      <button id="btnRompecabezas">🧩 Rompecabezas</button>
+    </div>
+    <div>
+      <button id="btnCarta" style="display:none;">💌 Carta secreta</button>
+      <button id="btnNivelEspecial" style="display:none; background:#ff1493; box-shadow:0 0 25px #ff1493;">🎁 NIVEL ESPECIAL 🎂</button>
+    </div>
   </div>
 </div>
 
@@ -264,16 +269,28 @@ document.addEventListener("DOMContentLoaded", () => {
   
   const btnPuzzle = document.getElementById("btnRompecabezas");
   const btnCarta = document.getElementById("btnCarta");
+  const btnNivelEspecial = document.getElementById("btnNivelEspecial"); // BOTÓN NUEVO
+
   const puzzleScreen = document.getElementById("puzzleScreen");
   const cartaModal = document.getElementById("cartaModal");
 
   const hoy = new Date();
+  
+  // Lógica para Aniversario (11 de Agosto)
   const esAniversario = (hoy.getDate() === 11 && hoy.getMonth() === 7); 
-
   if (esAniversario) {
     btnCarta.style.display = "inline-block"; 
   } else {
     btnCarta.style.display = "none";
+  }
+
+  // Lógica para Cumpleaños (8 de Julio)
+  
+  const esCumpleanos = true;
+  if (esCumpleanos) {
+    btnNivelEspecial.style.display = "inline-block";
+  } else {
+    btnNivelEspecial.style.display = "none";
   }
 
   btnRecuerdos.addEventListener("click",()=>{
@@ -288,6 +305,11 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   btnRegresarRecuerdos.addEventListener("click",()=>{regresarPantalla();});
+  
+  // Redirección del botón especial
+  btnNivelEspecial.addEventListener("click", () => {
+    window.location.href = "cumpleanos_solar.html";
+  });
   
   // AL REGRESAR DE FOTOS: Detenemos la lluvia de fotos y reactivamos confeti
   btnRegresarFotos.addEventListener("click",()=>{
@@ -540,8 +562,6 @@ function checkFechasEspeciales(mostrarTexto = true){
   if(d===11 && m===7){ mensaje="🎉 Feliz aniversario 💖, otro año mas junto a ti💖"; }
   if(d===8 && m===6){ mensaje="🎂 Feliz cumpleaños amor 💖"; }
   if(d===10 && m===1){ mensaje="🎂 Feliz cumpleaños 🎉"; }
-
-
 
   // Si hay mensaje, llamamos a la función
   if(mensaje){ lanzarConfeti(mensaje, mostrarTexto); }
