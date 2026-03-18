@@ -54,34 +54,39 @@
 <script>
 // VARIABLES GLOBALES
 let scene, camera, renderer, controls;
-let width, height, starfield, sun, planets = [];
+let width, height, sun, planets = [];
+let shootingStars = [];
 
 function init() {
   width = window.innerWidth;
   height = window.innerHeight;
 
-  // 1. Escena (El "mundo" 3D)
+  // 1. Escena 
   scene = new THREE.Scene();
 
-  // 2. Cámara (Perspectiva para 3D)
-  camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 10000);
-  camera.position.set(0, 150, 400); // Elevada y alejada
+  // 2. Fondo del Universo (AÑADIMOS UNA NEBULOSA REAL)
+  const textureLoader = new THREE.TextureLoader();
+  // Esta textura añade un fondo galáctico complejo (blues, purples, pinks)
+  const backgroundTexture = textureLoader.load('https://dl.dropboxusercontent.com/s/7t7i03848w481d6/nebula_background_texture.jpg');
+  scene.background = backgroundTexture;
 
-  // 3. Renderer (El motor gráfico)
+  // 3. Cámara 
+  camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 10000);
+  camera.position.set(0, 150, 400); 
+
+  // 4. Renderer 
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(width, height);
   document.getElementById('threeCanvas').appendChild(renderer.domElement);
 
-  // 4. Controles para mover el universo con el Mouse
+  // 5. Controles
   controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true; 
   controls.dampingFactor = 0.05;
   controls.minDistance = 100;
-  controls.maxDistance = 2000;
+  controls.maxDistance = 3000; // Un poco más lejos para apreciar el fondo
 
   // --- Creación de Objetos ---
-
-  createStarfield();
 
   // Sol Central
   const sunGeometry = new THREE.SphereGeometry(60, 32, 32);
@@ -89,10 +94,10 @@ function init() {
   sun = new THREE.Mesh(sunGeometry, sunMaterial);
   scene.add(sun);
   
-  // Luz del Sol y luz ambiente para iluminar los planetas
+  // Luces
   const sunLight = new THREE.PointLight(0xff69b4, 2, 1000); 
   scene.add(sunLight);
-  const ambientLight = new THREE.AmbientLight(0x404040, 0.8); // Luz suave
+  const ambientLight = new THREE.AmbientLight(0x404040, 1); // Luz suave
   scene.add(ambientLight);
 
   // Planetas
@@ -101,14 +106,13 @@ function init() {
   for (let i = 0; i < 5; i++) {
     const pRadius = 10 + Math.random() * 15;
     const pGeometry = new THREE.SphereGeometry(pRadius, 32, 32);
-    // MeshStandardMaterial reacciona a la luz
     const pMaterial = new THREE.MeshStandardMaterial({ 
         color: planetColors[i % planetColors.length], 
         roughness: 0.4 
     });
     const planet = new THREE.Mesh(pGeometry, pMaterial);
     
-    const distance = 160 + i * 80; 
+    const distance = 160 + i * 100; // Más separación para ver mejor
     const angle = Math.random() * Math.PI * 2; 
     const speed = 0.005 + Math.random() * 0.01; 
 
@@ -119,27 +123,12 @@ function init() {
 
     createOrbitRing(distance);
   }
-}
-
-// Estrellas
-function createStarfield() {
-  const starsGeometry = new THREE.BufferGeometry();
-  const starsPositions = [];
-
-  for (let i = 0; i < 5000; i++) {
-    const x = (Math.random() - 0.5) * 6000;
-    const y = (Math.random() - 0.5) * 6000;
-    const z = (Math.random() - 0.5) * 6000;
-    starsPositions.push(x, y, z);
-  }
   
-  starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsPositions, 3));
-  const starsMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 2, transparent: true, opacity: 0.8 });
-  starfield = new THREE.Points(starsGeometry, starsMaterial);
-  scene.add(starfield);
+  // AÑADIMOS EL SISTEMA DE ESTRELLAS FUGACES
+  createShootingStars();
 }
 
-// Anillo de órbita
+// Anillo de órbita (Línea sutil)
 function createOrbitRing(distance) {
   const ringGeometry = new THREE.RingGeometry(distance - 0.5, distance + 0.5, 128);
   const ringMaterial = new THREE.MeshBasicMaterial({ color: 0xff69b4, side: THREE.DoubleSide, transparent: true, opacity: 0.15 });
@@ -148,11 +137,42 @@ function createOrbitRing(distance) {
   scene.add(ring);
 }
 
+// Crear sistema de estrellas fugaces rápidas
+function createShootingStars() {
+    const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1 });
+    const starGeometry = new THREE.SphereGeometry(1, 4, 4);
+
+    for (let i = 0; i < 10; i++) {
+        const star = new THREE.Mesh(starGeometry, starMaterial.clone());
+        resetShootingStar(star); // Posición inicial aleatoria lejana
+        shootingStars.push(star);
+        scene.add(star);
+    }
+}
+
+// Restablecer la posición de una estrella fugaz para que vuelva a cruzar
+function resetShootingStar(star) {
+    // Posición inicial aleatoria lejos en el borde de la escena
+    star.position.set(
+        (Math.random() - 0.5) * 4000,
+        (Math.random() - 0.5) * 4000,
+        (Math.random() - 0.5) * 4000
+    );
+    // Velocidad de cruce rápida y aleatoria
+    star.userData.velocity = new THREE.Vector3(
+        (Math.random() - 0.5) * 40,
+        (Math.random() - 0.5) * 40,
+        (Math.random() - 0.5) * 40
+    );
+    star.material.opacity = 0; // Oculta al restablecer
+}
+
 // Bucle de animación 
 function animate() {
   requestAnimationFrame(animate);
   controls.update();
 
+  // Animar planetas
   planets.forEach(p => {
     p.angle += p.speed;
     p.mesh.position.x = Math.cos(p.angle) * p.distance;
@@ -160,12 +180,32 @@ function animate() {
     p.mesh.rotation.y += p.selfRotation;
   });
   
+  // Rotación del Sol
   sun.rotation.y += 0.002;
-  starfield.rotation.y += 0.0005; // Rotación lenta de las estrellas
+  
+  // ANIMAR ESTRELLAS FUGACES
+  shootingStars.forEach(star => {
+      // Mover la estrella
+      star.position.add(star.userData.velocity);
+      
+      // Controlar la opacidad (aparecer y desaparecer rápido)
+      const distanceToCenter = star.position.distanceTo(scene.position);
+      if (distanceToCenter < 1000 && distanceToCenter > 100) {
+          star.material.opacity = Math.min(star.material.opacity + 0.1, 1);
+      } else {
+          star.material.opacity = Math.max(star.material.opacity - 0.1, 0);
+      }
+      
+      // Si se aleja mucho, resetearla
+      if (distanceToCenter > 2000 || Math.abs(star.position.y) > 2000) {
+          resetShootingStar(star);
+      }
+  });
 
   renderer.render(scene, camera);
 }
 
+// Manejo del cambio de tamaño
 function onWindowResize() {
   width = window.innerWidth;
   height = window.innerHeight;
