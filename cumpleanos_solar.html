@@ -7,7 +7,6 @@
 <style>
   body { margin: 0; background: black; overflow: hidden; font-family: 'Courier New', monospace; color: white; }
   
-  /* --- PANTALLA DE ENTRADA --- */
   #pantallaEntrada {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: black; z-index: 999; display: flex; flex-direction: column;
@@ -16,22 +15,20 @@
   }
   #pantallaEntrada h2 { font-size: 2rem; text-shadow: 0 0 15px #ff69b4; text-align: center; padding: 0 20px;}
   
-  /* ESTILOS DEL BOTÓN (Inicia apagado y bloqueado) */
   #btnEmpezarUniverso {
     margin-top: 30px; padding: 15px 40px; font-size: 1.5rem; background: #ff1493;
     color: white; border: none; border-radius: 50px; 
     box-shadow: 0 0 25px #ff1493;
-    opacity: 0.5; /* Opacidad baja al inicio */
-    cursor: not-allowed; /* Cursor de "espera" */
-    pointer-events: none; /* Bloquea los clics */
+    opacity: 0.5; 
+    cursor: not-allowed; 
+    pointer-events: none; 
     transition: all 0.5s ease;
   }
   
-  /* Clase que se añade cuando pasan los 4 segundos */
   #btnEmpezarUniverso.listo {
     opacity: 1;
     cursor: pointer;
-    pointer-events: auto; /* Permite hacer clic */
+    pointer-events: auto; 
     animation: latidoEntrada 1.5s infinite;
   }
 
@@ -41,7 +38,6 @@
     100% { transform: scale(1); }
   }
 
-  /* --- RESTO DEL UNIVERSO --- */
   #threeCanvas { display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
   
   #mainContent {
@@ -109,7 +105,7 @@ const intervaloCarga = setInterval(() => {
     } else {
         clearInterval(intervaloCarga);
         btnEmpezar.innerText = "🚀 Entrar al Universo";
-        btnEmpezar.classList.add("listo"); // Añade animación y permite el clic
+        btnEmpezar.classList.add("listo"); 
         document.querySelector('#pantallaEntrada h2').innerText = "✨ El universo está listo ✨";
     }
 }, 1000);
@@ -133,7 +129,6 @@ document.getElementById('btnEmpezarUniverso').addEventListener('click', function
         controls.enabled = true;
         enViaje = false;
         
-        // Al terminar el viaje en PC, nos aseguramos de que el FOV de la cámara vuelva a la normalidad
         if (!esCelular) {
             camera.fov = 75;
             camera.updateProjectionMatrix();
@@ -182,6 +177,12 @@ const textureLoader = new THREE.TextureLoader();
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
+// VARIABLES PARA EFECTO PARALLAX (Solo PC)
+let mouseXParallax = 0;
+let mouseYParallax = 0;
+let targetCameraX = 0;
+let targetCameraY = 300;
+
 function init() {
   width = window.innerWidth;
   height = window.innerHeight;
@@ -190,11 +191,10 @@ function init() {
   scene.background = new THREE.Color(0x000000);
   scene.fog = new THREE.FogExp2(0x000000, 0.0001); 
 
-  // CÁMARA INICIALMENTE LEJOS
   camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 30000);
   camera.position.set(0, 1000, 5000); 
 
-  renderer = new THREE.WebGLRenderer({ antialias: false }); 
+  renderer = new THREE.WebGLRenderer({ antialias: !esCelular }); // Antialias activo solo en PC para bordes suaves
   renderer.setSize(width, height);
   renderer.setPixelRatio(esCelular ? 1 : Math.min(window.devicePixelRatio, 2)); 
   document.getElementById('threeCanvas').appendChild(renderer.domElement);
@@ -234,12 +234,35 @@ function init() {
   const canvasElement = document.getElementById('threeCanvas');
   canvasElement.addEventListener('click', onSunClick); 
   canvasElement.addEventListener('touchstart', onSunTouch, { passive: false });
+  
+  // EVENTO DE MOVIMIENTO DE MOUSE (Para Parallax e Interacción)
+  window.addEventListener('mousemove', onMouseMove);
+}
+
+function onMouseMove(event) {
+    // Normalizamos el mouse de -1 a 1
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    // Para el efecto Parallax
+    if (!esCelular) {
+        mouseXParallax = (event.clientX - window.innerWidth / 2) * 2; // Rango de movimiento X
+        mouseYParallax = (event.clientY - window.innerHeight / 2) * 2; // Rango de movimiento Y
+    }
 }
 
 function createDetailedPlanet(radius, color, distance, speed, hasRing=false) {
-    const geometry = new THREE.SphereGeometry(radius, esCelular ? 12 : 16, esCelular ? 12 : 16);
-    const material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6 });
+    const geometry = new THREE.SphereGeometry(radius, esCelular ? 12 : 32, esCelular ? 12 : 32); // Más detalle en PC
+    const material = new THREE.MeshStandardMaterial({ 
+        color: color, 
+        roughness: 0.6,
+        emissive: 0x000000 // Inicia apagado (se iluminará al pasar el mouse)
+    });
     const mesh = new THREE.Mesh(geometry, material);
+    
+    // Guardamos el color base para el efecto hover
+    mesh.userData.baseColor = color; 
+    
     const angle = Math.random() * Math.PI * 2;
     mesh.position.set(Math.cos(angle) * distance, 0, Math.sin(angle) * distance);
     detailedPlanets.push({ mesh: mesh, distance, angle, speed, selfRotation: 0.01 + Math.random()*0.02 });
@@ -276,6 +299,37 @@ function createStarfield() {
     const starsMaterial = new THREE.PointsMaterial({ size: esCelular ? 4 : 3, color: 0xffffff, transparent: true, opacity: 0.8 });
     starfield = new THREE.Points(starsGeometry, starsMaterial);
     scene.add(starfield); 
+    
+    // PC EXCLUSIVO: ESTRELLAS FUGACES COMO COMETAS (Estelas largas)
+    if (!esCelular) {
+        createComets();
+    }
+}
+
+// EFECTO PC: COMETAS CON ESTELAS
+let comets = [];
+function createComets() {
+    const cometMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
+    // En PC, la esfera se estira en Z para parecer un láser/cometa
+    const cometGeometry = new THREE.SphereGeometry(2, 8, 8); 
+    
+    for (let i = 0; i < 20; i++) {
+        const comet = new THREE.Mesh(cometGeometry, cometMaterial.clone());
+        resetComet(comet); 
+        comets.push(comet);
+        scene.add(comet);
+    }
+}
+function resetComet(comet) {
+    comet.position.set((Math.random() - 0.5) * 15000, (Math.random() - 0.5) * 10000, (Math.random() - 0.5) * 15000);
+    const v = new THREE.Vector3((Math.random() - 0.5), (Math.random() - 0.5), (Math.random() - 0.5)).normalize().multiplyScalar(150 + Math.random() * 100);
+    comet.userData.velocity = v;
+    
+    // Escala Z muy alta para parecer una estela
+    comet.scale.set(1, 1, 30);
+    // Lo rotamos para que mire hacia su dirección de movimiento
+    comet.lookAt(comet.position.clone().add(v));
+    comet.material.opacity = 0; 
 }
 
 function createRealisticLocalizedFog() {
@@ -373,8 +427,6 @@ function createGlowTextTexture(text) {
 }
 
 function onSunClick(e) {
-  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
   const intersects = raycaster.intersectObject(sun);
   if (intersects.length > 0) triggerSunExplosion();
@@ -394,21 +446,12 @@ let prevTime = Date.now();
 
 function animate() {
   requestAnimationFrame(animate);
-  controls.update();
   
   const time = Date.now();
   const delta = (time - prevTime) / 1000; 
   prevTime = time;
 
-  // ANIMACIÓN DE ESTRELLAS Y SOL
-  sun.rotation.y += 0.002;
-  
-  photoStars.forEach(sprite => {
-      if (Math.random() < 0.01) sprite.userData.pulseOpacity = 0.6 + Math.random() * 0.4;
-      sprite.material.opacity = THREE.MathUtils.lerp(sprite.material.opacity, sprite.userData.pulseOpacity, 0.05);
-  });
-
-  // --- LÓGICA DE VIAJE ESPACIAL ---
+  // LÓGICA DE VIAJE ESPACIAL
   if (enViaje) {
       viajeProgress += delta * 1000;
       if (viajeProgress > viajeDuration) viajeProgress = viajeDuration;
@@ -417,46 +460,87 @@ function animate() {
       const targetX = 0; const targetY = 300; const targetZ = 1100;
       const t = Math.pow(ratio, 2); 
       
-      // La cámara viaja hacia el sol (Esto pasa en PC y celular)
       camera.position.x = THREE.MathUtils.lerp(0, targetX, t);
       camera.position.y = THREE.MathUtils.lerp(1000, targetY, t);
       camera.position.z = THREE.MathUtils.lerp(5000, targetZ, t);
       
       if (!esCelular) {
-          // --- EFECTOS PRO SOLO PARA PC (Agujero Negro / Hiperespacio) ---
-          
-          // 1. Distorsión de FOV: El espacio se alarga al máximo en el medio del viaje
           const warpFov = Math.sin(ratio * Math.PI) * 50; 
           camera.fov = 75 + warpFov;
           camera.updateProjectionMatrix();
-
-          // 2. Las estrellas de fondo giran en espiral envolvente
           starfield.rotation.z += 5 * (1 - ratio) * delta;
-
-          // 3. El sistema solar rota a una velocidad vertiginosa hacia ti
           const speed = 12 * (1 - ratio) + 0.1;
           systemRotationGroup.rotation.y += speed * delta;
-
       } else {
-          // --- EFECTOS CELULAR (Más sutiles para no dar lag) ---
           starfield.rotation.y += 0.0001;
           const speed = 4 * (1 - ratio) + 0.1; 
           systemRotationGroup.rotation.y += speed * delta;
       }
       
   } else {
-      // Movimiento normal cuando no hay viaje
+      controls.update();
       starfield.rotation.y += 0.0001;
       systemRotationGroup.rotation.y += 0.001;
+      
+      // --- NUEVO: EFECTO PARALLAX INTERACTIVO (SOLO PC) ---
+      if (!esCelular) {
+          // Movimiento suave de cámara basado en la posición del mouse
+          targetCameraX = mouseXParallax * 0.5;
+          targetCameraY = -mouseYParallax * 0.5 + 300; // Mantiene altura base
+          
+          camera.position.x += (targetCameraX - camera.position.x) * 0.02;
+          camera.position.y += (targetCameraY - camera.position.y) * 0.02;
+          camera.lookAt(scene.position); // Siempre mirar al sol
+          
+          // --- NUEVO: EFECTO HOVER EN PLANETAS (SOLO PC) ---
+          raycaster.setFromCamera(mouse, camera);
+          
+          // Apagamos todos primero
+          let intersects = raycaster.intersectObjects(detailedPlanets.map(p => p.mesh));
+          
+          // Restauramos color original si no hay hover
+          detailedPlanets.forEach(p => {
+             p.mesh.material.emissive.setHex(0x000000);
+          });
+          document.body.style.cursor = 'default';
+
+          if (intersects.length > 0) {
+              // Iluminamos el planeta seleccionado
+              intersects[0].object.material.emissive.setHex(0xff69b4); // Brillo rosa
+              document.body.style.cursor = 'pointer';
+          }
+          
+          // Verificamos si tocamos el sol
+          if(raycaster.intersectObject(sun).length > 0) {
+              document.body.style.cursor = 'pointer';
+          }
+      }
   }
 
-  // Animación de Planetas
+  sun.rotation.y += 0.002;
+  
+  photoStars.forEach(sprite => {
+      if (Math.random() < 0.01) sprite.userData.pulseOpacity = 0.6 + Math.random() * 0.4;
+      sprite.material.opacity = THREE.MathUtils.lerp(sprite.material.opacity, sprite.userData.pulseOpacity, 0.05);
+  });
+
   detailedPlanets.forEach(p => {
     p.angle += p.speed;
     p.mesh.position.x = Math.cos(p.angle) * p.distance;
     p.mesh.position.z = Math.sin(p.angle) * p.distance;
     p.mesh.rotation.y += p.selfRotation; 
   });
+  
+  // ANIMAR COMETAS (SOLO PC)
+  if (!esCelular) {
+      comets.forEach(comet => {
+          comet.position.add(comet.userData.velocity.clone().multiplyScalar(delta));
+          const dist = comet.position.distanceTo(scene.position);
+          if (dist < 8000 && dist > 100) comet.material.opacity = Math.min(comet.material.opacity + 0.1, 1);
+          else comet.material.opacity = Math.max(comet.material.opacity - 0.1, 0);
+          if (dist > 18000 || Math.abs(comet.position.y) > 10000) resetComet(comet);
+      });
+  }
 
   // Animación Explosión
   const currentTime = Date.now();
