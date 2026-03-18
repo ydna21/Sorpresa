@@ -41,12 +41,16 @@
 
 <script>
 // VARIABLES GLOBALES
-let scene, camera, renderer, controls;
-let width, height, sun, starfield;
+let scene, camera, renderer, controls, sun;
+let width, height, starfield;
 let detailedPlanets = []; 
-let shootingStars = [];
-let photoStars = []; // Array para las fotos ultra-ligeras
+let photoStars = []; 
+let activeExplosions = []; // Para controlar la animación de la explosión
 const textureLoader = new THREE.TextureLoader();
+
+// Raycaster para detectar clics en 3D
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
 
 function init() {
   width = window.innerWidth;
@@ -54,29 +58,30 @@ function init() {
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000);
-  scene.fog = new THREE.FogExp2(0x000000, 0.0001); // Niebla para profundidad
+  // Niebla sutil para profundidad
+  scene.fog = new THREE.FogExp2(0x000000, 0.0001); 
 
-  camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 25000);
+  camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 30000);
   camera.position.set(0, 300, 1100);
 
-  // Optimizamos el renderer quitando sombras que no usamos
-  renderer = new THREE.WebGLRenderer({ antialias: false }); // Antialias false mejora FPS
+  renderer = new THREE.WebGLRenderer({ antialias: false }); 
   renderer.setSize(width, height);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Evita lag en pantallas HD
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
   document.getElementById('threeCanvas').appendChild(renderer.domElement);
 
   controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true; 
   controls.dampingFactor = 0.05;
   controls.minDistance = 150;
-  controls.maxDistance = 10000;
+  controls.maxDistance = 12000;
 
-  // SOL CENTRAL Y LUZ (Solo usamos 2 luces en todo el escenario para evitar lag)
+  // SOL CENTRAL (Interactuable)
   const sunGeometry = new THREE.SphereGeometry(60, 32, 32);
   const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffdf00 });
   sun = new THREE.Mesh(sunGeometry, sunMaterial);
   scene.add(sun);
   
+  // Luces de escena
   const sunLight = new THREE.PointLight(0xff69b4, 4, 3000); 
   scene.add(sunLight);
   const ambientLight = new THREE.AmbientLight(0x404040, 1.2); 
@@ -87,21 +92,25 @@ function init() {
   createDetailedPlanet(15, 0xdda0dd, 200, 0.012);
   createDetailedPlanet(18, 0x87cefa, 260, 0.010);
   createDetailedPlanet(12, 0xffdab9, 310, 0.009);
-  createDetailedPlanet(50, 0x98fb98, 500, 0.006, true); // Gigante con anillos
+  createDetailedPlanet(50, 0x98fb98, 500, 0.006, true); 
   createDetailedPlanet(40, 0xd8bfd8, 650, 0.005);
   createDetailedPlanet(30, 0xafeeee, 800, 0.004);
   createDetailedPlanet(28, 0xb0c4de, 950, 0.0035);
 
   createStarfield();
-  createLocalizedNebula();
-  createShootingStars();
   
-  // CARGA DE FOTOS OPTIMIZADA
+  // MEJORA: NIEBLA CÓSMICA LOCALIZADA Y REAL (No cuadrado)
+  createRealisticLocalizedFog();
+  
   loadPhotoStars();
+
+  // EVENTOS PARA EL CLIC EN EL SOL
+  window.addEventListener('mousedown', onSunClick);
+  window.addEventListener('touchstart', onSunTouch, { passive: false });
 }
 
 function createDetailedPlanet(radius, color, distance, speed, hasRing=false) {
-    const geometry = new THREE.SphereGeometry(radius, 16, 16); // Menos polígonos = más rápido
+    const geometry = new THREE.SphereGeometry(radius, 16, 16); 
     const material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6 });
     const mesh = new THREE.Mesh(geometry, material);
     const angle = Math.random() * Math.PI * 2;
@@ -128,8 +137,8 @@ function createDetailedPlanet(radius, color, distance, speed, hasRing=false) {
 function createStarfield() {
     const starsGeometry = new THREE.BufferGeometry();
     const starsPositions = [];
-    for (let i = 0; i < 6000; i++) { // Reducido un poco para rendimiento
-        starsPositions.push((Math.random() - 0.5) * 15000, (Math.random() - 0.5) * 15000, (Math.random() - 0.5) * 15000);
+    for (let i = 0; i < 8000; i++) { 
+        starsPositions.push((Math.random() - 0.5) * 18000, (Math.random() - 0.5) * 18000, (Math.random() - 0.5) * 18000);
     }
     starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsPositions, 3));
     const starsMaterial = new THREE.PointsMaterial({ size: 3, color: 0xffffff, transparent: true, opacity: 0.8 });
@@ -137,72 +146,182 @@ function createStarfield() {
     scene.add(starfield);
 }
 
-function createLocalizedNebula() {
-    const nebulaMaterial = new THREE.SpriteMaterial({ 
-        color: 0xff69b4, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending 
-    });
-    textureLoader.load('https://dl.dropboxusercontent.com/s/7t7i03848w481d6/nebula_background_texture.jpg', (texture) => {
-        nebulaMaterial.map = texture;
-        nebulaMaterial.needsUpdate = true;
-    });
-    const nebulaSprite = new THREE.Sprite(nebulaMaterial);
-    nebulaSprite.position.set(4000, 500, -4000);
-    nebulaSprite.scale.set(5000, 4000, 1);
-    scene.add(nebulaSprite);
-}
+// NUEVO: Crea una nebulosa realista localizada (efecto niebla de gas difusa)
+function createRealisticLocalizedFog() {
+    // Sistema de partículas para la niebla. No usa UN cuadrado, usa cientos de puntos difusos.
+    const fogParticlesGeometry = new THREE.BufferGeometry();
+    const fogPositions = [];
+    const fogColors = [];
 
-// NUEVO: SISTEMA DE FOTOS LIGERO (SPRITES)
-function loadPhotoStars() {
-    const totalFotos = 40;
-    
-    for (let i = 1; i <= totalFotos; i++) {
-        // MUY IMPORTANTE EN GITHUB: La ruta debe ser EXACTA (fotos/foto1.jpg)
-        textureLoader.load(`fotos/foto${i}.jpg`, 
-            // Si la foto carga bien:
-            (texture) => {
-                // Usamos SpriteMaterial (2D) en vez de Mesh (3D). Es súper rápido.
-                const material = new THREE.SpriteMaterial({ 
-                    map: texture, 
-                    color: 0xffffff, // Mantiene el color original de la foto
-                    transparent: true 
-                });
-                const sprite = new THREE.Sprite(material);
-                
-                // Las posicionamos a media distancia para que sean fáciles de encontrar
-                const distance = 1500 + Math.random() * 3000;
-                const angle = Math.random() * Math.PI * 2;
-                const y = (Math.random() - 0.5) * 2000; 
-                sprite.position.set(Math.cos(angle) * distance, y, Math.sin(angle) * distance);
-                
-                // Hacemos las fotos de buen tamaño (150x150 unidades en el espacio 3D)
-                sprite.scale.set(150, 150, 1);
-                
-                // Datos para parpadeo
-                sprite.userData.pulseOpacity = 0.5 + Math.random() * 0.5;
-                photoStars.push(sprite);
-                scene.add(sprite);
-            },
-            undefined, 
-            // Si hay un error al cargar (ej. no existe foto40.jpg), lo ignora sin crashear
-            (error) => { console.log(`No se encontró foto${i}.jpg, saltando...`); }
+    const totalFogParticles = 600; // Cientos de puntos para hacerla difusa
+    const nebulaBaseColor = new THREE.Color(0xff69b4); // Rosa/Morado
+    const nebulaAltColor = new THREE.Color(0x87cefa); // Azul claro
+
+    // Dispersamos las partículas en una región localizada lejana
+    const origin = new THREE.Vector3(4000, 500, -4000);
+    for (let i = 0; i < totalFogParticles; i++) {
+        // Dispersión aleatoria gaussiana alrededor del origen para que no sea un cuadrado
+        fogPositions.push(
+            origin.x + (Math.random() - 0.5) * 2000,
+            origin.y + (Math.random() - 0.5) * 1500,
+            origin.z + (Math.random() - 0.5) * 2000
+        );
+        
+        // Mezclamos colores sutilmente
+        const colorRatio = Math.random();
+        fogColors.push(
+            THREE.MathUtils.lerp(nebulaBaseColor.r, nebulaAltColor.r, colorRatio),
+            THREE.MathUtils.lerp(nebulaBaseColor.g, nebulaAltColor.g, colorRatio),
+            THREE.MathUtils.lerp(nebulaBaseColor.b, nebulaAltColor.b, colorRatio)
         );
     }
+    fogParticlesGeometry.setAttribute('position', new THREE.Float32BufferAttribute(fogPositions, 3));
+    fogParticlesGeometry.setAttribute('color', new THREE.Float32BufferAttribute(fogColors, 3));
+    
+    // Material difuso sutil (PointsMaterial)
+    const fogMaterial = new THREE.PointsMaterial({ 
+        size: 50, // Puntos grandes y borrosos
+        vertexColors: true, 
+        transparent: true, 
+        opacity: 0.1, // Súper tenue para efecto niebla real
+        blending: THREE.AdditiveBlending // Brillan al superponerse
+    });
+    
+    // Opcional: Cargar una textura de nube borrosa genérica para suavizar los bordes
+    textureLoader.load('https://dl.dropboxusercontent.com/s/7t7i03848w481d6/nebula_background_texture.jpg', (texture) => {
+        fogMaterial.map = texture; // Asigna una forma de nube borrosa a cada punto
+        fogMaterial.needsUpdate = true;
+    });
+
+    const localizedFogMesh = new THREE.Points(fogParticlesGeometry, fogMaterial);
+    scene.add(localizedFogMesh);
 }
 
-function createShootingStars() {
-    const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const starGeometry = new THREE.SphereGeometry(2, 4, 4);
-    for (let i = 0; i < 10; i++) {
-        const star = new THREE.Mesh(starGeometry, starMaterial);
-        resetShootingStar(star); 
-        shootingStars.push(star);
-        scene.add(star);
+// FOTOS LIGERAS (SPRITES)
+function loadPhotoStars() {
+    const totalFotos = 40;
+    for (let i = 1; i <= totalFotos; i++) {
+        textureLoader.load(`fotos/foto${i}.jpg`, (texture) => {
+            const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+            const sprite = new THREE.Sprite(material);
+            const distance = 1500 + Math.random() * 3000;
+            const angle = Math.random() * Math.PI * 2;
+            const y = (Math.random() - 0.5) * 2000; 
+            sprite.position.set(Math.cos(angle) * distance, y, Math.sin(angle) * distance);
+            sprite.scale.set(150, 150, 1);
+            sprite.userData.pulseOpacity = 0.5 + Math.random() * 0.5;
+            photoStars.push(sprite);
+            scene.add(sprite);
+        }, undefined, () => {});
     }
 }
 
-function resetShootingStar(star) {
-    star.position.set((Math.random() - 0.5) * 8000, (Math.random() - 0.5) * 8000, (Math.random() - 0.5) * 8000);
-    star.userData.velocity = new THREE.Vector3((Math.random() - 0.5) * 100, (Math.random() - 0.5) * 100, (Math.random() - 0.5) * 100);
+// NUEVO: SISTEMA DE EXPLOSIÓN DE SOL AL CLIC (Optimizado y rápido)
+function triggerSunExplosion() {
+    console.log("¡Explosión de amor!");
+    
+    // Configuramos 2 PointClouds optimizados: uno para Corazones y otro para Texto
+    const totalExplosionParticles = 500; // Mezcla de 500 partículas
+    const geometry = new THREE.BufferGeometry();
+    const positions = [];
+    const velocities = []; // Velocidad radial de explosión
+    const sizes = [];
+    
+    for (let i = 0; i < totalExplosionParticles; i++) {
+        positions.push(0, 0, 0); // Empiezan en el centro del sol (origen de la escena)
+        
+        // Velocidad radial aleatoria (salen disparados hacia afuera)
+        const v = new THREE.Vector3((Math.random() - 0.5), (Math.random() - 0.5), (Math.random() - 0.5));
+        v.normalize().multiplyScalar(15 + Math.random() * 10); // Velocidad rápida
+        velocities.push(v.x, v.y, v.z);
+        
+        // Tamaños aleatorios iniciales grandes
+        sizes.push(30 + Math.random() * 20); 
+    }
+    
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute('size', new THREE.Float32BufferAttribute(sizes, 1));
+    geometry.setAttribute('velocity', new THREE.Float32BufferAttribute(velocities, 3));
+
+    // Generamos las texturas dinámicas para "Corazones" y "TE AMO"
+    const heartTexture = createGlowShapeTexture("💖");
+    const teAmoTexture = createGlowTextTexture("TE AMO");
+    
+    // ShaderMaterial optimizado para controlar la opacidad y el tiempo de vida
+    const material = new THREE.PointsMaterial({
+        size: 50, // Tamaño base
+        transparent: true,
+        opacity: 1, // Empieza visible
+        depthWrite: false, // No ocluye estrellas
+        blending: THREE.AdditiveBlending // Brilla mágica
+    });
+
+    // Creamos dos mallas: una con corazones y otra con texto, dispersas
+    const heartParticles = new THREE.Points(geometry, material.clone());
+    heartParticles.material.map = heartTexture;
+    
+    const teAmoParticles = new THREE.Points(geometry, material.clone());
+    teAmoParticles.material.map = teAmoTexture;
+    
+    // Las añadimos y rastreamos para la animación
+    scene.add(heartParticles);
+    scene.add(teAmoParticles);
+    
+    const startTime = Date.now();
+    const lifeSpan = 4000; // Dure 4 segundos antes de desaparecer por completo
+    
+    activeExplosions.push({ 
+        geometry, 
+        material: heartParticles.material, // Comparten la animación de opacidad
+        teAmoMaterial: teAmoParticles.material,
+        positions: geometry.getAttribute('position').array,
+        velocities,
+        totalExplosionParticles,
+        heartMesh: heartParticles,
+        teAmoMesh: teAmoParticles,
+        startTime,
+        lifeSpan 
+    });
+}
+
+// Genera una textura de canvas sutil para un shape (ej 💖)
+function createGlowShapeTexture(char) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 128; canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'white';
+    ctx.shadowColor = '#ff69b4'; ctx.shadowBlur = 15; // Brillo sutil rosa
+    ctx.font = '80px Arial';
+    ctx.fillText(char, 64, 64);
+    return new THREE.CanvasTexture(canvas);
+}
+
+// Genera una textura de canvas sutil para texto (ej "TE AMO")
+function createGlowTextTexture(text) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256; canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'white';
+    ctx.shadowColor = '#ff69b4'; ctx.shadowBlur = 15; // Brillo sutil rosa
+    ctx.font = 'bold 40px Courier New';
+    ctx.fillText(text, 128, 64);
+    return new THREE.CanvasTexture(canvas);
+}
+
+// FUNCIONES DE DETECCIÓN DE CLIC EN EL SOL
+function onSunClick(e) {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObject(sun);
+  if (intersects.length > 0) triggerSunExplosion();
+}
+
+function onSunTouch(e) {
+  if (e.touches.length > 0) {
+    e.preventDefault();
+    onSunClick(e.touches[0]);
+  }
 }
 
 function animate() {
@@ -219,18 +338,38 @@ function animate() {
   sun.rotation.y += 0.002;
   starfield.rotation.y += 0.0001;
 
-  // Animación de las fotos (parpadeo suave)
   photoStars.forEach(sprite => {
-      if (Math.random() < 0.01) { 
-          sprite.userData.pulseOpacity = 0.6 + Math.random() * 0.4;
-      }
+      if (Math.random() < 0.01) sprite.userData.pulseOpacity = 0.6 + Math.random() * 0.4;
       sprite.material.opacity = THREE.MathUtils.lerp(sprite.material.opacity, sprite.userData.pulseOpacity, 0.05);
   });
 
-  shootingStars.forEach(star => {
-      star.position.add(star.userData.velocity);
-      if (star.position.distanceTo(scene.position) > 10000) resetShootingStar(star);
-  });
+  // NUEVO: ANIMAR EXPLOSIÓN (Expansión radial y desvanecimiento)
+  const currentTime = Date.now();
+  for (let i = activeExplosions.length - 1; i >= 0; i--) {
+      const exp = activeExplosions[i];
+      const elapsed = currentTime - exp.startTime;
+      
+      if (elapsed > exp.lifeSpan) {
+          // Ha muerto: limpiar memoria
+          scene.remove(exp.heartMesh); scene.remove(exp.teAmoMesh); exp.geometry.dispose(); exp.material.dispose(); exp.teAmoMaterial.dispose();
+          activeExplosions.splice(i, 1);
+          continue;
+      }
+
+      // 1. Desvanecimiento (Opacidad disminuye con el tiempo hasta 0)
+      const ratio = elapsed / exp.lifeSpan;
+      const opacity = 1 - Math.pow(ratio, 2); // Cae rápido al final
+      exp.material.opacity = opacity;
+      exp.teAmoMaterial.opacity = opacity;
+
+      // 2. Expansión (Actualizar posiciones basadas en la velocidad)
+      for (let j = 0; j < exp.totalExplosionParticles; j++) {
+          exp.positions[j * 3] += exp.velocities[j * 3]; // X
+          exp.positions[j * 3 + 1] += exp.velocities[j * 3 + 1]; // Y
+          exp.positions[j * 3 + 2] += exp.velocities[j * 3 + 2]; // Z
+      }
+      exp.geometry.getAttribute('position').needsUpdate = true;
+  }
 
   renderer.render(scene, camera);
 }
