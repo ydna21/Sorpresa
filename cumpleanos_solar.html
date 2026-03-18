@@ -7,6 +7,7 @@
 <style>
   body { margin: 0; background: black; overflow: hidden; font-family: 'Courier New', monospace; color: white; }
   
+  /* --- PANTALLA DE ENTRADA --- */
   #pantallaEntrada {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: black; z-index: 999; display: flex; flex-direction: column;
@@ -19,16 +20,12 @@
     margin-top: 30px; padding: 15px 40px; font-size: 1.5rem; background: #ff1493;
     color: white; border: none; border-radius: 50px; 
     box-shadow: 0 0 25px #ff1493;
-    opacity: 0.5; 
-    cursor: not-allowed; 
-    pointer-events: none; 
+    opacity: 0.5; cursor: not-allowed; pointer-events: none; 
     transition: all 0.5s ease;
   }
   
   #btnEmpezarUniverso.listo {
-    opacity: 1;
-    cursor: pointer;
-    pointer-events: auto; 
+    opacity: 1; cursor: pointer; pointer-events: auto; 
     animation: latidoEntrada 1.5s infinite;
   }
 
@@ -38,15 +35,24 @@
     100% { transform: scale(1); }
   }
 
+  /* --- CARTEL DE MENSAJES OCULTOS (Solo PC) --- */
+  #mensajePlaneta {
+    display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: rgba(20, 0, 10, 0.85); border: 2px solid #ff1493; color: white;
+    padding: 20px 40px; border-radius: 20px; font-size: 1.8rem; text-align: center;
+    z-index: 1000; box-shadow: 0 0 40px #ff1493; animation: aparecerMensaje 0.5s ease;
+    pointer-events: none; text-shadow: 0 0 10px #ffb6c1;
+  }
+  @keyframes aparecerMensaje { from { opacity: 0; transform: translate(-50%, -40%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+
+  /* --- RESTO DEL UNIVERSO --- */
   #threeCanvas { display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
   
   #mainContent {
     position: absolute; bottom: 60px; left: 0; width: 100%;
     z-index: 2; display: flex; flex-direction: column;
-    align-items: center; text-align: center;
-    pointer-events: none;
-    opacity: 0; 
-    transition: opacity 2s ease;
+    align-items: center; text-align: center; pointer-events: none;
+    opacity: 0; transition: opacity 2s ease;
   }
   
   h1 { font-size: 3.5rem; color: #fff; text-shadow: 0 0 20px #ff69b4, 0 0 30px #ff1493; margin-bottom: 10px; animation: glow 2s ease-in-out infinite alternate; margin-top: 0; }
@@ -73,7 +79,7 @@
 </head>
 <body>
 
-<audio id="musica2" loop>
+<audio id="musica2" loop crossorigin="anonymous">
   <source src="musica2.mp3" type="audio/mpeg">
 </audio>
 
@@ -81,6 +87,8 @@
   <h2>✨ Preparando el viaje espacial... ✨</h2>
   <button id="btnEmpezarUniverso">Cargando motores... (4s)</button>
 </div>
+
+<div id="mensajePlaneta"></div>
 
 <div id="threeCanvas"></div>
 
@@ -92,12 +100,21 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 
 <script>
+// --- LEER LA ELECCIÓN DEL USUARIO ---
+const eleccion = localStorage.getItem('dispositivoElegido');
+const esCelular = (eleccion === 'celular') || (window.innerWidth < 768 && eleccion !== 'pc');
+
 // --- LÓGICA DEL BOTÓN DE 4 SEGUNDOS ---
 let contadorCarga = 4;
 const btnEmpezar = document.getElementById('btnEmpezarUniverso');
-
 const intervaloCarga = setInterval(() => {
     contadorCarga--;
     if (contadorCarga > 0) {
@@ -115,8 +132,28 @@ let enViaje = false;
 let viajeProgress = 0;
 const viajeDuration = 3000;
 
+// --- VARIABLES GLOBALES DE AUDIO Y EFECTOS ---
+let audioContext, analyser, dataArray;
+let composer, bloomPass;
+
 document.getElementById('btnEmpezarUniverso').addEventListener('click', function() {
-    document.getElementById('musica2').play();
+    // 1. Iniciar Audio y Reactividad (Solo en PC para no agotar batería de cell)
+    const audio = document.getElementById('musica2');
+    if (!esCelular) {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const source = audioContext.createMediaElementSource(audio);
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 256;
+            source.connect(analyser);
+            analyser.connect(audioContext.destination);
+            dataArray = new Uint8Array(analyser.frequencyBinCount);
+        }
+        if (audioContext.state === 'suspended') audioContext.resume();
+    }
+    audio.play();
+
+    // 2. Iniciar Viaje
     enViaje = true;
     controls.enabled = false;
     
@@ -128,22 +165,13 @@ document.getElementById('btnEmpezarUniverso').addEventListener('click', function
         document.getElementById('mainContent').style.opacity = '1';
         controls.enabled = true;
         enViaje = false;
-        
-        if (!esCelular) {
-            camera.fov = 75;
-            camera.updateProjectionMatrix();
-        }
+        if (!esCelular) { camera.fov = 75; camera.updateProjectionMatrix(); }
     }, viajeDuration + 500); 
 });
 
-document.getElementById('pastelBtn').addEventListener('click', () => {
-    window.location.href = 'index.html';
-});
+document.getElementById('pastelBtn').addEventListener('click', () => window.location.href = 'index.html');
 
-// --- LEER LA ELECCIÓN DEL USUARIO ---
-const eleccion = localStorage.getItem('dispositivoElegido');
-const esCelular = (eleccion === 'celular') || (window.innerWidth < 768 && eleccion !== 'pc');
-
+// --- ADAPTACIÓN A CELULAR ---
 if (esCelular) {
     const titulo = document.getElementById('tituloCumple');
     const parrafo = document.getElementById('parrafoCumple');
@@ -156,18 +184,15 @@ if (esCelular) {
     parrafo.style.fontSize = "1.1rem";     
     parrafo.style.maxWidth = "90%";
     parrafo.style.padding = "0 15px";
-    
     boton.style.display = "none"; 
-    
     pastel.style.display = "inline-block";
     pastel.style.animation = "latidoPastel 1.5s infinite";
-    
     contenedor.style.bottom = "50px"; 
 } else {
     document.getElementById('pastelBtn').style.display = "none";
 }
 
-// VARIABLES GLOBALES 3D
+// --- VARIABLES GLOBALES 3D ---
 let scene, camera, renderer, controls, sun;
 let width, height, starfield, systemRotationGroup;
 let detailedPlanets = []; 
@@ -177,11 +202,19 @@ const textureLoader = new THREE.TextureLoader();
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
-// VARIABLES PARA EFECTO PARALLAX (Solo PC)
-let mouseXParallax = 0;
-let mouseYParallax = 0;
-let targetCameraX = 0;
-let targetCameraY = 300;
+let mouseXParallax = 0, mouseYParallax = 0, targetCameraX = 0, targetCameraY = 300;
+
+// MENSAJES OCULTOS PARA LOS PLANETAS
+const frasesPlanetas = [
+    "Eres mi estrella favorita ✨",
+    "Contigo hasta el infinito 🚀",
+    "Mi mundo gira por ti 🌍",
+    "Te amo de aquí a la luna 🌙",
+    "Juntos somos magia 💖",
+    "Mi lugar favorito es contigo 🥰",
+    "Gracias por existir ✨",
+    "Eres mi universo entero 🌌"
+];
 
 function init() {
   width = window.innerWidth;
@@ -194,22 +227,35 @@ function init() {
   camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 30000);
   camera.position.set(0, 1000, 5000); 
 
-  renderer = new THREE.WebGLRenderer({ antialias: !esCelular }); // Antialias activo solo en PC para bordes suaves
+  renderer = new THREE.WebGLRenderer({ antialias: !esCelular }); 
   renderer.setSize(width, height);
   renderer.setPixelRatio(esCelular ? 1 : Math.min(window.devicePixelRatio, 2)); 
   document.getElementById('threeCanvas').appendChild(renderer.domElement);
 
+  // --- EFECTO BLOOM CINEMATOGRÁFICO (SOLO PC) ---
+  if (!esCelular) {
+      const renderScene = new THREE.RenderPass(scene, camera);
+      // Configuración del resplandor: Resolución, Fuerza, Radio, Umbral
+      bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+      bloomPass.threshold = 0.1;
+      bloomPass.strength = 1.2; // Intensidad inicial del brillo
+      bloomPass.radius = 0.8;
+
+      composer = new THREE.EffectComposer(renderer);
+      composer.addPass(renderScene);
+      composer.addPass(bloomPass);
+  }
+
   controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true; 
-  controls.dampingFactor = 0.05;
-  controls.minDistance = 150;
-  controls.maxDistance = 12000;
+  controls.enableDamping = true; controls.dampingFactor = 0.05;
+  controls.minDistance = 150; controls.maxDistance = 12000;
 
   systemRotationGroup = new THREE.Group();
   scene.add(systemRotationGroup);
 
   const sunGeometry = new THREE.SphereGeometry(60, 32, 32);
-  const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffdf00 });
+  // MeshBasicMaterial brilla intensamente con el efecto Bloom
+  const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffdf00 }); 
   sun = new THREE.Mesh(sunGeometry, sunMaterial);
   systemRotationGroup.add(sun); 
   
@@ -218,54 +264,60 @@ function init() {
   const ambientLight = new THREE.AmbientLight(0x404040, 1.2); 
   scene.add(ambientLight);
 
-  createDetailedPlanet(10, 0xffb6c1, 150, 0.015);
-  createDetailedPlanet(15, 0xdda0dd, 200, 0.012);
-  createDetailedPlanet(18, 0x87cefa, 260, 0.010);
-  createDetailedPlanet(12, 0xffdab9, 310, 0.009);
-  createDetailedPlanet(50, 0x98fb98, 500, 0.006, true); 
-  createDetailedPlanet(40, 0xd8bfd8, 650, 0.005);
-  createDetailedPlanet(30, 0xafeeee, 800, 0.004);
-  createDetailedPlanet(28, 0xb0c4de, 950, 0.0035);
+  // PLANETAS CON LUNAS Y MENSAJES
+  createDetailedPlanet(10, 0xffb6c1, 150, 0.015, false, false, frasesPlanetas[0]);
+  createDetailedPlanet(15, 0xdda0dd, 200, 0.012, false, false, frasesPlanetas[1]);
+  createDetailedPlanet(18, 0x87cefa, 260, 0.010, false, true,  frasesPlanetas[2]); // Tierra con luna
+  createDetailedPlanet(12, 0xffdab9, 310, 0.009, false, false, frasesPlanetas[3]);
+  createDetailedPlanet(50, 0x98fb98, 500, 0.006, true,  true,  frasesPlanetas[4]); // Gigante con anillos y lunas
+  createDetailedPlanet(40, 0xd8bfd8, 650, 0.005, false, false, frasesPlanetas[5]);
+  createDetailedPlanet(30, 0xafeeee, 800, 0.004, false, false, frasesPlanetas[6]);
+  createDetailedPlanet(28, 0xb0c4de, 950, 0.0035,false, false, frasesPlanetas[7]);
 
   createStarfield();
   createRealisticLocalizedFog();
   loadPhotoStars();
 
   const canvasElement = document.getElementById('threeCanvas');
-  canvasElement.addEventListener('click', onSunClick); 
-  canvasElement.addEventListener('touchstart', onSunTouch, { passive: false });
-  
-  // EVENTO DE MOVIMIENTO DE MOUSE (Para Parallax e Interacción)
+  // Detectar clics para PC y celulares
+  canvasElement.addEventListener('click', onWorldClick); 
+  canvasElement.addEventListener('touchstart', onWorldTouch, { passive: false });
   window.addEventListener('mousemove', onMouseMove);
 }
 
 function onMouseMove(event) {
-    // Normalizamos el mouse de -1 a 1
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-    // Para el efecto Parallax
     if (!esCelular) {
-        mouseXParallax = (event.clientX - window.innerWidth / 2) * 2; // Rango de movimiento X
-        mouseYParallax = (event.clientY - window.innerHeight / 2) * 2; // Rango de movimiento Y
+        mouseXParallax = (event.clientX - window.innerWidth / 2) * 2; 
+        mouseYParallax = (event.clientY - window.innerHeight / 2) * 2; 
     }
 }
 
-function createDetailedPlanet(radius, color, distance, speed, hasRing=false) {
-    const geometry = new THREE.SphereGeometry(radius, esCelular ? 12 : 32, esCelular ? 12 : 32); // Más detalle en PC
-    const material = new THREE.MeshStandardMaterial({ 
-        color: color, 
-        roughness: 0.6,
-        emissive: 0x000000 // Inicia apagado (se iluminará al pasar el mouse)
-    });
+function createDetailedPlanet(radius, color, distance, speed, hasRing, hasMoon, mensaje) {
+    const geometry = new THREE.SphereGeometry(radius, esCelular ? 12 : 32, esCelular ? 12 : 32); 
+    const material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6, emissive: 0x000000 });
     const mesh = new THREE.Mesh(geometry, material);
     
-    // Guardamos el color base para el efecto hover
     mesh.userData.baseColor = color; 
+    mesh.userData.mensaje = mensaje; // Guardamos el mensaje secreto
     
     const angle = Math.random() * Math.PI * 2;
     mesh.position.set(Math.cos(angle) * distance, 0, Math.sin(angle) * distance);
-    detailedPlanets.push({ mesh: mesh, distance, angle, speed, selfRotation: 0.01 + Math.random()*0.02 });
+    
+    // --- NUEVO: AÑADIR LUNAS (SOLO PC) ---
+    let moonPivot = null;
+    if (!esCelular && hasMoon) {
+        moonPivot = new THREE.Group();
+        const moonGeo = new THREE.SphereGeometry(radius * 0.3, 16, 16);
+        const moonMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.8 });
+        const moon = new THREE.Mesh(moonGeo, moonMat);
+        moon.position.set(radius + 15, 0, 0); // Separación de la luna
+        moonPivot.add(moon);
+        mesh.add(moonPivot); // La luna es hija del planeta
+    }
+
+    detailedPlanets.push({ mesh: mesh, distance, angle, speed, selfRotation: 0.01 + Math.random()*0.02, moonPivot: moonPivot });
     systemRotationGroup.add(mesh); 
     
     createOrbitRing(distance);
@@ -299,20 +351,13 @@ function createStarfield() {
     const starsMaterial = new THREE.PointsMaterial({ size: esCelular ? 4 : 3, color: 0xffffff, transparent: true, opacity: 0.8 });
     starfield = new THREE.Points(starsGeometry, starsMaterial);
     scene.add(starfield); 
-    
-    // PC EXCLUSIVO: ESTRELLAS FUGACES COMO COMETAS (Estelas largas)
-    if (!esCelular) {
-        createComets();
-    }
+    if (!esCelular) createComets();
 }
 
-// EFECTO PC: COMETAS CON ESTELAS
 let comets = [];
 function createComets() {
     const cometMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
-    // En PC, la esfera se estira en Z para parecer un láser/cometa
     const cometGeometry = new THREE.SphereGeometry(2, 8, 8); 
-    
     for (let i = 0; i < 20; i++) {
         const comet = new THREE.Mesh(cometGeometry, cometMaterial.clone());
         resetComet(comet); 
@@ -324,21 +369,16 @@ function resetComet(comet) {
     comet.position.set((Math.random() - 0.5) * 15000, (Math.random() - 0.5) * 10000, (Math.random() - 0.5) * 15000);
     const v = new THREE.Vector3((Math.random() - 0.5), (Math.random() - 0.5), (Math.random() - 0.5)).normalize().multiplyScalar(150 + Math.random() * 100);
     comet.userData.velocity = v;
-    
-    // Escala Z muy alta para parecer una estela
     comet.scale.set(1, 1, 30);
-    // Lo rotamos para que mire hacia su dirección de movimiento
     comet.lookAt(comet.position.clone().add(v));
     comet.material.opacity = 0; 
 }
 
 function createRealisticLocalizedFog() {
     const fogParticlesGeometry = new THREE.BufferGeometry();
-    const fogPositions = [];
-    const fogColors = [];
+    const fogPositions = []; const fogColors = [];
     const totalFogParticles = esCelular ? 300 : 600; 
-    const nebulaBaseColor = new THREE.Color(0xff69b4); 
-    const nebulaAltColor = new THREE.Color(0x87cefa); 
+    const nebulaBaseColor = new THREE.Color(0xff69b4); const nebulaAltColor = new THREE.Color(0x87cefa); 
     const origin = new THREE.Vector3(4000, 500, -4000);
     for (let i = 0; i < totalFogParticles; i++) {
         fogPositions.push(origin.x + (Math.random() - 0.5) * 2000, origin.y + (Math.random() - 0.5) * 1500, origin.z + (Math.random() - 0.5) * 2000);
@@ -349,8 +389,7 @@ function createRealisticLocalizedFog() {
     fogParticlesGeometry.setAttribute('color', new THREE.Float32BufferAttribute(fogColors, 3));
     const fogMaterial = new THREE.PointsMaterial({ size: 50, vertexColors: true, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending });
     textureLoader.load('https://dl.dropboxusercontent.com/s/7t7i03848w481d6/nebula_background_texture.jpg', (texture) => {
-        fogMaterial.map = texture; 
-        fogMaterial.needsUpdate = true;
+        fogMaterial.map = texture; fogMaterial.needsUpdate = true;
     });
     const localizedFogMesh = new THREE.Points(fogParticlesGeometry, fogMaterial);
     scene.add(localizedFogMesh); 
@@ -377,9 +416,7 @@ function loadPhotoStars() {
 function triggerSunExplosion() {
     const totalExplosionParticles = esCelular ? 250 : 500; 
     const geometry = new THREE.BufferGeometry();
-    const positions = [];
-    const velocities = []; 
-    const sizes = [];
+    const positions = []; const velocities = []; const sizes = [];
     for (let i = 0; i < totalExplosionParticles; i++) {
         positions.push(0, 0, 0); 
         const v = new THREE.Vector3((Math.random() - 0.5), (Math.random() - 0.5), (Math.random() - 0.5));
@@ -393,52 +430,60 @@ function triggerSunExplosion() {
     const heartTexture = createGlowShapeTexture("💖");
     const teAmoTexture = createGlowTextTexture("TE AMO");
     const material = new THREE.PointsMaterial({ size: 50, transparent: true, opacity: 1, depthWrite: false, blending: THREE.AdditiveBlending });
-    const heartParticles = new THREE.Points(geometry, material.clone());
-    heartParticles.material.map = heartTexture;
-    const teAmoParticles = new THREE.Points(geometry, material.clone());
-    teAmoParticles.material.map = teAmoTexture;
-    systemRotationGroup.add(heartParticles); 
-    systemRotationGroup.add(teAmoParticles); 
+    const heartParticles = new THREE.Points(geometry, material.clone()); heartParticles.material.map = heartTexture;
+    const teAmoParticles = new THREE.Points(geometry, material.clone()); teAmoParticles.material.map = teAmoTexture;
+    systemRotationGroup.add(heartParticles); systemRotationGroup.add(teAmoParticles); 
     const startTime = Date.now();
-    const lifeSpan = 4000; 
-    activeExplosions.push({ geometry, material: heartParticles.material, teAmoMaterial: teAmoParticles.material, positions: geometry.getAttribute('position').array, velocities, totalExplosionParticles, heartMesh: heartParticles, teAmoMesh: teAmoParticles, startTime, lifeSpan });
+    activeExplosions.push({ geometry, material: heartParticles.material, teAmoMaterial: teAmoParticles.material, positions: geometry.getAttribute('position').array, velocities, totalExplosionParticles, heartMesh: heartParticles, teAmoMesh: teAmoParticles, startTime, lifeSpan: 4000 });
 }
 
 function createGlowShapeTexture(char) {
-    const canvas = document.createElement('canvas');
-    canvas.width = 128; canvas.height = 128;
-    const ctx = canvas.getContext('2d');
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'white';
-    ctx.shadowColor = '#ff69b4'; ctx.shadowBlur = 15; 
-    ctx.font = '80px Arial';
-    ctx.fillText(char, 64, 64);
+    const canvas = document.createElement('canvas'); canvas.width = 128; canvas.height = 128;
+    const ctx = canvas.getContext('2d'); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'white';
+    ctx.shadowColor = '#ff69b4'; ctx.shadowBlur = 15; ctx.font = '80px Arial'; ctx.fillText(char, 64, 64);
     return new THREE.CanvasTexture(canvas);
 }
-
 function createGlowTextTexture(text) {
-    const canvas = document.createElement('canvas');
-    canvas.width = 256; canvas.height = 128;
-    const ctx = canvas.getContext('2d');
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'white';
-    ctx.shadowColor = '#ff69b4'; ctx.shadowBlur = 15; 
-    ctx.font = 'bold 40px Courier New';
-    ctx.fillText(text, 128, 64);
+    const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 128;
+    const ctx = canvas.getContext('2d'); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'white';
+    ctx.shadowColor = '#ff69b4'; ctx.shadowBlur = 15; ctx.font = 'bold 40px Courier New'; ctx.fillText(text, 128, 64);
     return new THREE.CanvasTexture(canvas);
 }
 
-function onSunClick(e) {
-  raycaster.setFromCamera(mouse, camera);
-  const intersects = raycaster.intersectObject(sun);
-  if (intersects.length > 0) triggerSunExplosion();
+// --- FUNCIÓN PARA MOSTRAR MENSAJES OCULTOS ---
+function mostrarMensajeEspecial(texto) {
+    const div = document.getElementById('mensajePlaneta');
+    div.innerText = texto;
+    div.style.display = 'block';
+    // Ocultar automáticamente después de 4 segundos
+    setTimeout(() => { div.style.display = 'none'; }, 4000);
 }
 
-function onSunTouch(e) {
+// --- CONTROLADOR UNIFICADO DE CLICS (Mundo 3D) ---
+function onWorldClick(e) {
+  raycaster.setFromCamera(mouse, camera);
+  
+  // 1. Verificar si tocamos el Sol
+  if (raycaster.intersectObject(sun).length > 0) {
+      triggerSunExplosion();
+      return; // Si tocamos el sol, terminamos aquí
+  }
+  
+  // 2. Verificar si tocamos un Planeta (Solo en PC)
+  if (!esCelular) {
+      const intersectPlanetas = raycaster.intersectObjects(detailedPlanets.map(p => p.mesh));
+      if (intersectPlanetas.length > 0) {
+          const mensajeSecreto = intersectPlanetas[0].object.userData.mensaje;
+          mostrarMensajeEspecial(mensajeSecreto);
+      }
+  }
+}
+
+function onWorldTouch(e) {
   if (e.touches.length > 0) {
     mouse.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
-    raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObject(sun);
-    if (intersects.length > 0) triggerSunExplosion();
+    onWorldClick(); // Reutiliza la lógica de clic
   }
 }
 
@@ -446,10 +491,37 @@ let prevTime = Date.now();
 
 function animate() {
   requestAnimationFrame(animate);
-  
   const time = Date.now();
   const delta = (time - prevTime) / 1000; 
   prevTime = time;
+
+  // --- AUDIO REACTIVIDAD DEL SOL (SOLO PC) ---
+  if (!esCelular && analyser && dataArray && !enViaje) {
+      analyser.getByteFrequencyData(dataArray);
+      // Calculamos el promedio de los bajos
+      let sum = 0;
+      for(let i = 0; i < 15; i++) sum += dataArray[i];
+      let avgBass = sum / 15;
+      
+      // El sol late con el bajo (Escala entre 1 y 1.4)
+      let scale = 1 + (avgBass / 256) * 0.4; 
+      sun.scale.set(scale, scale, scale);
+      
+      // El brillo de película también palpita
+      if (bloomPass) {
+          bloomPass.strength = 1.0 + (avgBass / 256) * 1.5;
+      }
+  } else {
+      sun.scale.set(1, 1, 1); // Sol normal en celular
+  }
+
+  // ANIMACIÓN BASE
+  sun.rotation.y += 0.002;
+  
+  photoStars.forEach(sprite => {
+      if (Math.random() < 0.01) sprite.userData.pulseOpacity = 0.6 + Math.random() * 0.4;
+      sprite.material.opacity = THREE.MathUtils.lerp(sprite.material.opacity, sprite.userData.pulseOpacity, 0.05);
+  });
 
   // LÓGICA DE VIAJE ESPACIAL
   if (enViaje) {
@@ -476,62 +548,47 @@ function animate() {
           const speed = 4 * (1 - ratio) + 0.1; 
           systemRotationGroup.rotation.y += speed * delta;
       }
-      
   } else {
       controls.update();
       starfield.rotation.y += 0.0001;
       systemRotationGroup.rotation.y += 0.001;
       
-      // --- NUEVO: EFECTO PARALLAX INTERACTIVO (SOLO PC) ---
+      // PARALLAX Y HOVER INTERACTIVO (SOLO PC)
       if (!esCelular) {
-          // Movimiento suave de cámara basado en la posición del mouse
           targetCameraX = mouseXParallax * 0.5;
-          targetCameraY = -mouseYParallax * 0.5 + 300; // Mantiene altura base
-          
+          targetCameraY = -mouseYParallax * 0.5 + 300; 
           camera.position.x += (targetCameraX - camera.position.x) * 0.02;
           camera.position.y += (targetCameraY - camera.position.y) * 0.02;
-          camera.lookAt(scene.position); // Siempre mirar al sol
+          camera.lookAt(scene.position); 
           
-          // --- NUEVO: EFECTO HOVER EN PLANETAS (SOLO PC) ---
           raycaster.setFromCamera(mouse, camera);
-          
-          // Apagamos todos primero
           let intersects = raycaster.intersectObjects(detailedPlanets.map(p => p.mesh));
           
-          // Restauramos color original si no hay hover
-          detailedPlanets.forEach(p => {
-             p.mesh.material.emissive.setHex(0x000000);
-          });
+          detailedPlanets.forEach(p => p.mesh.material.emissive.setHex(0x000000));
           document.body.style.cursor = 'default';
 
           if (intersects.length > 0) {
-              // Iluminamos el planeta seleccionado
-              intersects[0].object.material.emissive.setHex(0xff69b4); // Brillo rosa
+              // Con el Bloom, este emissive genera un aura rosa espectacular
+              intersects[0].object.material.emissive.setHex(0xff1493); 
               document.body.style.cursor = 'pointer';
           }
-          
-          // Verificamos si tocamos el sol
-          if(raycaster.intersectObject(sun).length > 0) {
-              document.body.style.cursor = 'pointer';
-          }
+          if(raycaster.intersectObject(sun).length > 0) document.body.style.cursor = 'pointer';
       }
   }
 
-  sun.rotation.y += 0.002;
-  
-  photoStars.forEach(sprite => {
-      if (Math.random() < 0.01) sprite.userData.pulseOpacity = 0.6 + Math.random() * 0.4;
-      sprite.material.opacity = THREE.MathUtils.lerp(sprite.material.opacity, sprite.userData.pulseOpacity, 0.05);
-  });
-
+  // ANIMACIÓN PLANETAS Y LUNAS
   detailedPlanets.forEach(p => {
     p.angle += p.speed;
     p.mesh.position.x = Math.cos(p.angle) * p.distance;
     p.mesh.position.z = Math.sin(p.angle) * p.distance;
     p.mesh.rotation.y += p.selfRotation; 
+    
+    // Rotación de las lunas alrededor del planeta
+    if (p.moonPivot) {
+        p.moonPivot.rotation.y += 0.04;
+    }
   });
   
-  // ANIMAR COMETAS (SOLO PC)
   if (!esCelular) {
       comets.forEach(comet => {
           comet.position.add(comet.userData.velocity.clone().multiplyScalar(delta));
@@ -542,7 +599,6 @@ function animate() {
       });
   }
 
-  // Animación Explosión
   const currentTime = Date.now();
   for (let i = activeExplosions.length - 1; i >= 0; i--) {
       const exp = activeExplosions[i];
@@ -564,7 +620,12 @@ function animate() {
       exp.geometry.getAttribute('position').needsUpdate = true;
   }
 
-  renderer.render(scene, camera);
+  // --- RENDERIZADO: BLOOM (PC) VS NORMAL (CELULAR) ---
+  if (!esCelular && composer) {
+      composer.render(); // Usa el motor cinematográfico
+  } else {
+      renderer.render(scene, camera); // Usa el motor ligero
+  }
 }
 
 window.addEventListener('resize', () => {
@@ -573,6 +634,9 @@ window.addEventListener('resize', () => {
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
   renderer.setSize(width, height);
+  if (composer && !esCelular) {
+      composer.setSize(width, height);
+  }
 });
 
 init();
