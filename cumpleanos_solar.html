@@ -6,30 +6,18 @@
 <title>Un Universo para Ti 💖</title>
 <style>
   body { margin: 0; background: black; overflow: hidden; font-family: 'Courier New', monospace; color: white; }
-  
-  /* Contenedor del Canvas 3D */
   #threeCanvas { display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-
-  /* Overlay de texto (HTML encima del 3D) */
   #mainContent {
     position: relative; z-index: 2; display: flex; flex-direction: column;
     align-items: center; justify-content: flex-end; height: 100vh; text-align: center;
-    pointer-events: none; /* Deja que el clic pase al canvas 3D */
-    padding-bottom: 50px;
+    pointer-events: none; padding-bottom: 50px;
   }
-
-  h1 {
-    font-size: 3.5rem; color: #fff; text-shadow: 0 0 20px #ff69b4, 0 0 30px #ff1493;
-    margin-bottom: 10px; animation: glow 2s ease-in-out infinite alternate;
-  }
-
+  h1 { font-size: 3.5rem; color: #fff; text-shadow: 0 0 20px #ff69b4, 0 0 30px #ff1493; margin-bottom: 10px; animation: glow 2s ease-in-out infinite alternate; }
   p { font-size: 1.5rem; color: #ffb6c1; max-width: 600px; margin-top: 0; }
-
   @keyframes glow {
     from { text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #ff69b4; }
     to { text-shadow: 0 0 20px #fff, 0 0 30px #ffb6c1, 0 0 40px #ff1493; }
   }
-
   .btn-regresar {
     margin-top: 30px; padding: 15px 30px; font-size: 1.2rem; background: transparent;
     border: 2px solid #ff69b4; color: #ff69b4; border-radius: 50px; cursor: pointer;
@@ -55,225 +43,157 @@
 // VARIABLES GLOBALES
 let scene, camera, renderer, controls;
 let width, height, sun, starfield;
-let detailedPlanets = []; // Planetas que orbitan el Sol
+let detailedPlanets = []; 
 let shootingStars = [];
-let distantGlowingBodies = []; // Cuerpos lejanos y fijos
-let nebulaSprite; // NUEVO: Nebulosa localizada
-let photoStars = []; // NUEVO: Estrellas que cargan fotos
+let photoStars = []; // Array para las fotos ultra-ligeras
 const textureLoader = new THREE.TextureLoader();
 
 function init() {
   width = window.innerWidth;
   height = window.innerHeight;
 
-  // 1. Escena 
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x000000); // Negro profundo
+  scene.background = new THREE.Color(0x000000);
+  scene.fog = new THREE.FogExp2(0x000000, 0.0001); // Niebla para profundidad
 
-  // EFECTO DE NIEBLA CÓSMICA sutil para dar profundidad a lo lejos
-  scene.fog = new THREE.FogExp2(0x000000, 0.0001); // Un poco menos densa para ver lo nuevo
+  camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 25000);
+  camera.position.set(0, 300, 1100);
 
-  // 2. Cámara 
-  camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 25000); // Aumentamos plano lejano
-  camera.position.set(0, 300, 1100); // Elevada y alejada para la vista inmersiva
-
-  // 3. Renderer 
-  renderer = new THREE.WebGLRenderer({ antialias: true });
+  // Optimizamos el renderer quitando sombras que no usamos
+  renderer = new THREE.WebGLRenderer({ antialias: false }); // Antialias false mejora FPS
   renderer.setSize(width, height);
-  renderer.shadowMap.enabled = true; 
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Evita lag en pantallas HD
   document.getElementById('threeCanvas').appendChild(renderer.domElement);
 
-  // 4. Controles
   controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true; 
   controls.dampingFactor = 0.05;
   controls.minDistance = 150;
-  controls.maxDistance = 10000; // Zoom máximo para explorar lo muy lejano
+  controls.maxDistance = 10000;
 
-  // --- Creación de Objetos ---
-
-  // Sol Central
+  // SOL CENTRAL Y LUZ (Solo usamos 2 luces en todo el escenario para evitar lag)
   const sunGeometry = new THREE.SphereGeometry(60, 32, 32);
   const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffdf00 });
   sun = new THREE.Mesh(sunGeometry, sunMaterial);
   scene.add(sun);
   
-  // Luces
-  const sunLight = new THREE.PointLight(0xff69b4, 4, 3000); // Rosa muy potente
+  const sunLight = new THREE.PointLight(0xff69b4, 4, 3000); 
   scene.add(sunLight);
-  const ambientLight = new THREE.AmbientLight(0x404040, 0.9); // Luz ambiente
+  const ambientLight = new THREE.AmbientLight(0x404040, 1.2); 
   scene.add(ambientLight);
 
-  // --- SISTEMA SOLAR POBLADO (Orbitan el Sol) ---
+  // PLANETAS DEL SISTEMA SOLAR
   createDetailedPlanet(10, 0xffb6c1, 150, 0.015);
-  createDetailedPlanet(15, 0xdda0dd, 200, 0.012, 0.4);
-  createDetailedPlanet(18, 0x87cefa, 260, 0.010, 0.2);
+  createDetailedPlanet(15, 0xdda0dd, 200, 0.012);
+  createDetailedPlanet(18, 0x87cefa, 260, 0.010);
   createDetailedPlanet(12, 0xffdab9, 310, 0.009);
-  createDetailedPlanet(50, 0x98fb98, 500, 0.006, 0.1, true); // Gigante con anillos
-  createDetailedPlanet(40, 0xd8bfd8, 650, 0.005, 0.1);
+  createDetailedPlanet(50, 0x98fb98, 500, 0.006, true); // Gigante con anillos
+  createDetailedPlanet(40, 0xd8bfd8, 650, 0.005);
   createDetailedPlanet(30, 0xafeeee, 800, 0.004);
   createDetailedPlanet(28, 0xb0c4de, 950, 0.0035);
 
-  // --- FONDO DE ESTRELLAS REALES Y BRILLANTES ---
   createStarfield();
-
-  // --- CUERPOS LEJANOS Y BRILLANTES (Glowing) ---
-  createDistantGlowingPlanets();
-
-  // --- NUEVO: AÑADIR NEBULA LOCALIZADA Y COLORIDA ---
-  // He usado AdditiveBlending y Sprites para crear un efecto de nube incandescente rosa/azul
   createLocalizedNebula();
-
-  // --- NUEVO: INTEGRACIÓN DE FOTOS COMO ESTRELLAS FLOATANTES (Remembrances) ---
-  loadPhotoStars();
-
-  // Sistema de estrellas fugaces
   createShootingStars();
+  
+  // CARGA DE FOTOS OPTIMIZADA
+  loadPhotoStars();
 }
 
-// Función para crear un planeta con parámetros detallados (orbitando el sol)
-function createDetailedPlanet(radius, color, distance, speed, roughness=0.5, hasRing=false) {
-    const geometry = new THREE.SphereGeometry(radius, 32, 32);
-    const material = new THREE.MeshStandardMaterial({ color: color, roughness: roughness, metalness: 0.1 });
+function createDetailedPlanet(radius, color, distance, speed, hasRing=false) {
+    const geometry = new THREE.SphereGeometry(radius, 16, 16); // Menos polígonos = más rápido
+    const material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6 });
     const mesh = new THREE.Mesh(geometry, material);
     const angle = Math.random() * Math.PI * 2;
     mesh.position.set(Math.cos(angle) * distance, 0, Math.sin(angle) * distance);
     detailedPlanets.push({ mesh: mesh, distance, angle, speed, selfRotation: 0.01 + Math.random()*0.02 });
     scene.add(mesh);
-    createOrbitRing(distance);
-    if (hasRing) createSaturnRing(mesh, radius);
+    
+    // Anillo sutil
+    const ringGeo = new THREE.RingGeometry(distance - 0.5, distance + 0.5, 64);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0xff69b4, side: THREE.DoubleSide, transparent: true, opacity: 0.1 });
+    const orbitRing = new THREE.Mesh(ringGeo, ringMat);
+    orbitRing.rotation.x = Math.PI / 2;
+    scene.add(orbitRing);
+
+    if (hasRing) {
+        const saturnRingGeo = new THREE.RingGeometry(radius + 10, radius + 40, 64);
+        const saturnRingMat = new THREE.MeshBasicMaterial({ color: 0xff69b4, side: THREE.DoubleSide, transparent: true, opacity: 0.3 });
+        const saturnRing = new THREE.Mesh(saturnRingGeo, saturnRingMat);
+        saturnRing.rotation.x = Math.PI / 2.1; 
+        mesh.add(saturnRing); 
+    }
 }
 
-// Función para crear un anillo alrededor de un planeta específico
-function createSaturnRing(planetMesh, planetRadius) {
-    const ringGeometry = new THREE.RingGeometry(planetRadius + 10, planetRadius + 60, 128);
-    const ringMaterial = new THREE.MeshBasicMaterial({ color: 0xff69b4, side: THREE.DoubleSide, transparent: true, opacity: 0.25 });
-    const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-    ring.rotation.x = Math.PI / 2.1; 
-    planetMesh.add(ring); 
-}
-
-// Anillo de órbita sutil
-function createOrbitRing(distance) {
-  const ringGeometry = new THREE.RingGeometry(distance - 0.5, distance + 0.5, 128);
-  const ringMaterial = new THREE.MeshBasicMaterial({ color: 0xff69b4, side: THREE.DoubleSide, transparent: true, opacity: 0.1 });
-  const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-  ring.rotation.x = Math.PI / 2;
-  scene.add(ring);
-}
-
-// Crea un campo de estrellas tridimensional masivo
 function createStarfield() {
     const starsGeometry = new THREE.BufferGeometry();
     const starsPositions = [];
-    for (let i = 0; i < 10000; i++) {
-        const x = (Math.random() - 0.5) * 18000;
-        const y = (Math.random() - 0.5) * 18000;
-        const z = (Math.random() - 0.5) * 18000;
-        starsPositions.push(x, y, z);
+    for (let i = 0; i < 6000; i++) { // Reducido un poco para rendimiento
+        starsPositions.push((Math.random() - 0.5) * 15000, (Math.random() - 0.5) * 15000, (Math.random() - 0.5) * 15000);
     }
     starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsPositions, 3));
-    const starsMaterial = new THREE.PointsMaterial({ size: 4, color: 0xffffff, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending });
+    const starsMaterial = new THREE.PointsMaterial({ size: 3, color: 0xffffff, transparent: true, opacity: 0.8 });
     starfield = new THREE.Points(starsGeometry, starsMaterial);
     scene.add(starfield);
 }
 
-// Crea cuerpos lejanos, fijos y brillantes (Glowing Distant Bodies)
-function createDistantGlowingPlanets() {
-    const glowMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1 });
-    for (let i = 0; i < 20; i++) {
-        const pRadius = 5 + Math.random() * 8;
-        const geometry = new THREE.SphereGeometry(pRadius, 16, 16); 
-        const mesh = new THREE.Mesh(geometry, glowMaterial.clone());
-        const distance = 4000 + Math.random() * 3000;
-        const x = (Math.random() - 0.5) * distance * 2;
-        const y = (Math.random() - 0.5) * distance * 1.5;
-        const z = (Math.random() - 0.5) * distance * 2;
-        mesh.position.set(x, y, z);
-        const haloLight = new THREE.PointLight(0xff69b4, 0.5, 200);
-        mesh.add(haloLight);
-        distantGlowingBodies.push(mesh);
-        scene.add(mesh);
-    }
-}
-
-// NUEVO: Crea una gran nebulosa localizada y colorida (en tonos rosas y azules sutiles)
 function createLocalizedNebula() {
-    // Usamos AdditiveBlending para que brille contra el negro
-    // Y SpriteMaterial para que siempre mire a la cámara
     const nebulaMaterial = new THREE.SpriteMaterial({ 
-        color: 0xff69b4, // Color rosa sutil base
-        transparent: true, 
-        opacity: 0.3, // Muy sutil
-        blending: THREE.AdditiveBlending // Efecto de gas incandescente
+        color: 0xff69b4, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending 
     });
-    
-    // He cargado una textura de nube genérica para darle forma
     textureLoader.load('https://dl.dropboxusercontent.com/s/7t7i03848w481d6/nebula_background_texture.jpg', (texture) => {
         nebulaMaterial.map = texture;
         nebulaMaterial.needsUpdate = true;
     });
-
-    nebulaSprite = new THREE.Sprite(nebulaMaterial);
-    
-    // Posición localizada lejana en el borde de la escena
-    nebulaSprite.position.set(5000, 500, -5000);
-    // Tamaño inmenso
-    nebulaSprite.scale.set(4000, 3000, 1);
-    
+    const nebulaSprite = new THREE.Sprite(nebulaMaterial);
+    nebulaSprite.position.set(4000, 500, -4000);
+    nebulaSprite.scale.set(5000, 4000, 1);
     scene.add(nebulaSprite);
-    
-    // Pequeño PointLight sutil *azul* dentro de la nebulosa rosa para dar profundidad de color
-    const nebulaCoreLight = new THREE.PointLight(0x87cefa, 2, 2000); // Azul claro
-    nebulaSprite.add(nebulaCoreLight);
 }
 
-// NUEVO: Carga las 40 fotos y las convierte en "Estrellas de Recuerdos" (PhotoStars)
+// NUEVO: SISTEMA DE FOTOS LIGERO (SPRITES)
 function loadPhotoStars() {
-    // Definimos el total de fotos (de foto1.jpg a foto40.jpg en carpeta fotos/)
     const totalFotos = 40;
     
-    const photoGlowMaterial = new THREE.MeshBasicMaterial({ 
-        color: 0xffffff, 
-        transparent: true, 
-        opacity: 1
-    });
-
     for (let i = 1; i <= totalFotos; i++) {
-        // Carga la textura de la foto
-        textureLoader.load(`fotos/foto${i}.jpg`, (texture) => {
-            // Geometría esférica pequeña para que parezca estrella de lejos
-            const geometry = new THREE.SphereGeometry(6, 16, 16); 
-            // Material Básico con la textura de la foto
-            const material = new THREE.MeshBasicMaterial({ map: texture });
-            const mesh = new THREE.Mesh(geometry, material);
-            
-            // Posiciones aleatorias extremadamente lejanas, dispersas por todo el "cielo" (6000-9000)
-            const distance = 6000 + Math.random() * 3000;
-            const x = (Math.random() - 0.5) * distance * 2;
-            const y = (Math.random() - 0.5) * distance * 1.8; // Mayor dispersión en Y
-            const z = (Math.random() - 0.5) * distance * 2;
-            mesh.position.set(x, y, z);
-            
-            // Añadimos un pequeño halo rosa PointLight sutil para que brillen
-            const haloLight = new THREE.PointLight(0xff69b4, 0.4, 200);
-            mesh.add(haloLight);
-            
-            // Datos para la animación (parpadeo sutil)
-            mesh.userData.pulseOpacity = 0.5 + Math.random() * 0.5; // Brillo base aleatorio
-            
-            photoStars.push(mesh);
-            scene.add(mesh);
-        });
+        // MUY IMPORTANTE EN GITHUB: La ruta debe ser EXACTA (fotos/foto1.jpg)
+        textureLoader.load(`fotos/foto${i}.jpg`, 
+            // Si la foto carga bien:
+            (texture) => {
+                // Usamos SpriteMaterial (2D) en vez de Mesh (3D). Es súper rápido.
+                const material = new THREE.SpriteMaterial({ 
+                    map: texture, 
+                    color: 0xffffff, // Mantiene el color original de la foto
+                    transparent: true 
+                });
+                const sprite = new THREE.Sprite(material);
+                
+                // Las posicionamos a media distancia para que sean fáciles de encontrar
+                const distance = 1500 + Math.random() * 3000;
+                const angle = Math.random() * Math.PI * 2;
+                const y = (Math.random() - 0.5) * 2000; 
+                sprite.position.set(Math.cos(angle) * distance, y, Math.sin(angle) * distance);
+                
+                // Hacemos las fotos de buen tamaño (150x150 unidades en el espacio 3D)
+                sprite.scale.set(150, 150, 1);
+                
+                // Datos para parpadeo
+                sprite.userData.pulseOpacity = 0.5 + Math.random() * 0.5;
+                photoStars.push(sprite);
+                scene.add(sprite);
+            },
+            undefined, 
+            // Si hay un error al cargar (ej. no existe foto40.jpg), lo ignora sin crashear
+            (error) => { console.log(`No se encontró foto${i}.jpg, saltando...`); }
+        );
     }
 }
 
-// Crear sistema de estrellas fugaces
 function createShootingStars() {
-    const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1 });
-    const starGeometry = new THREE.SphereGeometry(1, 4, 4);
-    for (let i = 0; i < 15; i++) {
-        const star = new THREE.Mesh(starGeometry, starMaterial.clone());
+    const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const starGeometry = new THREE.SphereGeometry(2, 4, 4);
+    for (let i = 0; i < 10; i++) {
+        const star = new THREE.Mesh(starGeometry, starMaterial);
         resetShootingStar(star); 
         shootingStars.push(star);
         scene.add(star);
@@ -281,69 +201,48 @@ function createShootingStars() {
 }
 
 function resetShootingStar(star) {
-    star.position.set((Math.random() - 0.5) * 10000, (Math.random() - 0.5) * 10000, (Math.random() - 0.5) * 10000);
-    star.userData.velocity = new THREE.Vector3((Math.random() - 0.5) * 80, (Math.random() - 0.5) * 80, (Math.random() - 0.5) * 80);
-    star.material.opacity = 0; 
+    star.position.set((Math.random() - 0.5) * 8000, (Math.random() - 0.5) * 8000, (Math.random() - 0.5) * 8000);
+    star.userData.velocity = new THREE.Vector3((Math.random() - 0.5) * 100, (Math.random() - 0.5) * 100, (Math.random() - 0.5) * 100);
 }
 
-// Bucle de animación 
 function animate() {
   requestAnimationFrame(animate);
   controls.update();
 
-  // Animar planetas detallados (orbitando el sol)
   detailedPlanets.forEach(p => {
     p.angle += p.speed;
     p.mesh.position.x = Math.cos(p.angle) * p.distance;
     p.mesh.position.z = Math.sin(p.angle) * p.distance;
-    p.mesh.rotation.y += p.selfRotation; // Rotación propia
+    p.mesh.rotation.y += p.selfRotation; 
   });
   
   sun.rotation.y += 0.002;
-  
-  // Parpadeo sutil de cuerpos lejanos y brillantes
-  distantGlowingBodies.forEach(body => {
-      if (Math.random() < 0.01) body.material.opacity = 0.5 + Math.random() * 0.5;
-  });
-  
-  // NUEVO: Animar Estrellas de Fotos (PhotoStars) (Parpadeo sutil)
-  photoStars.forEach(star => {
-      // Pequeño parpadeo lento
-      if (Math.random() < 0.005) { 
-          star.userData.pulseOpacity = 0.5 + Math.random() * 0.5;
-      }
-      star.material.opacity = THREE.MathUtils.lerp(star.material.opacity, star.userData.pulseOpacity, 0.05); // Suave
-  });
-  
-  // Rotación leve de las estrellas de fondo
   starfield.rotation.y += 0.0001;
 
-  // ANIMAR ESTRELLAS FUGACES
+  // Animación de las fotos (parpadeo suave)
+  photoStars.forEach(sprite => {
+      if (Math.random() < 0.01) { 
+          sprite.userData.pulseOpacity = 0.6 + Math.random() * 0.4;
+      }
+      sprite.material.opacity = THREE.MathUtils.lerp(sprite.material.opacity, sprite.userData.pulseOpacity, 0.05);
+  });
+
   shootingStars.forEach(star => {
       star.position.add(star.userData.velocity);
-      const distanceToCenter = star.position.distanceTo(scene.position);
-      if (distanceToCenter < 7000 && distanceToCenter > 100) {
-          star.material.opacity = Math.min(star.material.opacity + 0.1, 1);
-      } else {
-          star.material.opacity = Math.max(star.material.opacity - 0.1, 0);
-      }
-      if (distanceToCenter > 12000 || Math.abs(star.position.y) > 8000) resetShootingStar(star);
+      if (star.position.distanceTo(scene.position) > 10000) resetShootingStar(star);
   });
 
   renderer.render(scene, camera);
 }
 
-// Manejo del cambio de tamaño
-function onWindowResize() {
+window.addEventListener('resize', () => {
   width = window.innerWidth;
   height = window.innerHeight;
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
   renderer.setSize(width, height);
-}
-window.addEventListener('resize', onWindowResize);
+});
 
-// Ejecutar
 init();
 animate();
 </script>
