@@ -6,12 +6,16 @@
 <title>Un Universo para Ti 💖</title>
 <style>
   body { margin: 0; background: black; overflow: hidden; font-family: 'Courier New', monospace; color: white; }
-  canvas { display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
   
+  /* Contenedor del Canvas 3D */
+  #threeCanvas { display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+
+  /* Overlay de texto (HTML encima del 3D) */
   #mainContent {
     position: relative; z-index: 2; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; height: 100vh; text-align: center;
-    pointer-events: none; /* Deja que el clic pase al canvas si quieres */
+    align-items: center; justify-content: flex-end; height: 100vh; text-align: center;
+    pointer-events: none; /* Deja que el clic pase al canvas 3D si quieres */
+    padding-bottom: 50px;
   }
 
   h1 {
@@ -36,111 +40,167 @@
 </head>
 <body>
 
-<canvas id="solarCanvas"></canvas>
+<div id="threeCanvas"></div>
 
 <div id="mainContent">
-  <h1>¡Feliz Cumpleaños Sofía! 🎂💖</h1>
+  <h1>¡Feliz Cumpleaños! 🎂💖</h1>
   <p>Eres el sol que ilumina mi universo. Que este nuevo año esté lleno de órbitas de felicidad.</p>
   <button class="btn-regresar" onclick="window.location.href='index.html'">⬅️ Regresar al inicio</button>
 </div>
 
-<script>
-/** --- CONFIGURACIÓN DEL SISTEMA SOLAR --- **/
-const canvas = document.getElementById('solarCanvas');
-const ctx = canvas.getContext('2d');
+<script type="module">
+import * as THREE from 'https://unpkg.com/three@0.150.1/build/three.module.js';
+import { OrbitControls } from 'https://unpkg.com/three@0.150.1/examples/jsm/controls/OrbitControls.js';
 
-let width, height, stars = [], planets = [], sun;
+let scene, camera, renderer, controls;
+let width, height, starfield, sun, planets = [];
+let planetGeometries = [], orbitRings = [];
 
 function init() {
-  width = canvas.width = window.innerWidth;
-  height = canvas.height = window.innerHeight;
-  stars = []; planets = [];
+  width = window.innerWidth;
+  height = window.innerHeight;
 
-  // 1. Sol Central
-  sun = { x: width / 2, y: height / 2, r: 50, color: '#ffdf00', glow: '#ff69b4' };
+  // 1. Escena (El "mundo" 3D)
+  scene = new THREE.Scene();
 
-  // 2. Estrellas de fondo (muchas y brillantes)
-  for (let i = 0; i < 400; i++) {
-    stars.push({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      r: Math.random() * 1.5,
-      opacity: Math.random(),
-      blinkSpeed: 0.005 + Math.random() * 0.02
-    });
-  }
+  // 2. Cámara (Perspectiva para 3D)
+  camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 10000);
+  camera.position.set(0, 150, 400); // Elevada y alejada
 
-  // 3. Planetas (árbitas, tamaños y colores personalizados)
-  const planetColors = ['#ffb6c1', '#87cefa', '#dda0dd', '#ffdab9', '#98fb98'];
+  // 3. Renderer (El "motor" gráfico)
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(width, height);
+  document.getElementById('threeCanvas').appendChild(renderer.domElement);
+
+  // 4. Controles de Cámara (Crucial para MOVER EL UNIVERSO)
+  // Permite: Clic y arrastrar para rotar, Scroll para Zoom, Clic derecho para mover el centro
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true; // Efecto suave al soltar el clic
+  controls.dampingFactor = 0.05;
+  controls.screenSpacePanning = false; // El centro de rotación se queda en el Sol
+  controls.minDistance = 100; // Zoom mínimo
+  controls.maxDistance = 2000; // Zoom máximo
+
+  // --- Creación de Objetos ---
+
+  // A. Estrellas de fondo (Partículas 3D reales)
+  createStarfield();
+
+  // B. Sol Central (Emisivo: brilla)
+  const sunGeometry = new THREE.SphereGeometry(60, 32, 32);
+  const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffdf00 });
+  sun = new THREE.Mesh(sunGeometry, sunMaterial);
+  scene.add(sun);
+  
+  // Pequeña luz PointLight en el Sol (proyecta sombras y resplandor)
+  const sunLight = new THREE.PointLight(0xff69b4, 50, 1000); // Luz rosa resplandeciente
+  scene.add(sunLight);
+
+  // C. Planetas (Árbitas, tamaños y colores)
+  const planetColors = [0xffb6c1, 0x87cefa, 0xdda0dd, 0xffdab9, 0x98fb98];
+  
   for (let i = 0; i < 5; i++) {
-    planets.push({
-      distance: 120 + i * 60, // Distancia al Sol
-      r: 8 + Math.random() * 10,  // Tamaño
-      color: planetColors[i % planetColors.length],
-      speed: 0.005 + Math.random() * 0.01, // Velocidad de órbita
-      angle: Math.random() * Math.PI * 2 // Posición inicial
+    // Geometría del planeta
+    const pRadius = 10 + Math.random() * 15;
+    const pGeometry = new THREE.SphereGeometry(pRadius, 32, 32);
+    // Material (básico para que se vea sin sombras complejas)
+    const pMaterial = new THREE.MeshStandardMaterial({ 
+        color: planetColors[i % planetColors.length], 
+        emissive: planetColors[i % planetColors.length],
+        emissiveIntensity: 0.2
     });
+    const planet = new THREE.Mesh(pGeometry, pMaterial);
+    
+    // Configuración de la órbita
+    const distance = 160 + i * 80; // Distancia al Sol
+    const angle = Math.random() * Math.PI * 2; // Ángulo inicial aleatorio
+    const speed = 0.005 + Math.random() * 0.01; // Velocidad de órbita
+
+    planet.position.set(Math.cos(angle) * distance, 0, Math.sin(angle) * distance);
+    planet.rotation.y = Math.random() * Math.PI * 2; // Rotación aleatoria del planeta
+    
+    // Guardamos los datos para la animación
+    planets.push({ mesh: planet, distance, angle, speed, selfRotation: 0.01 + Math.random()*0.02 });
+    scene.add(planet);
+
+    // Anillo de órbita (Línea sutil)
+    createOrbitRing(distance);
   }
 }
 
-function draw() {
-  ctx.fillStyle = 'black';
-  ctx.fillRect(0, 0, width, height);
+// Función para crear el fondo de estrellas 3D
+function createStarfield() {
+  const starsGeometry = new THREE.BufferGeometry();
+  const starsPositions = new Float32Array(5000 * 3); // 5000 estrellas (x, y, z)
 
-  // Dibuja Estrellas
-  stars.forEach(s => {
-    ctx.beginPath();
-    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255, 255, 255, ${s.opacity})`;
-    ctx.fill();
-    
-    // Animación de parpadeo
-    s.opacity += s.blinkSpeed;
-    if (s.opacity > 1 || s.opacity < 0) s.blinkSpeed *= -1;
-  });
+  for (let i = 0; i < 5000 * 3; i++) {
+    starsPositions[i] = (Math.random() - 0.5) * 6000; // Posición aleatoria lejana
+  }
+  starsGeometry.setAttribute('position', new THREE.BufferAttribute(starsPositions, 3));
 
-  // Dibuja Sol (con resplandor)
-  ctx.shadowBlur = 50;
-  ctx.shadowColor = sun.glow;
-  ctx.beginPath();
-  ctx.arc(sun.x, sun.y, sun.r, 0, Math.PI * 2);
-  ctx.fillStyle = sun.color;
-  ctx.fill();
-  ctx.shadowBlur = 0; // Apaga el resplandor para los planetas
-
-  // Dibuja Planetas y Órbitas
-  planets.forEach(p => {
-    // Actualiza ángulo (órbita)
-    p.angle += p.speed;
-    const px = sun.x + Math.cos(p.angle) * p.distance;
-    const py = sun.y + Math.sin(p.angle) * p.distance;
-
-    // Dibuja la línea de la órbita (sutil)
-    ctx.beginPath();
-    ctx.arc(sun.x, sun.y, p.distance, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(255, 105, 180, 0.15)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // Dibuja el Planeta
-    ctx.beginPath();
-    ctx.arc(px, py, p.r, 0, Math.PI * 2);
-    ctx.fillStyle = p.color;
-    ctx.fill();
-    
-    // Pequeño resplandor en el planeta
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = p.color;
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-  });
-
-  requestAnimationFrame(draw);
+  // Material de estrellas (Partículas)
+  const starsMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 2, sizeAttenuation: true, transparent: true, opacity: 0.8 });
+  starfield = new THREE.Points(starsGeometry, starsMaterial);
+  scene.add(starfield);
 }
 
-window.addEventListener('resize', init);
+// Función para crear la línea de órbita sutil
+function createOrbitRing(distance) {
+  const ringGeometry = new THREE.RingGeometry(distance - 0.5, distance + 0.5, 128);
+  const ringMaterial = new THREE.MeshBasicMaterial({ color: 0xff69b4, side: THREE.DoubleSide, transparent: true, opacity: 0.1 });
+  const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+  ring.rotation.x = Math.PI / 2; // Ponemos el anillo plano
+  scene.add(ring);
+}
+
+// Bucle de animación (El "corazón" de Three.js)
+function animate() {
+  requestAnimationFrame(animate);
+
+  // 1. Actualiza controles (OrbitControls)
+  controls.update();
+
+  // 2. Anima Planetas (Órbitas y Rotación propia)
+  planets.forEach(p => {
+    // Órbita
+    p.angle += p.speed;
+    p.mesh.position.x = Math.cos(p.angle) * p.distance;
+    p.mesh.position.z = Math.sin(p.angle) * p.distance;
+    
+    // Rotación propia (el planeta gira sobre sí mismo)
+    p.mesh.rotation.y += p.selfRotation;
+  });
+  
+  // 3. Pequeña rotación del Sol
+  sun.rotation.y += 0.002;
+  
+  // 4. Pequeño parpadeo del Starfield
+  starfield.rotation.y += 0.0001;
+  const starsArray = starfield.geometry.attributes.position.array;
+  for (let i = 0; i < starsArray.length; i+=3) {
+    if(Math.random() < 0.001) starsArray[i+2] += (Math.random()-0.5) * 5; // Mueve levemente en Z
+  }
+  starfield.geometry.attributes.position.needsUpdate = true; // Indica que se han modificado
+
+  // 5. Renderiza la escena
+  renderer.render(scene, camera);
+}
+
+// Manejo del cambio de tamaño de ventana
+function onWindowResize() {
+  width = window.innerWidth;
+  height = window.innerHeight;
+  
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  
+  renderer.setSize(width, height);
+}
+window.addEventListener('resize', onWindowResize);
+
+// Inicio
 init();
-draw();
+animate();
 </script>
 </body>
 </html>
