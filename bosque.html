@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>El Bosque Encantado ✨</title>
+<style>
+  body { 
+    margin: 0; padding: 0; background: #050b14; 
+    overflow: hidden; font-family: 'Courier New', monospace; color: white; 
+  }
+  
+  /* Fondo radial para dar sensación de oscuridad profunda */
+  #fondo {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle at center, #0a192f 0%, #02040a 100%);
+    z-index: 0;
+  }
+
+  #canvasBosque { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
+  
+  /* Contenedor del árbol mágico */
+  .tree-container {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    z-index: 10; text-align: center; cursor: pointer;
+    animation: float 4s ease-in-out infinite;
+  }
+  .tree-emoji { 
+    font-size: 8rem; 
+    filter: drop-shadow(0 0 20px rgba(173, 255, 47, 0.6)); 
+    transition: transform 0.3s, filter 0.3s; 
+  }
+  .tree-emoji:hover { 
+    transform: scale(1.1); 
+    filter: drop-shadow(0 0 40px rgba(173, 255, 47, 1)); 
+  }
+  .hint { 
+    font-size: 1.2rem; color: #adff2f; margin-top: 10px; 
+    text-shadow: 0 0 10px #adff2f; font-weight: bold;
+  }
+  @keyframes float { 
+    0% { transform: translate(-50%, -50%); } 
+    50% { transform: translate(-50%, -55%); } 
+    100% { transform: translate(-50%, -50%); } 
+  }
+
+  /* Modal Polaroid */
+  #modalCarta {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); z-index: 20; flex-direction: column; 
+    align-items: center; justify-content: center;
+  }
+  .polaroid {
+    background: white; padding: 15px 15px 50px 15px; border-radius: 5px;
+    box-shadow: 0 0 40px rgba(173, 255, 47, 0.3); transform: rotate(-3deg);
+    max-width: 80%; text-align: center; color: #333; position: relative;
+    animation: aparecerCarta 0.5s ease-out;
+  }
+  @keyframes aparecerCarta {
+    from { opacity: 0; transform: translateY(50px) rotate(-10deg); }
+    to { opacity: 1; transform: translateY(0) rotate(-3deg); }
+  }
+  .polaroid img { 
+    width: 100%; max-width: 300px; height: auto; border: 1px solid #ddd; 
+  }
+  .polaroid-text { 
+    margin-top: 20px; font-size: 1.3rem; font-weight: bold; 
+    font-family: 'Courier New', monospace; color: #050b14;
+  }
+  .btn-cerrar {
+    margin-top: 30px; padding: 12px 25px; background: #adff2f; color: #050b14;
+    border: none; border-radius: 20px; font-size: 1.1rem; cursor: pointer; 
+    font-weight: bold; box-shadow: 0 0 15px rgba(173, 255, 47, 0.5);
+  }
+  
+  /* Botón para regresar al inicio */
+  .btn-volver {
+     position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+     z-index: 15; padding: 12px 25px; background: transparent; 
+     border: 2px solid #adff2f; color: #adff2f; border-radius: 25px; 
+     cursor: pointer; font-family: 'Courier New', monospace; font-size: 1rem;
+     transition: all 0.3s;
+  }
+  .btn-volver:hover { background: #adff2f; color: #050b14; box-shadow: 0 0 20px #adff2f; }
+</style>
+</head>
+<body>
+
+<div id="fondo"></div>
+<canvas id="canvasBosque"></canvas>
+
+<div class="tree-container" id="arbolMagico">
+  <div class="tree-emoji">🌲</div>
+  <div class="hint">Toca el árbol</div>
+</div>
+
+<button class="btn-volver" onclick="window.location.href='index.html'">⬅️ Volver al inicio</button>
+
+<div id="modalCarta">
+  <div class="polaroid">
+    <img src="foto_bosque.jpg" alt="Nuestro recuerdo" onerror="this.src='https://via.placeholder.com/300x350?text=Tu+Foto+Aqui'">
+    <div class="polaroid-text">Cada momento contigo es mágico ✨</div>
+  </div>
+  <button class="btn-cerrar" id="btnCerrarCarta">Guardar recuerdo</button>
+</div>
+
+<audio id="musicaBosque" loop>
+  <source src="musica3.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+  // --- LÓGICA DE LAS LUCIÉRNAGAS (CANVAS) ---
+  const canvas = document.getElementById('canvasBosque');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  let fireflies = [];
+  const numFireflies = window.innerWidth < 768 ? 100 : 250; // Menos en celular para rendimiento
+  let mouse = { x: null, y: null };
+
+  // Detectar movimiento del mouse o touch
+  window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
+  window.addEventListener('touchmove', (e) => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; });
+  window.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
+  window.addEventListener('touchend', () => { mouse.x = null; mouse.y = null; });
+
+  class Firefly {
+    constructor() {
+      this.x = Math.random() * canvas.width;
+      this.y = Math.random() * canvas.height;
+      this.size = Math.random() * 2 + 0.5;
+      this.speedX = Math.random() * 1 - 0.5;
+      this.speedY = Math.random() * 1 - 0.5;
+      this.angle = Math.random() * Math.PI * 2;
+      this.opacity = Math.random();
+      this.fadeSpeed = Math.random() * 0.02 + 0.01;
+      this.baseColor = Math.random() > 0.5 ? '173, 255, 47' : '152, 251, 152'; // Dos tonos de verde
+    }
+    update() {
+      this.x += this.speedX;
+      this.y += this.speedY;
+      this.angle += 0.05;
+      this.opacity += Math.sin(this.angle) * this.fadeSpeed; // Efecto de parpadeo
+
+      // Rebote suave en los bordes
+      if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+      if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+
+      // Interacción: Huir del mouse
+      if (mouse.x != null && mouse.y != null) {
+        let dx = mouse.x - this.x;
+        let dy = mouse.y - this.y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < 120) {
+          this.x -= dx * 0.02;
+          this.y -= dy * 0.02;
+        }
+      }
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${this.baseColor}, ${Math.abs(this.opacity)})`;
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = `rgba(${this.baseColor}, 1)`;
+      ctx.fill();
+    }
+  }
+
+  function initFireflies() {
+    fireflies = [];
+    for (let i = 0; i < numFireflies; i++) {
+      fireflies.push(new Firefly());
+    }
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    fireflies.forEach(firefly => {
+      firefly.update();
+      firefly.draw();
+    });
+    requestAnimationFrame(animate);
+  }
+
+  window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    initFireflies();
+  });
+
+  initFireflies();
+  animate();
+
+  // --- LÓGICA DEL ÁRBOL Y MODAL ---
+  const arbol = document.getElementById('arbolMagico');
+  const modal = document.getElementById('modalCarta');
+  const btnCerrar = document.getElementById('btnCerrarCarta');
+  const audio = document.getElementById('musicaBosque');
+
+  arbol.addEventListener('click', () => {
+    modal.style.display = 'flex';
+    // Reproducir música al interactuar si no está sonando ya
+    if (audio.paused) {
+        audio.play().catch(e => console.log("Audio requiere interacción previa"));
+    }
+  });
+
+  btnCerrar.addEventListener('click', () => {
+    modal.style.display = 'none';
+  });
+</script>
+</body>
+</html>
