@@ -114,6 +114,7 @@
   background:black;z-index:30;flex-direction:column;align-items:center;justify-content:center;">
   <canvas id="puzzleCanvas" width="300" height="300"
     style="border:4px solid #ff69b4;border-radius:10px;box-shadow:0 0 20px #ff69b4; max-width: 90%;"></canvas>
+  
   <button id="btnRegresarPuzzle" style="margin-top:20px;padding:12px 25px;
     font-size:1.2rem;background:#ff69b4;color:white;border:none;border-radius:12px;
     cursor:pointer;box-shadow:0 0 15px #ff69b4;">⬅️ Regresar</button>
@@ -534,6 +535,7 @@ function iniciarPuzzle(){
     [board[i], board[j]] = [board[j], board[i]];
   }
 
+  // AQUI ESTÁ LA ÚNICA MODIFICACIÓN
   function checkWin() {
     const isWin = board.every((val, index) => val === index);
     if (isWin) {
@@ -563,7 +565,9 @@ function iniciarPuzzle(){
             window.location.href = "bosque.html";
           };
           
-          puzzleScreenDiv.appendChild(btnBosque);
+          // Insertamos el botón justo antes del botón de regresar
+          const btnRegresar = document.getElementById("btnRegresarPuzzle");
+          puzzleScreenDiv.insertBefore(btnBosque, btnRegresar);
         }
       }, 200);
     }
