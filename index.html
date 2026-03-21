@@ -537,7 +537,35 @@ function iniciarPuzzle(){
   function checkWin() {
     const isWin = board.every((val, index) => val === index);
     if (isWin) {
-      setTimeout(() => alert("🎉 ¡Felicidades mi amor! Completaste el rompecabezas 💖"), 200);
+      setTimeout(() => {
+        alert("🎉 ¡Felicidades mi amor! Completaste el rompecabezas 💖");
+        
+        // Crear dinámicamente el botón para ir al bosque
+        const puzzleScreenDiv = document.getElementById("puzzleScreen");
+        
+        // Verificamos que el botón no exista ya para no duplicarlo
+        if (!document.getElementById("btnIrAlBosque")) {
+          const btnBosque = document.createElement("button");
+          btnBosque.id = "btnIrAlBosque";
+          btnBosque.innerText = "✨ Ir al Bosque Encantado ✨";
+          btnBosque.style.marginTop = "20px";
+          btnBosque.style.padding = "15px 30px";
+          btnBosque.style.fontSize = "1.3rem";
+          btnBosque.style.background = "#adff2f"; // Verde neón
+          btnBosque.style.color = "#050b14";
+          btnBosque.style.border = "none";
+          btnBosque.style.borderRadius = "15px";
+          btnBosque.style.cursor = "pointer";
+          btnBosque.style.fontWeight = "bold";
+          btnBosque.style.boxShadow = "0 0 20px #adff2f";
+          
+          btnBosque.onclick = function() {
+            window.location.href = "bosque.html";
+          };
+          
+          puzzleScreenDiv.appendChild(btnBosque);
+        }
+      }, 200);
     }
   }
 
