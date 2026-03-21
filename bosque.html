@@ -193,20 +193,28 @@
   initFireflies();
   animate();
 
-  // --- LÓGICA DEL ÁRBOL Y MODAL ---
+// --- LÓGICA DEL ÁRBOL, MODAL Y MÚSICA ---
   const arbol = document.getElementById('arbolMagico');
   const modal = document.getElementById('modalCarta');
   const btnCerrar = document.getElementById('btnCerrarCarta');
   const audio = document.getElementById('musicaBosque');
 
-  arbol.addEventListener('click', () => {
-    modal.style.display = 'flex';
-    // Reproducir música al interactuar si no está sonando ya
-    if (audio.paused) {
-        audio.play().catch(e => console.log("Audio requiere interacción previa"));
-    }
+  // 1. Que la música suene al hacer clic o tocar CUALQUIER parte del fondo
+  document.body.addEventListener('click', () => {
+    if (audio.paused) audio.play().catch(e => console.log("Esperando interacción..."));
+  });
+  document.body.addEventListener('touchstart', () => {
+    if (audio.paused) audio.play().catch(e => console.log("Esperando interacción..."));
   });
 
+  // 2. Lógica del Árbol
+  arbol.addEventListener('click', (evento) => {
+    evento.stopPropagation(); // Evita que el clic del árbol active otras cosas por error
+    modal.style.display = 'flex';
+    if (audio.paused) audio.play(); // Por si acaso no había tocado nada antes
+  });
+
+  // 3. Cerrar Carta
   btnCerrar.addEventListener('click', () => {
     modal.style.display = 'none';
   });
