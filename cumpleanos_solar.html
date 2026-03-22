@@ -252,8 +252,15 @@ function init() {
   }
 
   controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true; controls.dampingFactor = 0.05;
-  controls.minDistance = 150; controls.maxDistance = 12000;
+  controls.enableDamping = true; 
+  controls.dampingFactor = 0.05;
+  
+  // --- FRENOS DE LA CÁMARA CORREGIDOS ---
+  controls.minDistance = 800;  // Límite de zoom: Evita que te estrelles con el sol
+  controls.maxDistance = 6000; // Límite de alejamiento: Evita que te pierdas en el espacio
+  controls.enablePan = false;  // Bloqueo: Evita arrastrar el sol fuera del centro de la pantalla
+
+  
 
   systemRotationGroup = new THREE.Group();
   scene.add(systemRotationGroup);
