@@ -77,6 +77,12 @@
 <audio id="musicaBosque" loop>
   <source src="src_bosque/musica3.mp3" type="audio/mpeg">
 </audio>
+<audio id="sfxMagic">
+  <source src="src_bosque/sfx_magic.mp3" type="audio/mpeg">
+</audio>
+<audio id="sfxFirework">
+  <source src="src_bosque/sfx_firework.mp3" type="audio/mpeg">
+</audio>
 
 <div id="fase2D">
   <canvas id="canvasBosque2D"></canvas>
@@ -97,7 +103,7 @@
 <div class="modal-style" id="modalCartaFinal">
   <div class="card-style" style="transform: rotate(2deg);">
     <div class="card-style-text" style="font-size: 1.1rem; padding: 10px;">
-      eres lo mas bonito que me a podido pasar en esta vida❤️,nunca dudes del amor que te tengo❤️gracias por todo❤️
+      eres lo mas bonito que me a podido pasar en esta vida❤️, nunca dude del amor que te tengo❤️ gracias por todo❤️
     </div>
   </div>
   <button class="btn-base" id="btnCerrarCartaFinal">Gracias ❤️</button>
@@ -126,12 +132,15 @@
   const esCelular = (eleccion === 'celular') || (window.innerWidth < 768 && eleccion !== 'pc');
 
   // ==========================================
-  // MÚSICA Y CONTROL
+  // AUDIOS Y EFECTOS
   // ==========================================
-  const audio = document.getElementById('musicaBosque');
+  const audioMain = document.getElementById('musicaBosque');
+  const sfxMagic = document.getElementById('sfxMagic');
+  const sfxFirework = document.getElementById('sfxFirework');
+  
   function reproducirMusica() {
-    if (audio.paused) {
-      audio.play().then(() => {
+    if (audioMain.paused) {
+      audioMain.play().then(() => {
         window.removeEventListener('click', reproducirMusica);
         window.removeEventListener('touchstart', reproducirMusica);
       }).catch(e => console.log("Esperando..."));
@@ -146,11 +155,10 @@
   // ==========================================
   const canvas2D = document.getElementById('canvasBosque2D');
   const ctx2D = canvas2D.getContext('2d');
-  canvas2D.width = window.innerWidth;
-  canvas2D.height = window.innerHeight;
+  canvas2D.width = window.innerWidth; canvas2D.height = window.innerHeight;
 
   let fireflies2D = [];
-  const numFireflies2D = esCelular ? 80 : 250; // PC tiene más luciérnagas 2D
+  const numFireflies2D = esCelular ? 80 : 250; // PC ULTRA: Más luces iniciales
   let mouse2D = { x: null, y: null };
   let animacion2DActiva = true; 
   let idAnimacion2D;
@@ -160,14 +168,10 @@
 
   class Firefly2D {
     constructor() {
-      this.x = Math.random() * canvas2D.width;
-      this.y = Math.random() * canvas2D.height;
-      this.size = Math.random() * 2 + 0.5;
-      this.speedX = Math.random() * 1 - 0.5;
-      this.speedY = Math.random() * 1 - 0.5;
-      this.angle = Math.random() * Math.PI * 2;
-      this.opacity = Math.random();
-      this.fadeSpeed = Math.random() * 0.02 + 0.01;
+      this.x = Math.random() * canvas2D.width; this.y = Math.random() * canvas2D.height;
+      this.size = Math.random() * 2 + 0.5; this.speedX = Math.random() * 1 - 0.5;
+      this.speedY = Math.random() * 1 - 0.5; this.angle = Math.random() * Math.PI * 2;
+      this.opacity = Math.random(); this.fadeSpeed = Math.random() * 0.02 + 0.01;
       this.baseColor = Math.random() > 0.5 ? '173, 255, 47' : '152, 251, 152'; 
     }
     update() {
@@ -175,30 +179,23 @@
       this.angle += 0.05; this.opacity += Math.sin(this.angle) * this.fadeSpeed; 
       if (this.x < 0 || this.x > canvas2D.width) this.speedX *= -1;
       if (this.y < 0 || this.y > canvas2D.height) this.speedY *= -1;
-
       if (mouse2D.x != null && mouse2D.y != null) {
         let dx = mouse2D.x - this.x; let dy = mouse2D.y - this.y;
         if (Math.sqrt(dx * dx + dy * dy) < 100) { this.x -= dx * 0.02; this.y -= dy * 0.02; }
       }
     }
     draw() {
-      ctx2D.beginPath();
-      ctx2D.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-      ctx2D.fillStyle = `rgba(${this.baseColor}, ${Math.abs(this.opacity)})`;
-      ctx2D.shadowBlur = 10; ctx2D.shadowColor = `rgba(${this.baseColor}, 1)`;
-      ctx2D.fill();
+      ctx2D.beginPath(); ctx2D.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx2D.fillStyle = `rgba(${this.baseColor}, ${Math.abs(this.opacity)})`;
+      ctx2D.shadowBlur = 10; ctx2D.shadowColor = `rgba(${this.baseColor}, 1)`; ctx2D.fill();
     }
   }
 
   for (let i = 0; i < numFireflies2D; i++) fireflies2D.push(new Firefly2D());
 
   function animate2D() {
-    if (!animacion2DActiva) return;
-    ctx2D.clearRect(0, 0, canvas2D.width, canvas2D.height);
-    fireflies2D.forEach(f => { f.update(); f.draw(); });
-    idAnimacion2D = requestAnimationFrame(animate2D);
-  }
-  animate2D();
+    if (!animacion2DActiva) return; ctx2D.clearRect(0, 0, canvas2D.width, canvas2D.height);
+    fireflies2D.forEach(f => { f.update(); f.draw(); }); idAnimacion2D = requestAnimationFrame(animate2D);
+  } animate2D();
 
 
   // ==========================================
@@ -215,178 +212,149 @@
     e.stopPropagation();
     modalCarta.style.display = 'flex';
     reproducirMusica();
+    // NUEVO: SFX de magia
+    sfxMagic.currentTime = 0; sfxMagic.play().catch(e=>console.log("SFX bloq"));
   });
 
   btnViaje.addEventListener('click', () => {
-    modalCarta.style.display = 'none'; 
-    fase2D.style.opacity = '0'; 
-    fase2D.style.transform = 'scale(0.8)';
-    canvas3DContenedor.style.display = 'block'; 
-
+    modalCarta.style.display = 'none'; fase2D.style.opacity = '0'; fase2D.style.transform = 'scale(0.8)'; canvas3DContenedor.style.display = 'block'; 
     iniciarMundo3D(); 
-
-    setTimeout(() => {
-      fase2D.style.display = 'none';
-      animacion2DActiva = false; 
-      cancelAnimationFrame(idAnimacion2D);
-      btnVolver.style.display = 'block';
-    }, 2000);
+    setTimeout(() => { fase2D.style.display = 'none'; animacion2DActiva = false; cancelAnimationFrame(idAnimacion2D); btnVolver.style.display = 'block'; }, 2000);
   });
-
   btnVolver.addEventListener('click', () => window.location.href = 'index.html');
 
 
   // ==========================================
-  // MOTOR 3D PRINCIPAL
+  // MOTOR 3D PRINCIPAL (CONEJO EXPUESTO)
   // ==========================================
   let scene, camera, renderer, controls, lakeMesh;
+  // NUEVO: Variables para el conejito
+  let bunnySprite, textureHeart; 
   let raycaster, mouse = new THREE.Vector2(); 
 
   function iniciarMundo3D() {
     const contenedor = document.getElementById('threeCanvas');
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x02040a); 
-    scene.fog = new THREE.FogExp2(0x02040a, 0.003); 
+    scene = new THREE.Scene(); scene.background = new THREE.Color(0x02040a); scene.fog = new THREE.FogExp2(0x02040a, 0.003); 
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000); camera.position.set(0, 50, 200); 
 
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
-    camera.position.set(0, 50, 200); 
-
-    // PC: Activa Antialiasing y mejor Pixel Ratio
+    // PC ULTRA: Antialiasing y mejor Pixel Ratio
     renderer = new THREE.WebGLRenderer({ antialias: !esCelular });
     renderer.setPixelRatio(esCelular ? 1 : Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
     contenedor.appendChild(renderer.domElement);
 
     controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.maxPolarAngle = Math.PI / 2 - 0.05; 
-    controls.minDistance = 30;
-    controls.maxDistance = 600;
+    controls.enableDamping = true; controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 - 0.05; controls.minDistance = 30; controls.maxDistance = 600;
 
     // LUCES
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.2); 
-    scene.add(ambientLight);
-    const luzLago = new THREE.PointLight(0x00bfff, 3, 300); 
-    luzLago.position.set(0, 20, 0);
-    scene.add(luzLago);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.2)); 
+    const luzLago = new THREE.PointLight(0x00bfff, 3, 300); luzLago.position.set(0, 20, 0); scene.add(luzLago);
 
     // SUELO
-    const groundGeo = new THREE.PlaneGeometry(1000, 1000);
     const groundMat = new THREE.MeshStandardMaterial({ color: 0x051a05, roughness: 1 });
-    const ground = new THREE.Mesh(groundGeo, groundMat);
-    ground.rotation.x = -Math.PI / 2;
-    scene.add(ground);
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), groundMat); ground.rotation.x = -Math.PI / 2; scene.add(ground);
 
     // LAGO
-    const lagoGeo = new THREE.CircleGeometry(60, esCelular ? 32 : 64);
     const lagoMat = new THREE.MeshBasicMaterial({ color: 0x00bfff, transparent: true, opacity: 0.9, emissive: 0x00bfff });
-    lakeMesh = new THREE.Mesh(lagoGeo, lagoMat);
-    lakeMesh.rotation.x = -Math.PI / 2;
-    lakeMesh.position.y = 0.6; 
-    scene.add(lakeMesh);
+    lakeMesh = new THREE.Mesh(new THREE.CircleGeometry(60, esCelular ? 32 : 64), lagoMat); lakeMesh.rotation.x = -Math.PI / 2; lakeMesh.position.y = 0.6; scene.add(lakeMesh);
 
-    // ANIMALITO
+    // TEXTURAS MÁGICAS
     const textureLoader = new THREE.TextureLoader();
+    // NUEVO: Cargar textura de corazón para el easter egg
+    textureHeart = textureLoader.load('src_bosque/heart.png');
+
+    // ANIMALITO (MODIFICADO: Se expone la variable global)
     textureLoader.load('src_bosque/bunny.png', (texture) => {
       const bunnyMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
-      const bunny = new THREE.Sprite(bunnyMat);
-      bunny.scale.set(30, 30, 1);
-      bunny.position.set(60, 15, 30); 
-      scene.add(bunny);
+      bunnySprite = new THREE.Sprite(bunnyMat);
+      // NUEVO: Nombre y datos para identificarlo y animarlo
+      bunnySprite.name = "bunny"; bunnySprite.userData = { baseY: 15, baseScale: 30 };
+      bunnySprite.scale.set(30, 30, 1); bunnySprite.position.set(60, 15, 30); 
+      scene.add(bunnySprite);
     }, undefined, () => {
-      const bolaLuz = new THREE.Mesh(new THREE.SphereGeometry(6, 16, 16), new THREE.MeshBasicMaterial({color: 0xffffff}));
-      bolaLuz.position.set(60, 6, 30);
-      scene.add(bolaLuz);
+      const bolaLuzGeo = new THREE.SphereGeometry(6, 16, 16);
+      const bolaLuzMat = new THREE.MeshBasicMaterial({color: 0xffffff});
+      // Fallback: Si no hay foto, la bola de luz se llama conejo y salta igual
+      bunnySprite = new THREE.Mesh(bolaLuzGeo, bolaLuzMat);
+      bunnySprite.name = "bunny"; bunnySprite.userData = { baseY: 6, baseScale: 6 };
+      bunnySprite.position.set(60, 6, 30); scene.add(bunnySprite);
     });
 
-    // ÁRBOLES DINÁMICOS (Más árboles y más polígonos en PC)
-    const numArboles = esCelular ? 60 : 120;
+    // ÁRBOLES DINÁMICOS (PC ULTRA: Muchos más árboles y más polígonos)
+    const numArboles = esCelular ? 60 : 120; // PC ULTRA: Doble de árboles
     const trunkSides = esCelular ? 6 : 8;
     const leafSides = esCelular ? 5 : 7;
-
     function crearArbol(x, z) {
-      const troncoGeo = new THREE.CylinderGeometry(1.5, 2, 12, trunkSides);
-      const troncoMat = new THREE.MeshStandardMaterial({ color: 0x2d1a11, roughness: 1 });
-      const tronco = new THREE.Mesh(troncoGeo, troncoMat);
-      tronco.position.set(x, 6, z);
-      scene.add(tronco);
-
-      const hojasGeo = new THREE.ConeGeometry(8, 25, leafSides); 
-      const hojasMat = new THREE.MeshStandardMaterial({ color: 0x0a290a, roughness: 0.9 });
-      const hojas = new THREE.Mesh(hojasGeo, hojasMat);
-      hojas.position.set(x, 22, z); 
-      scene.add(hojas);
+      const tronco = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 2, 12, trunkSides), new THREE.MeshStandardMaterial({ color: 0x2d1a11, roughness: 1 })); tronco.position.set(x, 6, z); scene.add(tronco);
+      const hojas = new THREE.Mesh(new THREE.ConeGeometry(8, 25, leafSides), new THREE.MeshStandardMaterial({ color: 0x0a290a, roughness: 0.9 })); hojas.position.set(x, 22, z); scene.add(hojas);
     }
     for (let i = 0; i < numArboles; i++) {
-      const angulo = Math.random() * Math.PI * 2;
-      const radio = 80 + Math.random() * 250; 
-      crearArbol(Math.cos(angulo) * radio, Math.sin(angulo) * radio);
+      const angulo = Math.random() * Math.PI * 2; const radio = 80 + Math.random() * 250; crearArbol(Math.cos(angulo) * radio, Math.sin(angulo) * radio);
     }
 
     // PARTÍCULAS
     initParticulasSistemas();
 
     // LUNA
-    const lunaGeo = new THREE.SphereGeometry(25, 32, 32);
     const lunaMat = new THREE.MeshBasicMaterial({ color: 0xffffcc }); 
-    const luna = new THREE.Mesh(lunaGeo, lunaMat);
-    luna.position.set(-300, 250, -200); 
-    scene.add(luna);
-    const lunaLight = new THREE.PointLight(0xffffcc, 3, 800);
-    luna.add(lunaLight);
+    const luna = new THREE.Mesh(new THREE.SphereGeometry(25, 32, 32), lunaMat); luna.position.set(-300, 250, -200); scene.add(luna);
+    const lunaLight = new THREE.PointLight(0xffffcc, 3, 800); luna.add(lunaLight);
 
     animate3D();
 
+    // INTERACCIÓN (Soporte para Celular y PC + Bunny Egg)
     raycaster = new THREE.Raycaster();
-    
-    // --- SOPORTE PARA CELULAR Y PC ---
-    renderer.domElement.addEventListener('click', onLagoClick);
-    renderer.domElement.addEventListener('touchend', onLagoClick); // Para dedos en celular
+    renderer.domElement.addEventListener('click', onSceneInteract);
+    renderer.domElement.addEventListener('touchend', onSceneInteract); // Soporte móvil
     window.addEventListener('resize', on3DWindowResize);
   }
 
-  function onLagoClick(event) {
+  // MODIFICADO: Ahora maneja clics en el lago Y en el conejo
+  function onSceneInteract(event) {
     let coordX, coordY;
-    
-    // Si es touch, saca la coordenada del dedo, si no, del mouse
     if (event.changedTouches && event.changedTouches.length > 0) {
-      coordX = event.changedTouches[0].clientX;
-      coordY = event.changedTouches[0].clientY;
+      coordX = event.changedTouches[0].clientX; coordY = event.changedTouches[0].clientY;
     } else {
-      coordX = event.clientX;
-      coordY = event.clientY;
+      coordX = event.clientX; coordY = event.clientY;
     }
-
-    mouse.x = (coordX / window.innerWidth) * 2 - 1;
-    mouse.y = -(coordY / window.innerHeight) * 2 + 1;
-    
+    mouse.x = (coordX / window.innerWidth) * 2 - 1; mouse.y = -(coordY / window.innerHeight) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObject(lakeMesh);
+
+    // NUEVO: Lista de objetos interactivos
+    const objetosInteractivos = [];
+    if(lakeMesh) objetosInteractivos.push(lakeMesh);
+    if(bunnySprite) objetosInteractivos.push(bunnySprite); // <--- El conejo se une a la lista
+
+    const intersects = raycaster.intersectObjects(objetosInteractivos);
+
     if (intersects.length > 0) {
-      onInteraccionFinal();
+      const objetoTocado = intersects[0].object;
+
+      // LOGICA DEL LAGO (Final)
+      if (objetoTocado === lakeMesh) {
+        onInteraccionFinal();
+      }
+
+      // NUEVO: LOGICA DEL CONEJO (Easter Egg)
+      if (objetoTocado.name === "bunny") {
+        onBunnyEasterEgg();
+      }
     }
   }
 
-  function on3DWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  }
+  function on3DWindowResize() { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); }
 
-  function animate3D() {
-    requestAnimationFrame(animate3D);
-    controls.update();
-    actualizarParticulas3D(); 
-    renderer.render(scene, camera);
-  }
+  function animate3D() { requestAnimationFrame(animate3D); controls.update(); actualizarParticulas3D(); renderer.render(scene, camera); }
 
 
   // ==========================================
-  // SISTEMAS DE PARTÍCULAS (Con ajuste Celular/PC)
+  // SISTEMAS DE PARTÍCULAS (Con ajuste Celular/PC Ultra)
   // ==========================================
   let fireflies3DSystem, fireworksSystems = [];
   let shootingStarsSystem; 
+  // NUEVO: Corazones del conejo
+  let heartSystems = []; 
   let textureParticle;
   let secuenciaFinalIniciada = false; 
 
@@ -394,101 +362,141 @@
     const loader = new THREE.TextureLoader();
     textureParticle = loader.load('src_bosque/particle.png', (txt) => { txt.needsUpdate = true; }, undefined, () => {
       const canvas = document.createElement('canvas'); canvas.width = 32; canvas.height = 32;
-      const ctx = canvas.getContext('2d');
-      ctx.beginPath(); ctx.arc(16, 16, 14, 0, Math.PI*2); ctx.fillStyle = 'white'; ctx.shadowBlur=10; ctx.shadowColor='white'; ctx.fill();
+      const ctx = canvas.getContext('2d'); ctx.beginPath(); ctx.arc(16, 16, 14, 0, Math.PI*2); ctx.fillStyle = 'white'; ctx.shadowBlur=10; ctx.shadowColor='white'; ctx.fill();
       textureParticle = new THREE.CanvasTexture(canvas);
     });
 
-    // LUCIÉRNAGAS 3D
-    const numFireflies3D = esCelular ? 250 : 800; // Más luces en PC
-    const particlesGeo = new THREE.BufferGeometry();
-    const particlesPos = [];
-    for (let i = 0; i < numFireflies3D; i++) {
-      particlesPos.push((Math.random() - 0.5) * 500, Math.random() * 150, (Math.random() - 0.5) * 500);
-    }
+    // LUCIÉRNAGAS 3D (PC ULTRA: Muchas más luces)
+    const numFireflies3D = esCelular ? 250 : 800; // PC ULTRA: Casi el triple de luces 3D
+    const particlesGeo = new THREE.BufferGeometry(); const particlesPos = [];
+    for (let i = 0; i < numFireflies3D; i++) { particlesPos.push((Math.random() - 0.5) * 500, Math.random() * 150, (Math.random() - 0.5) * 500); }
     particlesGeo.setAttribute('position', new THREE.Float32BufferAttribute(particlesPos, 3));
-    const particlesMat = new THREE.PointsMaterial({ color: 0xadff2f, size: 2.5, transparent: true, opacity: 0.8 });
-    fireflies3DSystem = new THREE.Points(particlesGeo, particlesMat);
-    scene.add(fireflies3DSystem);
+    fireflies3DSystem = new THREE.Points(particlesGeo, new THREE.PointsMaterial({ color: 0xadff2f, size: 2.5, transparent: true, opacity: 0.8 })); scene.add(fireflies3DSystem);
 
-    // ESTRELLAS FUGACES
-    const numShootingStars = esCelular ? 5 : 15; // Más estrellas en PC
-    const shootingStarsGeo = new THREE.BufferGeometry();
-    const shootingStarsPos = [];
-    const shootingStarsVel = [];
-    
+    // ESTRELLAS FUGACES (PC ULTRA: Triple de estrellas)
+    const numShootingStars = esCelular ? 5 : 15; // PC ULTRA: Triple de estrellas fugaces
+    const shootingStarsGeo = new THREE.BufferGeometry(); const shootingStarsPos = []; const shootingStarsVel = [];
     for (let i = 0; i < numShootingStars; i++) {
       shootingStarsPos.push((Math.random() - 0.5) * 1000, 300 + Math.random() * 150, (Math.random() - 0.5) * 1000);
-      const v = new THREE.Vector3((Math.random() - 0.5), -0.1, (Math.random() - 0.5));
-      v.normalize().multiplyScalar(10 + Math.random() * 5); 
-      shootingStarsVel.push(v.x, v.y, v.z);
+      const v = new THREE.Vector3((Math.random() - 0.5), -0.1, (Math.random() - 0.5)).normalize().multiplyScalar(10 + Math.random() * 5); shootingStarsVel.push(v.x, v.y, v.z);
     }
-    shootingStarsGeo.setAttribute('position', new THREE.Float32BufferAttribute(shootingStarsPos, 3));
-    shootingStarsGeo.setAttribute('velocity', new THREE.Float32BufferAttribute(shootingStarsVel, 3));
-
-    const shootingStarsMat = new THREE.PointsMaterial({ 
-      color: 0xffffff, size: 4, map: textureParticle, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false 
-    });
-    shootingStarsSystem = new THREE.Points(shootingStarsGeo, shootingStarsMat);
-    scene.add(shootingStarsSystem);
+    shootingStarsGeo.setAttribute('position', new THREE.Float32BufferAttribute(shootingStarsPos, 3)); shootingStarsGeo.setAttribute('velocity', new THREE.Float32BufferAttribute(shootingStarsVel, 3));
+    shootingStarsSystem = new THREE.Points(shootingStarsGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 4, map: textureParticle, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); scene.add(shootingStarsSystem);
   }
 
   function onInteraccionFinal() {
-    if (secuenciaFinalIniciada) return; 
-    secuenciaFinalIniciada = true;
-
+    if (secuenciaFinalIniciada) return; secuenciaFinalIniciada = true;
     lanzarFuegoArtificial(0, 0); 
     setTimeout(() => lanzarFuegoArtificial(40, 20), 400); 
     setTimeout(() => lanzarFuegoArtificial(-50, -10), 800); 
     setTimeout(() => lanzarFuegoArtificial(20, -30), 1500); 
     setTimeout(() => lanzarFuegoArtificial(-20, 40), 2200); 
-
     setTimeout(() => mostrarCartaFinalText(), 4000);
   }
 
   function lanzarFuegoArtificial(startX, startZ) {
-    const geo = new THREE.BufferGeometry();
-    const pos = []; const vel = []; const colors = [];
-    const numParticulasFuegos = esCelular ? 150 : 400; // Explosiones más masivas en PC
+    // NUEVO: SFX explosión sincronizado
+    sfxFirework.currentTime = 0; sfxFirework.play().catch(e=>console.log("SFX bloq"));
+
+    const geo = new THREE.BufferGeometry(); const pos = []; const vel = []; const colors = [];
+    // PC ULTRA: Explosiones masivas con más partículas
+    const numParticulasFuegos = esCelular ? 150 : 400; // PC ULTRA: El doble de partículas por explosión
     const baseColor = new THREE.Color(`hsl(${Math.random() * 60 + 40}, 100%, 70%)`); 
 
     for (let i = 0; i < numParticulasFuegos; i++) {
       pos.push(startX + (Math.random()-0.5)*10, Math.random() * 5, startZ + (Math.random()-0.5)*10);
-      const anguloH = Math.random() * Math.PI * 2;
-      const speed = 2 + Math.random() * 1.5;
-      vel.push(Math.cos(anguloH) * speed, 3 + Math.random()*2, Math.sin(anguloH) * speed); 
-      colors.push(baseColor.r, baseColor.g, baseColor.b);
+      const anguloH = Math.random() * Math.PI * 2; const speed = 2 + Math.random() * 1.5;
+      vel.push(Math.cos(anguloH) * speed, 3 + Math.random()*2, Math.sin(anguloH) * speed); colors.push(baseColor.r, baseColor.g, baseColor.b);
+    }
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('velocity', new THREE.Float32BufferAttribute(vel, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    const fw = new THREE.Points(geo, new THREE.PointsMaterial({ size: 5, map: textureParticle, transparent: true, blending: THREE.AdditiveBlending, vertexColors: true, depthWrite: false }));
+    fw.userData = { life: 1, timer: 0, exploded: false, vY: 3, count: numParticulasFuegos }; fireworksSystems.push(fw); scene.add(fw);
+  }
+
+  // ==========================================
+  // LÓGICA DEL EASTER EGG (CONEJO Y CORAZONES)
+  // ==========================================
+  let bunnyJumping = false, bunnyJumpTimer = 0;
+
+  function onBunnyEasterEgg() {
+    // Si ya está saltando o no cargó la textura del corazón, no hacemos nada
+    if (bunnyJumping || !bunnySprite || !textureHeart) return;
+    bunnyJumping = true; bunnyJumpTimer = 0;
+    // SFX mágico al tocar al conejito (puedes reusar sfxMagic o buscar otro)
+    sfxMagic.currentTime = 0; sfxMagic.play().catch(e=>console.log("SFX bloq"));
+    // Lanzar corazones desde la posición del conejo (un poco arriba)
+    const pos = bunnySprite.position.clone();
+    lanzarCorazonesMágicos(pos.x, pos.y + 10, pos.z);
+  }
+
+  function lanzarCorazonesMágicos(x, y, z) {
+    const geo = new THREE.BufferGeometry(); const pos = []; const vel = [];
+    const numCorazones = 5; // Pocos pero especiales
+
+    for (let i = 0; i < numCorazones; i++) {
+      pos.push(x, y, z);
+      // Movimiento flotante hacia arriba y hacia afuera ligeramente
+      vel.push((Math.random() - 0.5) * 1, 1.5 + Math.random() * 1, (Math.random() - 0.5) * 1);
     }
     geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
     geo.setAttribute('velocity', new THREE.Float32BufferAttribute(vel, 3));
-    geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
 
-    const mat = new THREE.PointsMaterial({ 
-      size: 5, map: textureParticle, transparent: true, blending: THREE.AdditiveBlending, vertexColors: true, depthWrite: false 
-    });
-    const fw = new THREE.Points(geo, mat);
-    fw.userData = { life: 1, timer: 0, exploded: false, vY: 3, count: numParticulasFuegos };
-    fireworksSystems.push(fw);
-    scene.add(fw);
+    const hs = new THREE.Points(geo, new THREE.PointsMaterial({ 
+      color: 0xffffff, // La imagen del corazón es roja, la pintamos de blanco para Additive blending si es blanca, o normal si es roja. Si es roja con fondo transparente, NormalBlending es mejor.
+      size: 15, map: textureHeart, transparent: true, opacity: 1, depthWrite: false, blending: THREE.NormalBlending 
+    }));
+    hs.userData = { life: 1 }; // Tiempo de vida del sistema
+    heartSystems.push(hs); scene.add(hs);
   }
 
   function actualizarParticulas3D() {
     if (fireflies3DSystem) fireflies3DSystem.rotation.y += 0.0008;
 
+    // ACTUALIZAR CONEJITO (Salto y Corazones)
+    if (bunnyJumping && bunnySprite) {
+      bunnyJumpTimer += 0.05;
+      const saltoMax = 15; // Altura máxima del salto
+      // basic jump curve using sine: height = peak * sin(pi * progress)
+      if (bunnyJumpTimer <= 1) {
+        bunnySprite.position.y = bunnySprite.userData.baseY + Math.sin(bunnyJumpTimer * Math.PI) * saltoMax;
+      } else {
+        // Landed
+        bunnySprite.position.y = bunnySprite.userData.baseY; bunnyJumping = false; bunnyJumpTimer = 0;
+      }
+    }
+
+    // Actualizar Corazones Mágicos (Flotar hacia arriba y desvanecer)
+    for (let i = heartSystems.length - 1; i >= 0; i--) {
+      const hs = heartSystems[i];
+      const positions = hs.geometry.getAttribute('position').array;
+      const velocities = hs.geometry.getAttribute('velocity').array;
+      const num = 5; // same num neón
+
+      for (let j = 0; j < num; j++) {
+        // Mover neón
+        positions[j*3] += velocities[j*3] * 0.2; 
+        positions[j*3+1] += velocities[j*3+1] * 0.2; // Suben
+        positions[j*3+2] += velocities[j*3+2] * 0.2;
+      }
+      hs.geometry.getAttribute('position').needsUpdate = true;
+      
+      // Desvanecimiento neón
+      hs.userData.life -= 0.015; // velocidad de desvanecido
+      hs.material.opacity = hs.userData.life;
+
+      if (hs.userData.life <= 0) {
+        scene.remove(hs); hs.geometry.dispose(); hs.material.dispose(); heartSystems.splice(i, 1);
+      }
+    }
+
     if (shootingStarsSystem) {
-      const positions = shootingStarsSystem.geometry.getAttribute('position').array;
-      const velocities = shootingStarsSystem.geometry.getAttribute('velocity').array;
-      const num = esCelular ? 5 : 15; 
+      const positions = shootingStarsSystem.geometry.getAttribute('position').array; const velocities = shootingStarsSystem.geometry.getAttribute('velocity').array;
+      const num = esCelular ? 5 : 15; // PC ULTRA: Triple neón
 
       for (let i = 0; i < num; i++) {
-        positions[i * 3] += velocities[i * 3];
-        positions[i * 3 + 1] += velocities[i * 3 + 1];
-        positions[i * 3 + 2] += velocities[i * 3 + 2];
-
+        positions[i * 3] += velocities[i * 3]; positions[i * 3 + 1] += velocities[i * 3 + 1]; positions[i * 3 + 2] += velocities[i * 3 + 2];
         if (positions[i * 3 + 1] < 200 || Math.abs(positions[i * 3]) > 1000 || Math.abs(positions[i * 3 + 2]) > 1000) {
-          positions[i * 3] = (Math.random() - 0.5) * 1000;
-          positions[i * 3 + 1] = 300 + Math.random() * 150;
-          positions[i * 3 + 2] = (Math.random() - 0.5) * 1000;
+          positions[i * 3] = (Math.random() - 0.5) * 1000; positions[i * 3 + 1] = 300 + Math.random() * 150; positions[i * 3 + 2] = (Math.random() - 0.5) * 1000;
         }
       }
       shootingStarsSystem.geometry.getAttribute('position').needsUpdate = true;
@@ -496,140 +504,63 @@
 
     for (let i = fireworksSystems.length - 1; i >= 0; i--) {
       const fw = fireworksSystems[i];
-      const positions = fw.geometry.getAttribute('position').array;
-      const velocities = fw.geometry.getAttribute('velocity').array;
-      const pCount = fw.userData.count;
-      fw.userData.timer += 0.01;
-
+      const positions = fw.geometry.getAttribute('position').array; const velocities = fw.geometry.getAttribute('velocity').array;
+      const pCount = fw.userData.count; fw.userData.timer += 0.01;
       for (let j = 0; j < pCount; j++) {
-        positions[j*3] += velocities[j*3] * 0.2; 
-        positions[j*3+1] += velocities[j*3+1] * 0.2; 
-        positions[j*3+2] += velocities[j*3+2] * 0.2; 
-
-        if (fw.userData.exploded) {
-           velocities[j*3] *= 0.98; velocities[j*3+1] *= 0.98; velocities[j*3+2] *= 0.98; 
-           velocities[j*3+1] -= 0.03; 
-        } else {
-           velocities[j*3+1] *= 0.99; 
-        }
+        positions[j*3] += velocities[j*3] * 0.2; positions[j*3+1] += velocities[j*3+1] * 0.2; positions[j*3+2] += velocities[j*3+2] * 0.2; 
+        if (fw.userData.exploded) { velocities[j*3] *= 0.98; velocities[j*3+1] *= 0.98; velocities[j*3+2] *= 0.98; velocities[j*3+1] -= 0.03; 
+        } else { velocities[j*3+1] *= 0.99; }
       }
       fw.geometry.getAttribute('position').needsUpdate = true;
-
       if (fw.userData.timer > 1.2 && !fw.userData.exploded) {
          fw.userData.exploded = true;
-         for (let j = 0; j < pCount; j++) {
-           velocities[j*3] *= 2.5; velocities[j*3+1] *= 1.5; velocities[j*3+2] *= 2.5;
-         }
+         for (let j = 0; j < pCount; j++) { velocities[j*3] *= 2.5; velocities[j*3+1] *= 1.5; velocities[j*3+2] *= 2.5; }
       }
-
-      if (fw.userData.timer > 1.5) {
-         fw.userData.life -= 0.02; 
-         fw.material.opacity = fw.userData.life;
+      if (fw.userData.timer > 1.5) { fw.userData.life -= 0.02; fw.material.opacity = fw.userData.life;
       }
-
-      if (fw.userData.life <= 0) {
-        scene.remove(fw); fw.geometry.dispose(); fw.material.dispose();
-        fireworksSystems.splice(i, 1);
-      }
+      if (fw.userData.life <= 0) { scene.remove(fw); fw.geometry.dispose(); fw.material.dispose(); fireworksSystems.splice(i, 1); }
     }
   }
 
 
   // ==========================================
-  // SECUENCIA DE CARTAS Y GIRASOL (Loop Rejugable)
+  // SECUENCIA DE CARTAS Y GIRASOL
   // ==========================================
   const modalCartaFinalText = document.getElementById('modalCartaFinal');
   const btnCerrarFinal = document.getElementById('btnCerrarCartaFinal');
   const modalFlorAmarilla = document.getElementById('modalFlorAmarilla');
 
-  function mostrarCartaFinalText() {
-    modalCartaFinalText.style.display = 'flex';
-  }
-
-  btnCerrarFinal.addEventListener('click', () => {
-    modalCartaFinalText.style.display = 'none';
-    iniciarSecuenciaFlorAmarilla();
-  });
+  function mostrarCartaFinalText() { modalCartaFinalText.style.display = 'flex'; }
+  btnCerrarFinal.addEventListener('click', () => { modalCartaFinalText.style.display = 'none'; iniciarSecuenciaFlorAmarilla(); });
 
   function iniciarSecuenciaFlorAmarilla() {
-    const size = 300; 
-    const flowerCanvas = createSunflowerCanvasElement(size);
-
+    const size = 300; const flowerCanvas = createSunflowerCanvasElement(size);
     const container = document.getElementById('flowerCanvasContainer');
-    container.innerHTML = '';
-    flowerCanvas.style.maxWidth = '200px'; 
-    flowerCanvas.style.height = 'auto';
-    container.appendChild(flowerCanvas);
-
-    modalFlorAmarilla.style.display = 'flex';
-    modalFlorAmarilla.style.opacity = '1';
-
-    setTimeout(() => {
-      modalFlorAmarilla.style.opacity = '0';
-      setTimeout(() => {
-        modalFlorAmarilla.style.display = 'none';
-        secuenciaFinalIniciada = false; // ABRE EL CANDADO PARA REJUGAR
-      }, 1000);
-    }, 5000);
+    container.innerHTML = ''; flowerCanvas.style.maxWidth = '200px'; flowerCanvas.style.height = 'auto'; container.appendChild(flowerCanvas);
+    modalFlorAmarilla.style.display = 'flex'; modalFlorAmarilla.style.opacity = '1';
+    setTimeout(() => { modalFlorAmarilla.style.opacity = '0'; setTimeout(() => { modalFlorAmarilla.style.display = 'none'; secuenciaFinalIniciada = false; }, 1000); }, 5000);
   }
 
-  // ==========================================
-  // CÓDIGO DEL GIRASOL
-  // ==========================================
   function createSunflowerCanvasElement(size) {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = size; canvas.height = size;
-    const center = size / 2;
-
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.translate(center, center);
-
-    const numPetals = 20;
-    const petalColor1 = '#FFC300'; 
-    const petalColor2 = '#FFD700'; 
-
+    const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); canvas.width = size; canvas.height = size; const center = size / 2;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.translate(center, center);
+    const numPetals = 20; const petalColor1 = '#FFC300'; const petalColor2 = '#FFD700'; 
     for (let layer = 1; layer >= 0; layer--) {
       const currentPetalColor = layer === 1 ? petalColor1 : petalColor2;
-      const petalLength = center * 0.9 * (layer === 1 ? 1 : 0.85);
-      const petalWidth = center * 0.2 * (layer === 1 ? 1 : 0.9);
-      const angleIncrement = (2 * Math.PI) / (numPetals * (layer === 1 ? 1 : 1.1));
-
+      const petalLength = center * 0.9 * (layer === 1 ? 1 : 0.85); const petalWidth = center * 0.2 * (layer === 1 ? 1 : 0.9); const angleIncrement = (2 * Math.PI) / (numPetals * (layer === 1 ? 1 : 1.1));
       for (let i = 0; i < (numPetals * (layer === 1 ? 1 : 1.1)); i++) {
-        const angle = i * angleIncrement + (layer === 1 ? 0 : angleIncrement / 2);
-        ctx.save();
-        ctx.rotate(angle);
-        
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.quadraticCurveTo(-petalWidth / 2, petalLength / 2, 0, petalLength);
-        ctx.quadraticCurveTo(petalWidth / 2, petalLength / 2, 0, 0);
-        ctx.closePath();
-        
-        ctx.fillStyle = currentPetalColor;
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = `rgba(${currentPetalColor === '#FFC300' ? '255,195,0' : '255,215,0'}, 1)`;
-        ctx.fill();
-        ctx.restore();
+        const angle = i * angleIncrement + (layer === 1 ? 0 : angleIncrement / 2); ctx.save(); ctx.rotate(angle);
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(-petalWidth / 2, petalLength / 2, 0, petalLength); ctx.quadraticCurveTo(petalWidth / 2, petalLength / 2, 0, 0); ctx.closePath();
+        ctx.fillStyle = currentPetalColor; ctx.shadowBlur = 10; ctx.shadowColor = `rgba(${currentPetalColor === '#FFC300' ? '255,195,0' : '255,215,0'}, 1)`; ctx.fill(); ctx.restore();
       }
     }
-
-    const centerRadius = center * 0.35;
-    ctx.beginPath(); ctx.arc(0, 0, centerRadius, 0, 2 * Math.PI);
-    ctx.fillStyle = '#654321'; ctx.shadowBlur = 15; ctx.shadowColor = 'rgba(101,67,33, 0.5)'; ctx.fill();
-
-    const numSeeds = 150; const seedColor = '#3e2a14'; 
-    const goldenAngle = Math.PI * (3 - Math.sqrt(5)); 
-
+    const centerRadius = center * 0.35; ctx.beginPath(); ctx.arc(0, 0, centerRadius, 0, 2 * Math.PI); ctx.fillStyle = '#654321'; ctx.shadowBlur = 15; ctx.shadowColor = 'rgba(101,67,33, 0.5)'; ctx.fill();
+    const numSeeds = 150; const seedColor = '#3e2a14'; const goldenAngle = Math.PI * (3 - Math.sqrt(5)); 
     for (let i = 0; i < numSeeds; i++) {
-      const radius = Math.sqrt(i) * (centerRadius / Math.sqrt(numSeeds));
-      const theta = i * goldenAngle;
-      ctx.beginPath();
-      ctx.arc(Math.cos(theta) * radius, Math.sin(theta) * radius, 1.5, 0, 2 * Math.PI); 
-      ctx.fillStyle = seedColor; ctx.fill();
+      const radius = Math.sqrt(i) * (centerRadius / Math.sqrt(numSeeds)); const theta = i * goldenAngle; ctx.beginPath();
+      ctx.arc(Math.cos(theta) * radius, Math.sin(theta) * radius, 1.5, 0, 2 * Math.PI); ctx.fillStyle = seedColor; ctx.fill();
     }
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    return canvas;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); return canvas;
   }
 </script>
 </body>
