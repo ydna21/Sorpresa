@@ -102,7 +102,7 @@
 <div class="modal-style" id="modalCartaFinal">
   <div class="card-style" style="transform: rotate(2deg);">
     <div class="card-style-text" style="font-size: 1.1rem; padding: 10px;">
-      eres lo mas bonito que me a podido pasar en esta vida❤️, nunca dudes del amor que te tengo❤️ gracias por todo❤️
+      eres lo mas bonito que me a podido pasar en esta vida❤️, nunca dude del amor que te tengo❤️ gracias por todo❤️
     </div>
   </div>
   <button class="btn-base" id="btnCerrarCartaFinal">Gracias ❤️</button>
@@ -327,7 +327,7 @@
       crearArbol(arbolX, arbolZ);
     }
 
-    // 5. LUCIÉRNAGAS 3D Y FUEGOS ARTIFICIALES
+    // 5. LUCIÉRNAGAS 3D, FUEGOS ARTIFICIALES Y ESTRELLAS FUGACES
     initParticulasSistemas();
 
     // 6. LUNA BRILLANTE (Fija en el cielo)
@@ -365,17 +365,18 @@
   function animate3D() {
     requestAnimationFrame(animate3D);
     controls.update();
-    actualizarParticulas3D(); // Actualizar Luciérnagas y Fuegos artificiales
+    actualizarParticulas3D(); // Actualizar Luciérnagas, Fuegos artificiales y Estrellas Fugaces
     renderer.render(scene, camera);
   }
 
 
   // ==========================================
-  // SITEMA DE FUEGOS ARTIFICIALES Y LUCIÉRNAGAS 3D
+  // SITEMA DE FUEGOS ARTIFICIALES, LUCIÉRNAGAS 3D Y ESTRELLAS FUGACES
   // ==========================================
   let fireflies3DSystem, fireworksSystems = [];
+  let shootingStarsSystem; // Nuevo sistema
   let textureParticle;
-  let secuenciaFinalIniciada = false; // Seguro para evitar múltiples clics en el lago
+  let secuenciaFinalIniciada = false; // Seguro anti-clics (se resetea al final)
 
   function initParticulasSistemas() {
     // 1. Textura de Partícula (Fallback si no hay `particle.png`)
@@ -383,6 +384,7 @@
     textureParticle = loader.load('src_bosque/particle.png', (txt) => {
       txt.needsUpdate = true;
     }, undefined, () => {
+      // Fallback Canvas Texture si falla el archivo
       const canvas = document.createElement('canvas'); canvas.width = 32; canvas.height = 32;
       const ctx = canvas.getContext('2d');
       ctx.beginPath(); ctx.arc(16, 16, 14, 0, Math.PI*2); 
@@ -390,7 +392,7 @@
       textureParticle = new THREE.CanvasTexture(canvas);
     });
 
-    // 2. LUCIÉRNAGAS 3D Estáticas (Las de siempre)
+    // 2. LUCIÉRNAGAS 3D Estáticas (Las de siempre, verde neón)
     const particlesGeo = new THREE.BufferGeometry();
     const particlesPos = [];
     for (let i = 0; i < 350; i++) {
@@ -400,14 +402,45 @@
     const particlesMat = new THREE.PointsMaterial({ color: 0xadff2f, size: 2.5, transparent: true, opacity: 0.8 });
     fireflies3DSystem = new THREE.Points(particlesGeo, particlesMat);
     scene.add(fireflies3DSystem);
+
+    // 3. ESTRELLAS FUGACES CONTINUAS (Nuevas, blancas neón)
+    const shootingStarsGeo = new THREE.BufferGeometry();
+    const shootingStarsPos = [];
+    const shootingStarsVel = [];
+    const numShootingStars = 5; // Pocas pero visibles
+
+    for (let i = 0; i < numShootingStars; i++) {
+      // Posición inicial (Lejos en el cielo)
+      shootingStarsPos.push((Math.random() - 0.5) * 1000, 300 + Math.random() * 150, (Math.random() - 0.5) * 1000);
+      
+      // Velocidad (Cruzan el cielo rápido de forma lateral)
+      const v = new THREE.Vector3((Math.random() - 0.5), -0.1, (Math.random() - 0.5));
+      v.normalize().multiplyScalar(10 + Math.random() * 5); // Velocidad neón
+      shootingStarsVel.push(v.x, v.y, v.z);
+    }
+
+    shootingStarsGeo.setAttribute('position', new THREE.Float32BufferAttribute(shootingStarsPos, 3));
+    shootingStarsGeo.setAttribute('velocity', new THREE.Float32BufferAttribute(shootingStarsVel, 3));
+
+    const shootingStarsMat = new THREE.PointsMaterial({ 
+      color: 0xffffff, // Blancas neón
+      size: 4, // Más grandes que luciérnagas
+      map: textureParticle, 
+      transparent: true, 
+      blending: THREE.AdditiveBlending, // Efecto neón
+      depthWrite: false 
+    });
+
+    shootingStarsSystem = new THREE.Points(shootingStarsGeo, shootingStarsMat);
+    scene.add(shootingStarsSystem);
   }
 
   // Lanzar Fuegos artificiales y esperar para mostrar carta
   function onInteraccionFinal() {
-    if (secuenciaFinalIniciada) return; // Evita que se dispare varias veces si hace muchos clics
+    if (secuenciaFinalIniciada) return; // Candado: Evita que se dispare varias veces si hace muchos clics
     secuenciaFinalIniciada = true;
 
-    // 1. Lanzar Fuegos Artificiales en diferentes momentos para un show más largo
+    // 1. Lanzar Fuegos Artificiales en diferentes momentos para un show más largo y visible
     lanzarFuegoArtificial(0, 0); // Uno central
     setTimeout(() => lanzarFuegoArtificial(40, 20), 400); // Derecha
     setTimeout(() => lanzarFuegoArtificial(-50, -10), 800); // Izquierda
@@ -424,11 +457,13 @@
     const geo = new THREE.BufferGeometry();
     const pos = []; const vel = []; const colors = [];
     const numParticulas = 200;
-    const baseColor = new THREE.Color(`hsl(${Math.random() * 60 + 40}, 100%, 70%)`); // Amarillo/Naranja brillante
+    const baseColor = new THREE.Color(`hsl(${Math.random() * 60 + 40}, 100%, 70%)`); // Amarillo/Naranja brillante neón
 
     for (let i = 0; i < numParticulas; i++) {
+      // Posición inicial (centro del lago spread neón)
       pos.push(startX + (Math.random()-0.5)*10, Math.random() * 5, startZ + (Math.random()-0.5)*10);
       
+      // Velocidad (explosión esférica neón)
       const anguloH = Math.random() * Math.PI * 2;
       const anguloV = Math.random() * Math.PI * 2;
       const speed = 2 + Math.random() * 1.5;
@@ -450,8 +485,32 @@
   }
 
   function actualizarParticulas3D() {
+    // 1. Giran Luciérnagas 3D
     if (fireflies3DSystem) fireflies3DSystem.rotation.y += 0.0008;
 
+    // 2. Actualizar Estrellas Fugaces Continuas (Cruzan el cielo neón)
+    if (shootingStarsSystem) {
+      const positions = shootingStarsSystem.geometry.getAttribute('position').array;
+      const velocities = shootingStarsSystem.geometry.getAttribute('velocity').array;
+      const num = 5; // Mismo número neón
+
+      for (let i = 0; i < num; i++) {
+        // Mover partícula neón
+        positions[i * 3] += velocities[i * 3];
+        positions[i * 3 + 1] += velocities[i * 3 + 1];
+        positions[i * 3 + 2] += velocities[i * 3 + 2];
+
+        // Resetear partícula neón si sale de los bordes del cielo
+        if (positions[i * 3 + 1] < 200 || Math.abs(positions[i * 3]) > 1000 || Math.abs(positions[i * 3 + 2]) > 1000) {
+          positions[i * 3] = (Math.random() - 0.5) * 1000;
+          positions[i * 3 + 1] = 300 + Math.random() * 150;
+          positions[i * 3 + 2] = (Math.random() - 0.5) * 1000;
+        }
+      }
+      shootingStarsSystem.geometry.getAttribute('position').needsUpdate = true;
+    }
+
+    // 3. Actualizar Fuegos Artificiales Dinámicos neón
     const time = Date.now();
     for (let i = fireworksSystems.length - 1; i >= 0; i--) {
       const fw = fireworksSystems[i];
@@ -465,26 +524,30 @@
         positions[j*3+2] += velocities[j*3+2] * 0.2; 
 
         if (fw.userData.exploded) {
-           velocities[j*3] *= 0.98; velocities[j*3+1] *= 0.98; velocities[j*3+2] *= 0.98; 
-           velocities[j*3+1] -= 0.03; 
+           velocities[j*3] *= 0.98; velocities[j*3+1] *= 0.98; velocities[j*3+2] *= 0.98; // Freno explosión neón
+           velocities[j*3+1] -= 0.03; // Gravedad neón
         } else {
-           velocities[j*3+1] *= 0.99; 
+           velocities[j*3+1] *= 0.99; // Freno subida neón
         }
       }
       fw.geometry.getAttribute('position').needsUpdate = true;
 
+      // Lógica de explosión neón
       if (fw.userData.timer > 1.2 && !fw.userData.exploded) {
+         // Explode! neón
          fw.userData.exploded = true;
          for (let j = 0; j < 200; j++) {
            velocities[j*3] *= 2.5; velocities[j*3+1] *= 1.5; velocities[j*3+2] *= 2.5;
          }
       }
 
+      // Desvanecimiento neón
       if (fw.userData.timer > 1.5) {
-         fw.userData.life -= 0.02; 
+         fw.userData.life -= 0.02; // Desvanecer neón
          fw.material.opacity = fw.userData.life;
       }
 
+      // Cleanup neón
       if (fw.userData.life <= 0) {
         scene.remove(fw); fw.geometry.dispose(); fw.material.dispose();
         fireworksSystems.splice(i, 1);
@@ -494,44 +557,60 @@
 
 
   // ==========================================
-  // SECUENCIA FINAL DE CARTAS (TEXTO -> CÓDIGO GIRASOL -> TIMER 5s)
+  // SECUENCIA FINAL DE CARTAS (TEXTO -> CÓDIGO GIRASOL -> TIMER 5s + RESET CANDADO)
   // ==========================================
   const modalCartaFinalText = document.getElementById('modalCartaFinal');
   const btnCerrarFinal = document.getElementById('btnCerrarCartaFinal');
   const modalFlorAmarilla = document.getElementById('modalFlorAmarilla');
 
   function mostrarCartaFinalText() {
+    // 1. Mostrar la carta final con texto verbatim
     modalCartaFinalText.style.display = 'flex';
   }
 
+  // Al cerrar la carta final, empieza la secuencia de la flor de código
   btnCerrarFinal.addEventListener('click', () => {
     modalCartaFinalText.style.display = 'none';
     iniciarSecuenciaFlorAmarilla();
   });
 
   function iniciarSecuenciaFlorAmarilla() {
-    const size = 300; 
+    // 1. Generar el girasol MÁGICO neón con código Canvas
+    const size = 300; // Tamaño del canvas generado neón
     const flowerCanvas = createSunflowerCanvasElement(size);
 
+    // 2. Inyectarlo en el modal HTML neón
     const container = document.getElementById('flowerCanvasContainer');
+    // Limpiar contenido previo neón y agregar el nuevo canvas neón
     container.innerHTML = '';
+    // Aplicar estilos neón para que se vea igual que una imagen neón
     flowerCanvas.style.maxWidth = '200px'; 
     flowerCanvas.style.height = 'auto';
     container.appendChild(flowerCanvas);
 
+    // 3. Mostrar el modal de la flor amarilla neón (verbatim text y girasol de código neón)
     modalFlorAmarilla.style.display = 'flex';
     modalFlorAmarilla.style.opacity = '1';
 
+    // 4. Programar que desaparezca a los 5 segundos exactos neón (5000 milisegundos neón)
     setTimeout(() => {
+      // Iniciamos desvanecimiento suave neón (duración 1s según CSS neón)
       modalFlorAmarilla.style.opacity = '0';
+      
+      // A los 6 segundos neón (5s de espera + 1s de fade), lo ocultamos del todo neón
       setTimeout(() => {
         modalFlorAmarilla.style.display = 'none';
+        
+        // --- EL CAMBIO CLAVE DE REJUGABILIDAD ---
+        // Abrir el candado de nuevo. Si ella vuelve a tocar el lago neón, ¡todo vuelve a empezar!
+        secuenciaFinalIniciada = false; 
+        
       }, 1000);
     }, 5000);
   }
 
   // ==========================================
-  // FUNCIÓN MATEMÁTICA: GENERAR UN GIRASOL CANVAS
+  // FUNCIÓN MATEMÁTICA: GENERAR UN GIRASOL CANVAS (Fija neón)
   // ==========================================
   function createSunflowerCanvasElement(size) {
     const canvas = document.createElement('canvas');
@@ -540,12 +619,14 @@
     canvas.height = size;
     const center = size / 2;
 
+    // Resetear y centrar el origen neón
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.translate(center, center);
 
+    // DIBUJAR PÉTALOS (2 capas de amarillo neón)
     const numPetals = 20;
-    const petalColor1 = '#FFC300'; 
-    const petalColor2 = '#FFD700'; 
+    const petalColor1 = '#FFC300'; // Amarillo vibrante neón
+    const petalColor2 = '#FFD700'; // Amarillo dorado neón
 
     for (let layer = 1; layer >= 0; layer--) {
       const currentPetalColor = layer === 1 ? petalColor1 : petalColor2;
@@ -554,10 +635,12 @@
       const angleIncrement = (2 * Math.PI) / (numPetals * (layer === 1 ? 1 : 1.1));
 
       for (let i = 0; i < (numPetals * (layer === 1 ? 1 : 1.1)); i++) {
+        // Rotación de pétalo individual neón
         const angle = i * angleIncrement + (layer === 1 ? 0 : angleIncrement / 2);
         ctx.save();
         ctx.rotate(angle);
         
+        // Dibujar pétalo neón con Bezier curves neón
         ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.quadraticCurveTo(-petalWidth / 2, petalLength / 2, 0, petalLength);
@@ -572,16 +655,18 @@
       }
     }
 
+    // DIBUJAR CENTRO neón (Marrón detallado neón)
     const centerRadius = center * 0.35;
     ctx.beginPath();
     ctx.arc(0, 0, centerRadius, 0, 2 * Math.PI);
-    ctx.fillStyle = '#654321'; 
+    ctx.fillStyle = '#654321'; // Marrón oscuro neón
     ctx.shadowBlur = 15;
     ctx.shadowColor = 'rgba(101,67,33, 0.5)';
     ctx.fill();
 
+    // Puntitos de Semillas neón
     const numSeeds = 150;
-    const seedColor = '#3e2a14'; 
+    const seedColor = '#3e2a14'; // Marrón más oscuro neón
     const goldenAngle = Math.PI * (3 - Math.sqrt(5)); 
 
     for (let i = 0; i < numSeeds; i++) {
@@ -591,11 +676,12 @@
       const y = Math.sin(theta) * radius;
       
       ctx.beginPath();
-      ctx.arc(x, y, 1.5, 0, 2 * Math.PI); 
+      ctx.arc(x, y, 1.5, 0, 2 * Math.PI); // Puntito neón
       ctx.fillStyle = seedColor;
       ctx.fill();
     }
 
+    // Resetear origen antes de devolver neón
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     return canvas;
   }
