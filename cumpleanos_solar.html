@@ -45,8 +45,9 @@
 
   #threeCanvas { display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
   
+  /* AJUSTADO: raised slightly to avoid covering buttons */
   #mainContent {
-    position: absolute; bottom: 60px; left: 0; width: 100%;
+    position: absolute; bottom: 100px; left: 0; width: 100%;
     z-index: 2; display: flex; flex-direction: column;
     align-items: center; text-align: center; pointer-events: none;
     opacity: 0; transition: opacity 2s ease;
@@ -66,18 +67,28 @@
     100% { transform: scale(1); }
   }
 
-  .btn-regresar {
-    margin-top: 25px; padding: 15px 30px; font-size: 1.2rem; background: transparent;
-    border: 2px solid #ff69b4; color: #ff69b4; border-radius: 50px; cursor: pointer;
-    box-shadow: 0 0 15px rgba(255, 105, 180, 0.5); pointer-events: auto; transition: all 0.3s;
+  /* NUEVO: Contenedor para alinear los dos botones abajo estilo ESPACIO */
+  #contenedorBotones {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    z-index: 20; display: none; gap: 15px; flex-wrap: wrap; justify-content: center; width: 100%;
   }
-  .btn-regresar:hover { background: #ff69b4; color: white; box-shadow: 0 0 30px #ff69b4; }
+
+  .btn-volver-flotante {
+     padding: 12px 25px; background: rgba(0,0,0,0.6); 
+     border: 2px solid #ff69b4; color: #ffb6c1; border-radius: 25px; 
+     cursor: pointer; font-family: 'Courier New', monospace; font-size: 1rem; font-weight: bold;
+     transition: all 0.3s; white-space: nowrap; box-shadow: 0 0 15px rgba(255, 105, 180, 0.4); pointer-events: auto;
+  }
+  .btn-volver-flotante:hover { background: #ff69b4; color: white; box-shadow: 0 0 30px #ff69b4; }
 </style>
 </head>
 <body>
 
 <audio id="musica2" loop crossorigin="anonymous">
   <source src="musica2.mp3" type="audio/mpeg">
+</audio>
+<audio id="sfxFirework">
+  <source src="sfx_firework.mp3" type="audio/mpeg">
 </audio>
 
 <div id="pantallaEntrada">
@@ -92,7 +103,11 @@
 <div id="mainContent">
   <h1 id="tituloCumple">¡Feliz Cumpleaños! <span id="pastelBtn" style="cursor:pointer; pointer-events:auto;" title="Toca para regresar">🎂</span>💖</h1>
   <p id="parrafoCumple">Eres el sol que ilumina mi universo. Que este nuevo año cumplas muchas cosas y sigamos siempre juntos❤️</p>
-  <button id="btnVolver" class="btn-regresar" onclick="window.location.href='index.html'">⬅️ Regresar al inicio</button>
+</div>
+
+<div id="contenedorBotones">
+  <button class="btn-volver-flotante" id="btnRepetirViaje">🚀 Repetir Viaje</button>
+  <button class="btn-volver-flotante" id="btnVolverInicio" onclick="window.location.href='index.html'">⬅️ Volver al inicio</button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -128,6 +143,10 @@ const viajeDuration = 3000;
 
 let audioContext, analyser, dataArray;
 let composer, bloomPass;
+const sfxFirework = document.getElementById('sfxFirework');
+
+// Lógica de los Botones Nuevos
+document.getElementById('btnRepetirViaje').addEventListener('click', () => window.location.reload());
 
 document.getElementById('btnEmpezarUniverso').addEventListener('click', function() {
     const audio = document.getElementById('musica2');
@@ -154,6 +173,7 @@ document.getElementById('btnEmpezarUniverso').addEventListener('click', function
     setTimeout(() => {
         pantalla.style.display = 'none';
         document.getElementById('mainContent').style.opacity = '1';
+        document.getElementById('contenedorBotones').style.display = 'flex'; // Muestra botones
         controls.enabled = true;
         enViaje = false;
         if (!esCelular) { camera.fov = 75; camera.updateProjectionMatrix(); }
@@ -165,8 +185,6 @@ document.getElementById('pastelBtn').addEventListener('click', () => window.loca
 if (esCelular) {
     const titulo = document.getElementById('tituloCumple');
     const parrafo = document.getElementById('parrafoCumple');
-    const boton = document.getElementById('btnVolver');
-    const contenedor = document.getElementById('mainContent');
     const pastel = document.getElementById('pastelBtn');
     
     titulo.style.fontSize = "1.8rem";      
@@ -174,10 +192,8 @@ if (esCelular) {
     parrafo.style.fontSize = "1.1rem";     
     parrafo.style.maxWidth = "90%";
     parrafo.style.padding = "0 15px";
-    boton.style.display = "none"; 
     pastel.style.display = "inline-block";
     pastel.style.animation = "latidoPastel 1.5s infinite";
-    contenedor.style.bottom = "50px"; 
 } else {
     document.getElementById('pastelBtn').style.display = "none";
 }
@@ -226,7 +242,7 @@ function init() {
       bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
       
       // AJUSTES ESTRICTOS PARA PROTEGER LAS FOTOS
-      bloomPass.threshold = 0.8;  // Solo atrapa luz extrema (ignora las fotos casi por completo)
+      bloomPass.threshold = 0.8;  // Solo atrapa luz extrema
       bloomPass.strength = 0.15;  // Brillo base mínimo
       bloomPass.radius = 0.2;     // Expansión del brillo reducida
 
@@ -399,6 +415,9 @@ function loadPhotoStars() {
 }
 
 function triggerSunExplosion() {
+    // NUEVO: SFX Fuego Artificial
+    if (sfxFirework) { sfxFirework.currentTime = 0; sfxFirework.play().catch(e=>console.log("SFX bloq")); }
+
     const totalExplosionParticles = esCelular ? 250 : 500; 
     const geometry = new THREE.BufferGeometry();
     const positions = []; const velocities = []; const sizes = [];
@@ -459,6 +478,7 @@ function onWorldClick(e) {
   }
 }
 
+// NUEVO: Soporte para toque en móvil sincronizado con onWorldClick
 function onWorldTouch(e) {
   if (e.touches.length > 0) {
     mouse.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
@@ -485,9 +505,8 @@ function animate() {
       let scale = 1 + (avgBass / 256) * 0.3; 
       sun.scale.set(scale, scale, scale);
       
-      // Tope muy sutil para la música para evitar el pantallazo blanco
       if (bloomPass) {
-          bloomPass.strength = 0.15 + (avgBass / 256) * 0.2; // Máximo llegará a 0.35 en una explosión de bajo
+          bloomPass.strength = 0.15 + (avgBass / 256) * 0.2; 
       }
   } else {
       sun.scale.set(1, 1, 1); 
