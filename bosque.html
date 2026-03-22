@@ -307,6 +307,49 @@
       
       crearArbol(arbolX, arbolZ);
     }
+
+    // ==========================================
+    // LA LUNA Y LAS ESTRELLAS FUGACES
+    // ==========================================
+    // 1. La Luna (Esfera brillante de color crema)
+    const lunaGeo = new THREE.SphereGeometry(30, 32, 32); // Radio 30, bastante grande
+    const lunaMat = new THREE.MeshBasicMaterial({ color: 0xffffcc }); // Color crema suave
+    const luna = new THREE.Mesh(lunaGeo, lunaMat);
+    // La colocamos en una esquina alta del cielo, alejada del lago
+    luna.position.set(-400, 300, -300);
+    scene.add(luna);
+
+    // Luz de la luna (Iluminación PointLight)
+    const lunaLight = new THREE.PointLight(0xffffcc, 4, 1000); // Color crema, intensidad 4, radio 1000
+    luna.add(lunaLight); // La luz sale de la luna misma
+
+    // 2. Sistema de Partículas para Estrellas Fugaces (Fijas, no animadas)
+    const estrellasGeo = new THREE.BufferGeometry();
+    const estrellasPos = [];
+    const estrellasColors = [];
+    const numEstrellas = 100;
+
+    for (let i = 0; i < numEstrellas; i++) {
+      // Posiciones aleatorias en un volumen grande en el cielo
+      estrellasPos.push((Math.random() - 0.5) * 2000, 400 + Math.random() * 200, (Math.random() - 0.5) * 2000);
+      
+      // Color blanco brillante con variaciones
+      estrellasColors.push(0.9 + Math.random() * 0.1, 0.9 + Math.random() * 0.1, 0.9 + Math.random() * 0.1);
+    }
+
+    estrellasGeo.setAttribute('position', new THREE.Float32BufferAttribute(estrellasPos, 3));
+    estrellasGeo.setAttribute('color', new THREE.Float32BufferAttribute(estrellasColors, 3));
+
+    const estrellasMat = new THREE.PointsMaterial({ 
+      size: 4, 
+      vertexColors: true, 
+      transparent: true, 
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending // Brillo neón
+    });
+
+    const estrellasSystem = new THREE.Points(estrellasGeo, estrellasMat);
+    scene.add(estrellasSystem);
     
     // LUCIÉRNAGAS 3D
     const particlesGeo = new THREE.BufferGeometry();
