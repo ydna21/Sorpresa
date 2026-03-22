@@ -18,7 +18,6 @@
     transition: opacity 2s ease-in-out, transform 2s ease-in-out;
   }
 
-  /* Canvas Luciérnagas 2D */
   #canvasBosque2D { 
     display: block; position: absolute; top: 0; left: 0; 
     z-index: 11; pointer-events: none; 
@@ -56,18 +55,23 @@
   }
   .btn-base:hover { transform: scale(1.05); box-shadow: 0 0 30px #adff2f; }
 
-  /* ================== FASE 3: MUNDO 3D ================== */
+  /* ================== FASE 3: MUNDO 3D Y BOTONES ================== */
   #threeCanvas { 
     position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
     z-index: 1; display: none; 
   }
 
+  /* NUEVO: Contenedor para alinear los dos botones abajo */
+  #contenedorBotones {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    z-index: 20; display: none; gap: 15px; flex-wrap: wrap; justify-content: center; width: 100%;
+  }
+
   .btn-volver {
-     position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-     z-index: 20; padding: 12px 25px; background: rgba(0,0,0,0.5); 
+     padding: 12px 25px; background: rgba(0,0,0,0.5); 
      border: 2px solid #adff2f; color: #adff2f; border-radius: 25px; 
      cursor: pointer; font-family: 'Courier New', monospace; font-size: 1rem;
-     transition: all 0.3s; display: none; 
+     transition: all 0.3s; white-space: nowrap;
   }
   .btn-volver:hover { background: #adff2f; color: #050b14; box-shadow: 0 0 20px #adff2f; }
 </style>
@@ -100,7 +104,7 @@
 <div class="modal-style" id="modalCartaFinal">
   <div class="card-style" style="transform: rotate(2deg);">
     <div class="card-style-text" style="font-size: 1.1rem; padding: 10px;">
-      eres lo mas bonito que me a podido pasar en esta vida❤️,nunca dudes del amor que te tengo❤️gracias por todo❤️
+      eres lo mas bonito que me a podido pasar en esta vida❤️, nunca dude del amor que te tengo❤️ gracias por todo❤️
     </div>
   </div>
   <button class="btn-base" id="btnCerrarCartaFinal">Gracias ❤️</button>
@@ -116,7 +120,11 @@
 </div>
 
 <div id="threeCanvas"></div>
-<button class="btn-volver" id="btnVolverInicio">⬅️ Volver al inicio</button>
+
+<div id="contenedorBotones">
+  <button class="btn-volver" id="btnVolverArbol">🌲 Volver al árbol</button>
+  <button class="btn-volver" id="btnVolverInicio">⬅️ Volver al inicio</button>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -195,14 +203,18 @@
 
 
   // ==========================================
-  // TRANSICIÓN AL 3D
+  // TRANSICIÓN AL 3D Y BOTONES
   // ==========================================
   const arbol = document.getElementById('arbolMagico');
   const modalCarta = document.getElementById('modalCarta');
   const btnViaje = document.getElementById('btnEmpezarViaje');
   const fase2D = document.getElementById('fase2D');
   const canvas3DContenedor = document.getElementById('threeCanvas');
-  const btnVolver = document.getElementById('btnVolverInicio');
+  
+  // Constantes de botones
+  const contenedorBotones = document.getElementById('contenedorBotones');
+  const btnVolverArbol = document.getElementById('btnVolverArbol');
+  const btnVolverInicio = document.getElementById('btnVolverInicio');
 
   arbol.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -213,9 +225,17 @@
   btnViaje.addEventListener('click', () => {
     modalCarta.style.display = 'none'; fase2D.style.opacity = '0'; fase2D.style.transform = 'scale(0.8)'; canvas3DContenedor.style.display = 'block'; 
     iniciarMundo3D(); 
-    setTimeout(() => { fase2D.style.display = 'none'; animacion2DActiva = false; cancelAnimationFrame(idAnimacion2D); btnVolver.style.display = 'block'; }, 2000);
+    setTimeout(() => { 
+      fase2D.style.display = 'none'; 
+      animacion2DActiva = false; 
+      cancelAnimationFrame(idAnimacion2D); 
+      contenedorBotones.style.display = 'flex'; // Muestra ambos botones
+    }, 2000);
   });
-  btnVolver.addEventListener('click', () => window.location.href = 'index.html');
+
+  // Funciones de los botones
+  btnVolverInicio.addEventListener('click', () => window.location.href = 'index.html');
+  btnVolverArbol.addEventListener('click', () => window.location.reload()); // Reinicia el bosque
 
 
   // ==========================================
