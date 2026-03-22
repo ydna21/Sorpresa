@@ -34,13 +34,11 @@
   @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
 
   /* ================== MODALES Y CARTAS ================== */
-  /* Estilo base para todos los modales */
   .modal-style {
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.85); z-index: 50; flex-direction: column; 
     align-items: center; justify-content: center; opacity: 1; transition: opacity 1s ease;
   }
-  /* Estilo base para las polaroids/cartas */
   .card-style {
     background: white; padding: 15px 15px 50px 15px; border-radius: 5px;
     box-shadow: 0 0 40px rgba(173, 255, 47, 0.3); transform: rotate(-3deg);
@@ -52,7 +50,6 @@
   .card-style img { width: 100%; max-width: 300px; height: auto; border: 1px solid #ddd; }
   .card-style-text { margin-top: 20px; font-size: 1.3rem; font-weight: bold; font-family: 'Courier New', monospace; color: #050b14; max-width: 400px; line-height: 1.4; }
   
-  /* Botones base */
   .btn-base {
     margin-top: 30px; padding: 12px 25px; background: #adff2f; color: #050b14;
     border: none; border-radius: 20px; font-size: 1.1rem; cursor: pointer; font-weight: bold; box-shadow: 0 0 15px rgba(173, 255, 47, 0.5); transition: all 0.3s;
@@ -62,16 +59,15 @@
   /* ================== FASE 3: MUNDO 3D ================== */
   #threeCanvas { 
     position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-    z-index: 1; display: none; /* Oculto al inicio */
+    z-index: 1; display: none; 
   }
 
-  /* Botón para regresar al inicio (visible en 3D) */
   .btn-volver {
      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
      z-index: 20; padding: 12px 25px; background: rgba(0,0,0,0.5); 
      border: 2px solid #adff2f; color: #adff2f; border-radius: 25px; 
      cursor: pointer; font-family: 'Courier New', monospace; font-size: 1rem;
-     transition: all 0.3s; display: none; /* Oculto al inicio */
+     transition: all 0.3s; display: none; 
   }
   .btn-volver:hover { background: #adff2f; color: #050b14; box-shadow: 0 0 20px #adff2f; }
 </style>
@@ -98,7 +94,6 @@
   <button class="btn-base" id="btnEmpezarViaje">Guardar recuerdo ✨</button>
 </div>
 
-
 <div class="modal-style" id="modalCartaFinal">
   <div class="card-style" style="transform: rotate(2deg);">
     <div class="card-style-text" style="font-size: 1.1rem; padding: 10px;">
@@ -117,9 +112,7 @@
   </div>
 </div>
 
-
 <div id="threeCanvas"></div>
-
 <button class="btn-volver" id="btnVolverInicio">⬅️ Volver al inicio</button>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -127,25 +120,29 @@
 
 <script>
   // ==========================================
-  // LÓGICA DE CONTROL GLOBAL Y MÚSICA
+  // CONFIGURACIÓN DE DISPOSITIVO (¡Tu genialidad!)
+  // ==========================================
+  const eleccion = localStorage.getItem('dispositivoElegido');
+  const esCelular = (eleccion === 'celular') || (window.innerWidth < 768 && eleccion !== 'pc');
+
+  // ==========================================
+  // MÚSICA Y CONTROL
   // ==========================================
   const audio = document.getElementById('musicaBosque');
-  
   function reproducirMusica() {
     if (audio.paused) {
       audio.play().then(() => {
         window.removeEventListener('click', reproducirMusica);
         window.removeEventListener('touchstart', reproducirMusica);
-      }).catch(e => console.log("Aún esperando interacción"));
+      }).catch(e => console.log("Esperando..."));
     }
   }
-  // Reproducir al primer toque en cualquier lado
   window.addEventListener('click', reproducirMusica);
   window.addEventListener('touchstart', reproducirMusica);
 
 
   // ==========================================
-  // MOTOR 2D: LUCIÉRNAGAS INICIALES (Fase 1)
+  // MOTOR 2D: LUCIÉRNAGAS
   // ==========================================
   const canvas2D = document.getElementById('canvasBosque2D');
   const ctx2D = canvas2D.getContext('2d');
@@ -153,7 +150,7 @@
   canvas2D.height = window.innerHeight;
 
   let fireflies2D = [];
-  const numFireflies2D = window.innerWidth < 768 ? 80 : 150; 
+  const numFireflies2D = esCelular ? 80 : 250; // PC tiene más luciérnagas 2D
   let mouse2D = { x: null, y: null };
   let animacion2DActiva = true; 
   let idAnimacion2D;
@@ -181,8 +178,7 @@
 
       if (mouse2D.x != null && mouse2D.y != null) {
         let dx = mouse2D.x - this.x; let dy = mouse2D.y - this.y;
-        let distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance < 100) { this.x -= dx * 0.02; this.y -= dy * 0.02; }
+        if (Math.sqrt(dx * dx + dy * dy) < 100) { this.x -= dx * 0.02; this.y -= dy * 0.02; }
       }
     }
     draw() {
@@ -206,7 +202,7 @@
 
 
   // ==========================================
-  // LÓGICA DE TRANSICIÓN Y VIAJE (Fase 1 -> Fase 3)
+  // TRANSICIÓN AL 3D
   // ==========================================
   const arbol = document.getElementById('arbolMagico');
   const modalCarta = document.getElementById('modalCarta');
@@ -222,140 +218,156 @@
   });
 
   btnViaje.addEventListener('click', () => {
-    modalCarta.style.display = 'none'; // Cerrar modal rápido
-    fase2D.style.opacity = '0'; // Desvanecer motor 2D
+    modalCarta.style.display = 'none'; 
+    fase2D.style.opacity = '0'; 
     fase2D.style.transform = 'scale(0.8)';
-    canvas3DContenedor.style.display = 'block'; // Mostrar motor 3D por debajo
+    canvas3DContenedor.style.display = 'block'; 
 
-    iniciarMundo3D(); // Arrancar motor 3D
+    iniciarMundo3D(); 
 
     setTimeout(() => {
       fase2D.style.display = 'none';
-      animacion2DActiva = false; // Apagar Luciérnagas 2D
+      animacion2DActiva = false; 
       cancelAnimationFrame(idAnimacion2D);
       btnVolver.style.display = 'block';
     }, 2000);
   });
 
-  // Botón Volver al inicio (en 3D)
   btnVolver.addEventListener('click', () => window.location.href = 'index.html');
 
 
   // ==========================================
-  // MOTOR MUNDO BOSQUE 3D (Three.js - Fase 3)
+  // MOTOR 3D PRINCIPAL
   // ==========================================
   let scene, camera, renderer, controls, lakeMesh;
-  let raycaster, mouse = new THREE.Vector2(); // Para interacción 3D
+  let raycaster, mouse = new THREE.Vector2(); 
 
   function iniciarMundo3D() {
     const contenedor = document.getElementById('threeCanvas');
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x02040a); // Fondo oscuro profundo
-    scene.fog = new THREE.FogExp2(0x02040a, 0.003); // Niebla mágica
+    scene.background = new THREE.Color(0x02040a); 
+    scene.fog = new THREE.FogExp2(0x02040a, 0.003); 
 
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
-    camera.position.set(0, 50, 200); // Cámara cerca del suelo
+    camera.position.set(0, 50, 200); 
 
-    renderer = new THREE.WebGLRenderer({ antialias: true });
+    // PC: Activa Antialiasing y mejor Pixel Ratio
+    renderer = new THREE.WebGLRenderer({ antialias: !esCelular });
+    renderer.setPixelRatio(esCelular ? 1 : Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
     contenedor.appendChild(renderer.domElement);
 
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.maxPolarAngle = Math.PI / 2 - 0.05; // No ver por debajo
+    controls.maxPolarAngle = Math.PI / 2 - 0.05; 
     controls.minDistance = 30;
     controls.maxDistance = 600;
 
     // LUCES
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.2); // Luz ambiental azul noche suave
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.2); 
     scene.add(ambientLight);
-    const luzLago = new THREE.PointLight(0x00bfff, 3, 300); // Luz azul del lago
+    const luzLago = new THREE.PointLight(0x00bfff, 3, 300); 
     luzLago.position.set(0, 20, 0);
     scene.add(luzLago);
 
-    // --- ELEMENTOS DEL MUNDO ---
-    // 1. EL SUELO DEL BOSQUE (Plano verde oscuro)
+    // SUELO
     const groundGeo = new THREE.PlaneGeometry(1000, 1000);
     const groundMat = new THREE.MeshStandardMaterial({ color: 0x051a05, roughness: 1 });
     const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.rotation.x = -Math.PI / 2;
     scene.add(ground);
 
-    // 2. EL LAGO BRILLANTE (Círculo azul brillante central)
-    const lagoGeo = new THREE.CircleGeometry(60, 64);
+    // LAGO
+    const lagoGeo = new THREE.CircleGeometry(60, esCelular ? 32 : 64);
     const lagoMat = new THREE.MeshBasicMaterial({ color: 0x00bfff, transparent: true, opacity: 0.9, emissive: 0x00bfff });
     lakeMesh = new THREE.Mesh(lagoGeo, lagoMat);
     lakeMesh.rotation.x = -Math.PI / 2;
-    lakeMesh.position.y = 0.6; // Arriba del suelo
+    lakeMesh.position.y = 0.6; 
     scene.add(lakeMesh);
 
-    // 3. ANIMALITO MÁGICO (Sprite)
+    // ANIMALITO
     const textureLoader = new THREE.TextureLoader();
     textureLoader.load('src_bosque/bunny.png', (texture) => {
       const bunnyMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
       const bunny = new THREE.Sprite(bunnyMat);
       bunny.scale.set(30, 30, 1);
-      bunny.position.set(60, 15, 30); // Cerca del lago
+      bunny.position.set(60, 15, 30); 
       scene.add(bunny);
     }, undefined, () => {
-      // Fallback: Si no hay foto, pone esfera de luz
       const bolaLuz = new THREE.Mesh(new THREE.SphereGeometry(6, 16, 16), new THREE.MeshBasicMaterial({color: 0xffffff}));
       bolaLuz.position.set(60, 6, 30);
       scene.add(bolaLuz);
     });
 
-    // 4. ÁRBOLES GEOMÉTRICOS
+    // ÁRBOLES DINÁMICOS (Más árboles y más polígonos en PC)
+    const numArboles = esCelular ? 60 : 120;
+    const trunkSides = esCelular ? 6 : 8;
+    const leafSides = esCelular ? 5 : 7;
+
     function crearArbol(x, z) {
-      const troncoGeo = new THREE.CylinderGeometry(1.5, 2, 12, 6);
+      const troncoGeo = new THREE.CylinderGeometry(1.5, 2, 12, trunkSides);
       const troncoMat = new THREE.MeshStandardMaterial({ color: 0x2d1a11, roughness: 1 });
       const tronco = new THREE.Mesh(troncoGeo, troncoMat);
       tronco.position.set(x, 6, z);
       scene.add(tronco);
 
-      const hojasGeo = new THREE.ConeGeometry(8, 25, 5); 
+      const hojasGeo = new THREE.ConeGeometry(8, 25, leafSides); 
       const hojasMat = new THREE.MeshStandardMaterial({ color: 0x0a290a, roughness: 0.9 });
       const hojas = new THREE.Mesh(hojasGeo, hojasMat);
       hojas.position.set(x, 22, z); 
       scene.add(hojas);
     }
-    for (let i = 0; i < 70; i++) {
+    for (let i = 0; i < numArboles; i++) {
       const angulo = Math.random() * Math.PI * 2;
-      const radio = 80 + Math.random() * 200; 
-      const arbolX = Math.cos(angulo) * radio;
-      const arbolZ = Math.sin(angulo) * radio;
-      crearArbol(arbolX, arbolZ);
+      const radio = 80 + Math.random() * 250; 
+      crearArbol(Math.cos(angulo) * radio, Math.sin(angulo) * radio);
     }
 
-    // 5. LUCIÉRNAGAS 3D, FUEGOS ARTIFICIALES Y ESTRELLAS FUGACES
+    // PARTÍCULAS
     initParticulasSistemas();
 
-    // 6. LUNA BRILLANTE (Fija en el cielo)
+    // LUNA
     const lunaGeo = new THREE.SphereGeometry(25, 32, 32);
     const lunaMat = new THREE.MeshBasicMaterial({ color: 0xffffcc }); 
     const luna = new THREE.Mesh(lunaGeo, lunaMat);
-    luna.position.set(-300, 250, -200); // Esquina alta
+    luna.position.set(-300, 250, -200); 
     scene.add(luna);
     const lunaLight = new THREE.PointLight(0xffffcc, 3, 800);
     luna.add(lunaLight);
 
     animate3D();
 
-    // Interaction Setup
     raycaster = new THREE.Raycaster();
+    
+    // --- SOPORTE PARA CELULAR Y PC ---
     renderer.domElement.addEventListener('click', onLagoClick);
+    renderer.domElement.addEventListener('touchend', onLagoClick); // Para dedos en celular
     window.addEventListener('resize', on3DWindowResize);
   }
 
   function onLagoClick(event) {
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    let coordX, coordY;
+    
+    // Si es touch, saca la coordenada del dedo, si no, del mouse
+    if (event.changedTouches && event.changedTouches.length > 0) {
+      coordX = event.changedTouches[0].clientX;
+      coordY = event.changedTouches[0].clientY;
+    } else {
+      coordX = event.clientX;
+      coordY = event.clientY;
+    }
+
+    mouse.x = (coordX / window.innerWidth) * 2 - 1;
+    mouse.y = -(coordY / window.innerHeight) * 2 + 1;
+    
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObject(lakeMesh);
     if (intersects.length > 0) {
       onInteraccionFinal();
     }
   }
+
   function on3DWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
@@ -365,110 +377,86 @@
   function animate3D() {
     requestAnimationFrame(animate3D);
     controls.update();
-    actualizarParticulas3D(); // Actualizar Luciérnagas, Fuegos artificiales y Estrellas Fugaces
+    actualizarParticulas3D(); 
     renderer.render(scene, camera);
   }
 
 
   // ==========================================
-  // SITEMA DE FUEGOS ARTIFICIALES, LUCIÉRNAGAS 3D Y ESTRELLAS FUGACES
+  // SISTEMAS DE PARTÍCULAS (Con ajuste Celular/PC)
   // ==========================================
   let fireflies3DSystem, fireworksSystems = [];
-  let shootingStarsSystem; // Nuevo sistema
+  let shootingStarsSystem; 
   let textureParticle;
-  let secuenciaFinalIniciada = false; // Seguro anti-clics (se resetea al final)
+  let secuenciaFinalIniciada = false; 
 
   function initParticulasSistemas() {
-    // 1. Textura de Partícula (Fallback si no hay `particle.png`)
     const loader = new THREE.TextureLoader();
-    textureParticle = loader.load('src_bosque/particle.png', (txt) => {
-      txt.needsUpdate = true;
-    }, undefined, () => {
-      // Fallback Canvas Texture si falla el archivo
+    textureParticle = loader.load('src_bosque/particle.png', (txt) => { txt.needsUpdate = true; }, undefined, () => {
       const canvas = document.createElement('canvas'); canvas.width = 32; canvas.height = 32;
       const ctx = canvas.getContext('2d');
-      ctx.beginPath(); ctx.arc(16, 16, 14, 0, Math.PI*2); 
-      ctx.fillStyle = 'white'; ctx.shadowBlur=10; ctx.shadowColor='white'; ctx.fill();
+      ctx.beginPath(); ctx.arc(16, 16, 14, 0, Math.PI*2); ctx.fillStyle = 'white'; ctx.shadowBlur=10; ctx.shadowColor='white'; ctx.fill();
       textureParticle = new THREE.CanvasTexture(canvas);
     });
 
-    // 2. LUCIÉRNAGAS 3D Estáticas (Las de siempre, verde neón)
+    // LUCIÉRNAGAS 3D
+    const numFireflies3D = esCelular ? 250 : 800; // Más luces en PC
     const particlesGeo = new THREE.BufferGeometry();
     const particlesPos = [];
-    for (let i = 0; i < 350; i++) {
-      particlesPos.push((Math.random() - 0.5) * 450, Math.random() * 120, (Math.random() - 0.5) * 450);
+    for (let i = 0; i < numFireflies3D; i++) {
+      particlesPos.push((Math.random() - 0.5) * 500, Math.random() * 150, (Math.random() - 0.5) * 500);
     }
     particlesGeo.setAttribute('position', new THREE.Float32BufferAttribute(particlesPos, 3));
     const particlesMat = new THREE.PointsMaterial({ color: 0xadff2f, size: 2.5, transparent: true, opacity: 0.8 });
     fireflies3DSystem = new THREE.Points(particlesGeo, particlesMat);
     scene.add(fireflies3DSystem);
 
-    // 3. ESTRELLAS FUGACES CONTINUAS (Nuevas, blancas neón)
+    // ESTRELLAS FUGACES
+    const numShootingStars = esCelular ? 5 : 15; // Más estrellas en PC
     const shootingStarsGeo = new THREE.BufferGeometry();
     const shootingStarsPos = [];
     const shootingStarsVel = [];
-    const numShootingStars = 5; // Pocas pero visibles
-
+    
     for (let i = 0; i < numShootingStars; i++) {
-      // Posición inicial (Lejos en el cielo)
       shootingStarsPos.push((Math.random() - 0.5) * 1000, 300 + Math.random() * 150, (Math.random() - 0.5) * 1000);
-      
-      // Velocidad (Cruzan el cielo rápido de forma lateral)
       const v = new THREE.Vector3((Math.random() - 0.5), -0.1, (Math.random() - 0.5));
-      v.normalize().multiplyScalar(10 + Math.random() * 5); // Velocidad neón
+      v.normalize().multiplyScalar(10 + Math.random() * 5); 
       shootingStarsVel.push(v.x, v.y, v.z);
     }
-
     shootingStarsGeo.setAttribute('position', new THREE.Float32BufferAttribute(shootingStarsPos, 3));
     shootingStarsGeo.setAttribute('velocity', new THREE.Float32BufferAttribute(shootingStarsVel, 3));
 
     const shootingStarsMat = new THREE.PointsMaterial({ 
-      color: 0xffffff, // Blancas neón
-      size: 4, // Más grandes que luciérnagas
-      map: textureParticle, 
-      transparent: true, 
-      blending: THREE.AdditiveBlending, // Efecto neón
-      depthWrite: false 
+      color: 0xffffff, size: 4, map: textureParticle, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false 
     });
-
     shootingStarsSystem = new THREE.Points(shootingStarsGeo, shootingStarsMat);
     scene.add(shootingStarsSystem);
   }
 
-  // Lanzar Fuegos artificiales y esperar para mostrar carta
   function onInteraccionFinal() {
-    if (secuenciaFinalIniciada) return; // Candado: Evita que se dispare varias veces si hace muchos clics
+    if (secuenciaFinalIniciada) return; 
     secuenciaFinalIniciada = true;
 
-    // 1. Lanzar Fuegos Artificiales en diferentes momentos para un show más largo y visible
-    lanzarFuegoArtificial(0, 0); // Uno central
-    setTimeout(() => lanzarFuegoArtificial(40, 20), 400); // Derecha
-    setTimeout(() => lanzarFuegoArtificial(-50, -10), 800); // Izquierda
-    setTimeout(() => lanzarFuegoArtificial(20, -30), 1500); // Arriba
-    setTimeout(() => lanzarFuegoArtificial(-20, 40), 2200); // Abajo
+    lanzarFuegoArtificial(0, 0); 
+    setTimeout(() => lanzarFuegoArtificial(40, 20), 400); 
+    setTimeout(() => lanzarFuegoArtificial(-50, -10), 800); 
+    setTimeout(() => lanzarFuegoArtificial(20, -30), 1500); 
+    setTimeout(() => lanzarFuegoArtificial(-20, 40), 2200); 
 
-    // 2. Esperar 4 segundos exactos viendo el show, y luego mostrar la carta
-    setTimeout(() => {
-      mostrarCartaFinalText();
-    }, 4000);
+    setTimeout(() => mostrarCartaFinalText(), 4000);
   }
 
   function lanzarFuegoArtificial(startX, startZ) {
     const geo = new THREE.BufferGeometry();
     const pos = []; const vel = []; const colors = [];
-    const numParticulas = 200;
-    const baseColor = new THREE.Color(`hsl(${Math.random() * 60 + 40}, 100%, 70%)`); // Amarillo/Naranja brillante neón
+    const numParticulasFuegos = esCelular ? 150 : 400; // Explosiones más masivas en PC
+    const baseColor = new THREE.Color(`hsl(${Math.random() * 60 + 40}, 100%, 70%)`); 
 
-    for (let i = 0; i < numParticulas; i++) {
-      // Posición inicial (centro del lago spread neón)
+    for (let i = 0; i < numParticulasFuegos; i++) {
       pos.push(startX + (Math.random()-0.5)*10, Math.random() * 5, startZ + (Math.random()-0.5)*10);
-      
-      // Velocidad (explosión esférica neón)
       const anguloH = Math.random() * Math.PI * 2;
-      const anguloV = Math.random() * Math.PI * 2;
       const speed = 2 + Math.random() * 1.5;
-      vel.push(Math.cos(anguloH) * speed, 3 + Math.random()*2, Math.sin(anguloH) * speed); // Sube rápido
-      
+      vel.push(Math.cos(anguloH) * speed, 3 + Math.random()*2, Math.sin(anguloH) * speed); 
       colors.push(baseColor.r, baseColor.g, baseColor.b);
     }
     geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
@@ -479,28 +467,24 @@
       size: 5, map: textureParticle, transparent: true, blending: THREE.AdditiveBlending, vertexColors: true, depthWrite: false 
     });
     const fw = new THREE.Points(geo, mat);
-    fw.userData = { life: 1, timer: 0, exploded: false, vY: 3 };
+    fw.userData = { life: 1, timer: 0, exploded: false, vY: 3, count: numParticulasFuegos };
     fireworksSystems.push(fw);
     scene.add(fw);
   }
 
   function actualizarParticulas3D() {
-    // 1. Giran Luciérnagas 3D
     if (fireflies3DSystem) fireflies3DSystem.rotation.y += 0.0008;
 
-    // 2. Actualizar Estrellas Fugaces Continuas (Cruzan el cielo neón)
     if (shootingStarsSystem) {
       const positions = shootingStarsSystem.geometry.getAttribute('position').array;
       const velocities = shootingStarsSystem.geometry.getAttribute('velocity').array;
-      const num = 5; // Mismo número neón
+      const num = esCelular ? 5 : 15; 
 
       for (let i = 0; i < num; i++) {
-        // Mover partícula neón
         positions[i * 3] += velocities[i * 3];
         positions[i * 3 + 1] += velocities[i * 3 + 1];
         positions[i * 3 + 2] += velocities[i * 3 + 2];
 
-        // Resetear partícula neón si sale de los bordes del cielo
         if (positions[i * 3 + 1] < 200 || Math.abs(positions[i * 3]) > 1000 || Math.abs(positions[i * 3 + 2]) > 1000) {
           positions[i * 3] = (Math.random() - 0.5) * 1000;
           positions[i * 3 + 1] = 300 + Math.random() * 150;
@@ -510,44 +494,39 @@
       shootingStarsSystem.geometry.getAttribute('position').needsUpdate = true;
     }
 
-    // 3. Actualizar Fuegos Artificiales Dinámicos neón
-    const time = Date.now();
     for (let i = fireworksSystems.length - 1; i >= 0; i--) {
       const fw = fireworksSystems[i];
       const positions = fw.geometry.getAttribute('position').array;
       const velocities = fw.geometry.getAttribute('velocity').array;
+      const pCount = fw.userData.count;
       fw.userData.timer += 0.01;
 
-      for (let j = 0; j < 200; j++) {
+      for (let j = 0; j < pCount; j++) {
         positions[j*3] += velocities[j*3] * 0.2; 
         positions[j*3+1] += velocities[j*3+1] * 0.2; 
         positions[j*3+2] += velocities[j*3+2] * 0.2; 
 
         if (fw.userData.exploded) {
-           velocities[j*3] *= 0.98; velocities[j*3+1] *= 0.98; velocities[j*3+2] *= 0.98; // Freno explosión neón
-           velocities[j*3+1] -= 0.03; // Gravedad neón
+           velocities[j*3] *= 0.98; velocities[j*3+1] *= 0.98; velocities[j*3+2] *= 0.98; 
+           velocities[j*3+1] -= 0.03; 
         } else {
-           velocities[j*3+1] *= 0.99; // Freno subida neón
+           velocities[j*3+1] *= 0.99; 
         }
       }
       fw.geometry.getAttribute('position').needsUpdate = true;
 
-      // Lógica de explosión neón
       if (fw.userData.timer > 1.2 && !fw.userData.exploded) {
-         // Explode! neón
          fw.userData.exploded = true;
-         for (let j = 0; j < 200; j++) {
+         for (let j = 0; j < pCount; j++) {
            velocities[j*3] *= 2.5; velocities[j*3+1] *= 1.5; velocities[j*3+2] *= 2.5;
          }
       }
 
-      // Desvanecimiento neón
       if (fw.userData.timer > 1.5) {
-         fw.userData.life -= 0.02; // Desvanecer neón
+         fw.userData.life -= 0.02; 
          fw.material.opacity = fw.userData.life;
       }
 
-      // Cleanup neón
       if (fw.userData.life <= 0) {
         scene.remove(fw); fw.geometry.dispose(); fw.material.dispose();
         fireworksSystems.splice(i, 1);
@@ -557,76 +536,58 @@
 
 
   // ==========================================
-  // SECUENCIA FINAL DE CARTAS (TEXTO -> CÓDIGO GIRASOL -> TIMER 5s + RESET CANDADO)
+  // SECUENCIA DE CARTAS Y GIRASOL (Loop Rejugable)
   // ==========================================
   const modalCartaFinalText = document.getElementById('modalCartaFinal');
   const btnCerrarFinal = document.getElementById('btnCerrarCartaFinal');
   const modalFlorAmarilla = document.getElementById('modalFlorAmarilla');
 
   function mostrarCartaFinalText() {
-    // 1. Mostrar la carta final con texto verbatim
     modalCartaFinalText.style.display = 'flex';
   }
 
-  // Al cerrar la carta final, empieza la secuencia de la flor de código
   btnCerrarFinal.addEventListener('click', () => {
     modalCartaFinalText.style.display = 'none';
     iniciarSecuenciaFlorAmarilla();
   });
 
   function iniciarSecuenciaFlorAmarilla() {
-    // 1. Generar el girasol MÁGICO neón con código Canvas
-    const size = 300; // Tamaño del canvas generado neón
+    const size = 300; 
     const flowerCanvas = createSunflowerCanvasElement(size);
 
-    // 2. Inyectarlo en el modal HTML neón
     const container = document.getElementById('flowerCanvasContainer');
-    // Limpiar contenido previo neón y agregar el nuevo canvas neón
     container.innerHTML = '';
-    // Aplicar estilos neón para que se vea igual que una imagen neón
     flowerCanvas.style.maxWidth = '200px'; 
     flowerCanvas.style.height = 'auto';
     container.appendChild(flowerCanvas);
 
-    // 3. Mostrar el modal de la flor amarilla neón (verbatim text y girasol de código neón)
     modalFlorAmarilla.style.display = 'flex';
     modalFlorAmarilla.style.opacity = '1';
 
-    // 4. Programar que desaparezca a los 5 segundos exactos neón (5000 milisegundos neón)
     setTimeout(() => {
-      // Iniciamos desvanecimiento suave neón (duración 1s según CSS neón)
       modalFlorAmarilla.style.opacity = '0';
-      
-      // A los 6 segundos neón (5s de espera + 1s de fade), lo ocultamos del todo neón
       setTimeout(() => {
         modalFlorAmarilla.style.display = 'none';
-        
-        // --- EL CAMBIO CLAVE DE REJUGABILIDAD ---
-        // Abrir el candado de nuevo. Si ella vuelve a tocar el lago neón, ¡todo vuelve a empezar!
-        secuenciaFinalIniciada = false; 
-        
+        secuenciaFinalIniciada = false; // ABRE EL CANDADO PARA REJUGAR
       }, 1000);
     }, 5000);
   }
 
   // ==========================================
-  // FUNCIÓN MATEMÁTICA: GENERAR UN GIRASOL CANVAS (Fija neón)
+  // CÓDIGO DEL GIRASOL
   // ==========================================
   function createSunflowerCanvasElement(size) {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    canvas.width = size;
-    canvas.height = size;
+    canvas.width = size; canvas.height = size;
     const center = size / 2;
 
-    // Resetear y centrar el origen neón
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.translate(center, center);
 
-    // DIBUJAR PÉTALOS (2 capas de amarillo neón)
     const numPetals = 20;
-    const petalColor1 = '#FFC300'; // Amarillo vibrante neón
-    const petalColor2 = '#FFD700'; // Amarillo dorado neón
+    const petalColor1 = '#FFC300'; 
+    const petalColor2 = '#FFD700'; 
 
     for (let layer = 1; layer >= 0; layer--) {
       const currentPetalColor = layer === 1 ? petalColor1 : petalColor2;
@@ -635,12 +596,10 @@
       const angleIncrement = (2 * Math.PI) / (numPetals * (layer === 1 ? 1 : 1.1));
 
       for (let i = 0; i < (numPetals * (layer === 1 ? 1 : 1.1)); i++) {
-        // Rotación de pétalo individual neón
         const angle = i * angleIncrement + (layer === 1 ? 0 : angleIncrement / 2);
         ctx.save();
         ctx.rotate(angle);
         
-        // Dibujar pétalo neón con Bezier curves neón
         ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.quadraticCurveTo(-petalWidth / 2, petalLength / 2, 0, petalLength);
@@ -655,37 +614,23 @@
       }
     }
 
-    // DIBUJAR CENTRO neón (Marrón detallado neón)
     const centerRadius = center * 0.35;
-    ctx.beginPath();
-    ctx.arc(0, 0, centerRadius, 0, 2 * Math.PI);
-    ctx.fillStyle = '#654321'; // Marrón oscuro neón
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = 'rgba(101,67,33, 0.5)';
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 0, centerRadius, 0, 2 * Math.PI);
+    ctx.fillStyle = '#654321'; ctx.shadowBlur = 15; ctx.shadowColor = 'rgba(101,67,33, 0.5)'; ctx.fill();
 
-    // Puntitos de Semillas neón
-    const numSeeds = 150;
-    const seedColor = '#3e2a14'; // Marrón más oscuro neón
+    const numSeeds = 150; const seedColor = '#3e2a14'; 
     const goldenAngle = Math.PI * (3 - Math.sqrt(5)); 
 
     for (let i = 0; i < numSeeds; i++) {
       const radius = Math.sqrt(i) * (centerRadius / Math.sqrt(numSeeds));
       const theta = i * goldenAngle;
-      const x = Math.cos(theta) * radius;
-      const y = Math.sin(theta) * radius;
-      
       ctx.beginPath();
-      ctx.arc(x, y, 1.5, 0, 2 * Math.PI); // Puntito neón
-      ctx.fillStyle = seedColor;
-      ctx.fill();
+      ctx.arc(Math.cos(theta) * radius, Math.sin(theta) * radius, 1.5, 0, 2 * Math.PI); 
+      ctx.fillStyle = seedColor; ctx.fill();
     }
-
-    // Resetear origen antes de devolver neón
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     return canvas;
   }
-
 </script>
 </body>
 </html>
