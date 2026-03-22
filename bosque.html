@@ -77,9 +77,6 @@
 <audio id="musicaBosque" loop>
   <source src="src_bosque/musica3.mp3" type="audio/mpeg">
 </audio>
-<audio id="sfxMagic">
-  <source src="src_bosque/sfx_magic.mp3" type="audio/mpeg">
-</audio>
 <audio id="sfxFirework">
   <source src="src_bosque/sfx_firework.mp3" type="audio/mpeg">
 </audio>
@@ -126,7 +123,7 @@
 
 <script>
   // ==========================================
-  // CONFIGURACIÓN DE DISPOSITIVO (¡Tu genialidad!)
+  // CONFIGURACIÓN DE DISPOSITIVO
   // ==========================================
   const eleccion = localStorage.getItem('dispositivoElegido');
   const esCelular = (eleccion === 'celular') || (window.innerWidth < 768 && eleccion !== 'pc');
@@ -135,7 +132,6 @@
   // AUDIOS Y EFECTOS
   // ==========================================
   const audioMain = document.getElementById('musicaBosque');
-  const sfxMagic = document.getElementById('sfxMagic');
   const sfxFirework = document.getElementById('sfxFirework');
   
   function reproducirMusica() {
@@ -158,7 +154,7 @@
   canvas2D.width = window.innerWidth; canvas2D.height = window.innerHeight;
 
   let fireflies2D = [];
-  const numFireflies2D = esCelular ? 80 : 250; // PC ULTRA: Más luces iniciales
+  const numFireflies2D = esCelular ? 80 : 250; 
   let mouse2D = { x: null, y: null };
   let animacion2DActiva = true; 
   let idAnimacion2D;
@@ -212,8 +208,6 @@
     e.stopPropagation();
     modalCarta.style.display = 'flex';
     reproducirMusica();
-    // NUEVO: SFX de magia
-    sfxMagic.currentTime = 0; sfxMagic.play().catch(e=>console.log("SFX bloq"));
   });
 
   btnViaje.addEventListener('click', () => {
@@ -225,10 +219,9 @@
 
 
   // ==========================================
-  // MOTOR 3D PRINCIPAL (CONEJO EXPUESTO)
+  // MOTOR 3D PRINCIPAL
   // ==========================================
   let scene, camera, renderer, controls, lakeMesh;
-  // NUEVO: Variables para el conejito
   let bunnySprite, textureHeart; 
   let raycaster, mouse = new THREE.Vector2(); 
 
@@ -237,7 +230,6 @@
     scene = new THREE.Scene(); scene.background = new THREE.Color(0x02040a); scene.fog = new THREE.FogExp2(0x02040a, 0.003); 
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000); camera.position.set(0, 50, 200); 
 
-    // PC ULTRA: Antialiasing y mejor Pixel Ratio
     renderer = new THREE.WebGLRenderer({ antialias: !esCelular });
     renderer.setPixelRatio(esCelular ? 1 : Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -247,42 +239,33 @@
     controls.enableDamping = true; controls.dampingFactor = 0.05;
     controls.maxPolarAngle = Math.PI / 2 - 0.05; controls.minDistance = 30; controls.maxDistance = 600;
 
-    // LUCES
     scene.add(new THREE.AmbientLight(0xffffff, 0.2)); 
     const luzLago = new THREE.PointLight(0x00bfff, 3, 300); luzLago.position.set(0, 20, 0); scene.add(luzLago);
 
-    // SUELO
     const groundMat = new THREE.MeshStandardMaterial({ color: 0x051a05, roughness: 1 });
     const ground = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), groundMat); ground.rotation.x = -Math.PI / 2; scene.add(ground);
 
-    // LAGO
     const lagoMat = new THREE.MeshBasicMaterial({ color: 0x00bfff, transparent: true, opacity: 0.9, emissive: 0x00bfff });
     lakeMesh = new THREE.Mesh(new THREE.CircleGeometry(60, esCelular ? 32 : 64), lagoMat); lakeMesh.rotation.x = -Math.PI / 2; lakeMesh.position.y = 0.6; scene.add(lakeMesh);
 
-    // TEXTURAS MÁGICAS
     const textureLoader = new THREE.TextureLoader();
-    // NUEVO: Cargar textura de corazón para el easter egg
     textureHeart = textureLoader.load('src_bosque/heart.png');
 
-    // ANIMALITO (MODIFICADO: Se expone la variable global)
     textureLoader.load('src_bosque/bunny.png', (texture) => {
       const bunnyMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
       bunnySprite = new THREE.Sprite(bunnyMat);
-      // NUEVO: Nombre y datos para identificarlo y animarlo
       bunnySprite.name = "bunny"; bunnySprite.userData = { baseY: 15, baseScale: 30 };
       bunnySprite.scale.set(30, 30, 1); bunnySprite.position.set(60, 15, 30); 
       scene.add(bunnySprite);
     }, undefined, () => {
       const bolaLuzGeo = new THREE.SphereGeometry(6, 16, 16);
       const bolaLuzMat = new THREE.MeshBasicMaterial({color: 0xffffff});
-      // Fallback: Si no hay foto, la bola de luz se llama conejo y salta igual
       bunnySprite = new THREE.Mesh(bolaLuzGeo, bolaLuzMat);
       bunnySprite.name = "bunny"; bunnySprite.userData = { baseY: 6, baseScale: 6 };
       bunnySprite.position.set(60, 6, 30); scene.add(bunnySprite);
     });
 
-    // ÁRBOLES DINÁMICOS (PC ULTRA: Muchos más árboles y más polígonos)
-    const numArboles = esCelular ? 60 : 120; // PC ULTRA: Doble de árboles
+    const numArboles = esCelular ? 60 : 120; 
     const trunkSides = esCelular ? 6 : 8;
     const leafSides = esCelular ? 5 : 7;
     function crearArbol(x, z) {
@@ -293,24 +276,20 @@
       const angulo = Math.random() * Math.PI * 2; const radio = 80 + Math.random() * 250; crearArbol(Math.cos(angulo) * radio, Math.sin(angulo) * radio);
     }
 
-    // PARTÍCULAS
     initParticulasSistemas();
 
-    // LUNA
     const lunaMat = new THREE.MeshBasicMaterial({ color: 0xffffcc }); 
     const luna = new THREE.Mesh(new THREE.SphereGeometry(25, 32, 32), lunaMat); luna.position.set(-300, 250, -200); scene.add(luna);
     const lunaLight = new THREE.PointLight(0xffffcc, 3, 800); luna.add(lunaLight);
 
     animate3D();
 
-    // INTERACCIÓN (Soporte para Celular y PC + Bunny Egg)
     raycaster = new THREE.Raycaster();
     renderer.domElement.addEventListener('click', onSceneInteract);
-    renderer.domElement.addEventListener('touchend', onSceneInteract); // Soporte móvil
+    renderer.domElement.addEventListener('touchend', onSceneInteract); 
     window.addEventListener('resize', on3DWindowResize);
   }
 
-  // MODIFICADO: Ahora maneja clics en el lago Y en el conejo
   function onSceneInteract(event) {
     let coordX, coordY;
     if (event.changedTouches && event.changedTouches.length > 0) {
@@ -321,25 +300,16 @@
     mouse.x = (coordX / window.innerWidth) * 2 - 1; mouse.y = -(coordY / window.innerHeight) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
 
-    // NUEVO: Lista de objetos interactivos
     const objetosInteractivos = [];
     if(lakeMesh) objetosInteractivos.push(lakeMesh);
-    if(bunnySprite) objetosInteractivos.push(bunnySprite); // <--- El conejo se une a la lista
+    if(bunnySprite) objetosInteractivos.push(bunnySprite); 
 
     const intersects = raycaster.intersectObjects(objetosInteractivos);
 
     if (intersects.length > 0) {
       const objetoTocado = intersects[0].object;
-
-      // LOGICA DEL LAGO (Final)
-      if (objetoTocado === lakeMesh) {
-        onInteraccionFinal();
-      }
-
-      // NUEVO: LOGICA DEL CONEJO (Easter Egg)
-      if (objetoTocado.name === "bunny") {
-        onBunnyEasterEgg();
-      }
+      if (objetoTocado === lakeMesh) { onInteraccionFinal(); }
+      if (objetoTocado.name === "bunny") { onBunnyEasterEgg(); }
     }
   }
 
@@ -349,11 +319,10 @@
 
 
   // ==========================================
-  // SISTEMAS DE PARTÍCULAS (Con ajuste Celular/PC Ultra)
+  // SISTEMAS DE PARTÍCULAS
   // ==========================================
   let fireflies3DSystem, fireworksSystems = [];
   let shootingStarsSystem; 
-  // NUEVO: Corazones del conejo
   let heartSystems = []; 
   let textureParticle;
   let secuenciaFinalIniciada = false; 
@@ -366,15 +335,13 @@
       textureParticle = new THREE.CanvasTexture(canvas);
     });
 
-    // LUCIÉRNAGAS 3D (PC ULTRA: Muchas más luces)
-    const numFireflies3D = esCelular ? 250 : 800; // PC ULTRA: Casi el triple de luces 3D
+    const numFireflies3D = esCelular ? 250 : 800; 
     const particlesGeo = new THREE.BufferGeometry(); const particlesPos = [];
     for (let i = 0; i < numFireflies3D; i++) { particlesPos.push((Math.random() - 0.5) * 500, Math.random() * 150, (Math.random() - 0.5) * 500); }
     particlesGeo.setAttribute('position', new THREE.Float32BufferAttribute(particlesPos, 3));
     fireflies3DSystem = new THREE.Points(particlesGeo, new THREE.PointsMaterial({ color: 0xadff2f, size: 2.5, transparent: true, opacity: 0.8 })); scene.add(fireflies3DSystem);
 
-    // ESTRELLAS FUGACES (PC ULTRA: Triple de estrellas)
-    const numShootingStars = esCelular ? 5 : 15; // PC ULTRA: Triple de estrellas fugaces
+    const numShootingStars = esCelular ? 5 : 15; 
     const shootingStarsGeo = new THREE.BufferGeometry(); const shootingStarsPos = []; const shootingStarsVel = [];
     for (let i = 0; i < numShootingStars; i++) {
       shootingStarsPos.push((Math.random() - 0.5) * 1000, 300 + Math.random() * 150, (Math.random() - 0.5) * 1000);
@@ -395,12 +362,10 @@
   }
 
   function lanzarFuegoArtificial(startX, startZ) {
-    // NUEVO: SFX explosión sincronizado
     sfxFirework.currentTime = 0; sfxFirework.play().catch(e=>console.log("SFX bloq"));
 
     const geo = new THREE.BufferGeometry(); const pos = []; const vel = []; const colors = [];
-    // PC ULTRA: Explosiones masivas con más partículas
-    const numParticulasFuegos = esCelular ? 150 : 400; // PC ULTRA: El doble de partículas por explosión
+    const numParticulasFuegos = esCelular ? 150 : 400; 
     const baseColor = new THREE.Color(`hsl(${Math.random() * 60 + 40}, 100%, 70%)`); 
 
     for (let i = 0; i < numParticulasFuegos; i++) {
@@ -419,80 +384,59 @@
   let bunnyJumping = false, bunnyJumpTimer = 0;
 
   function onBunnyEasterEgg() {
-    // Si ya está saltando o no cargó la textura del corazón, no hacemos nada
     if (bunnyJumping || !bunnySprite || !textureHeart) return;
     bunnyJumping = true; bunnyJumpTimer = 0;
-    // SFX mágico al tocar al conejito (puedes reusar sfxMagic o buscar otro)
-    sfxMagic.currentTime = 0; sfxMagic.play().catch(e=>console.log("SFX bloq"));
-    // Lanzar corazones desde la posición del conejo (un poco arriba)
     const pos = bunnySprite.position.clone();
     lanzarCorazonesMágicos(pos.x, pos.y + 10, pos.z);
   }
 
   function lanzarCorazonesMágicos(x, y, z) {
     const geo = new THREE.BufferGeometry(); const pos = []; const vel = [];
-    const numCorazones = 5; // Pocos pero especiales
+    const numCorazones = 5; 
 
     for (let i = 0; i < numCorazones; i++) {
       pos.push(x, y, z);
-      // Movimiento flotante hacia arriba y hacia afuera ligeramente
       vel.push((Math.random() - 0.5) * 1, 1.5 + Math.random() * 1, (Math.random() - 0.5) * 1);
     }
     geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
     geo.setAttribute('velocity', new THREE.Float32BufferAttribute(vel, 3));
 
     const hs = new THREE.Points(geo, new THREE.PointsMaterial({ 
-      color: 0xffffff, // La imagen del corazón es roja, la pintamos de blanco para Additive blending si es blanca, o normal si es roja. Si es roja con fondo transparente, NormalBlending es mejor.
-      size: 15, map: textureHeart, transparent: true, opacity: 1, depthWrite: false, blending: THREE.NormalBlending 
+      color: 0xffffff, size: 15, map: textureHeart, transparent: true, opacity: 1, depthWrite: false, blending: THREE.NormalBlending 
     }));
-    hs.userData = { life: 1 }; // Tiempo de vida del sistema
+    hs.userData = { life: 1 }; 
     heartSystems.push(hs); scene.add(hs);
   }
 
   function actualizarParticulas3D() {
     if (fireflies3DSystem) fireflies3DSystem.rotation.y += 0.0008;
 
-    // ACTUALIZAR CONEJITO (Salto y Corazones)
     if (bunnyJumping && bunnySprite) {
       bunnyJumpTimer += 0.05;
-      const saltoMax = 15; // Altura máxima del salto
-      // basic jump curve using sine: height = peak * sin(pi * progress)
+      const saltoMax = 15; 
       if (bunnyJumpTimer <= 1) {
         bunnySprite.position.y = bunnySprite.userData.baseY + Math.sin(bunnyJumpTimer * Math.PI) * saltoMax;
       } else {
-        // Landed
         bunnySprite.position.y = bunnySprite.userData.baseY; bunnyJumping = false; bunnyJumpTimer = 0;
       }
     }
 
-    // Actualizar Corazones Mágicos (Flotar hacia arriba y desvanecer)
     for (let i = heartSystems.length - 1; i >= 0; i--) {
       const hs = heartSystems[i];
       const positions = hs.geometry.getAttribute('position').array;
       const velocities = hs.geometry.getAttribute('velocity').array;
-      const num = 5; // same num neón
-
+      const num = 5; 
       for (let j = 0; j < num; j++) {
-        // Mover neón
-        positions[j*3] += velocities[j*3] * 0.2; 
-        positions[j*3+1] += velocities[j*3+1] * 0.2; // Suben
-        positions[j*3+2] += velocities[j*3+2] * 0.2;
+        positions[j*3] += velocities[j*3] * 0.2; positions[j*3+1] += velocities[j*3+1] * 0.2; positions[j*3+2] += velocities[j*3+2] * 0.2;
       }
       hs.geometry.getAttribute('position').needsUpdate = true;
-      
-      // Desvanecimiento neón
-      hs.userData.life -= 0.015; // velocidad de desvanecido
-      hs.material.opacity = hs.userData.life;
-
-      if (hs.userData.life <= 0) {
-        scene.remove(hs); hs.geometry.dispose(); hs.material.dispose(); heartSystems.splice(i, 1);
-      }
+      hs.userData.life -= 0.015; hs.material.opacity = hs.userData.life;
+      if (hs.userData.life <= 0) { scene.remove(hs); hs.geometry.dispose(); hs.material.dispose(); heartSystems.splice(i, 1); }
     }
 
     if (shootingStarsSystem) {
       const positions = shootingStarsSystem.geometry.getAttribute('position').array; const velocities = shootingStarsSystem.geometry.getAttribute('velocity').array;
-      const num = esCelular ? 5 : 15; // PC ULTRA: Triple neón
-
+      const num = esCelular ? 5 : 15; 
       for (let i = 0; i < num; i++) {
         positions[i * 3] += velocities[i * 3]; positions[i * 3 + 1] += velocities[i * 3 + 1]; positions[i * 3 + 2] += velocities[i * 3 + 2];
         if (positions[i * 3 + 1] < 200 || Math.abs(positions[i * 3]) > 1000 || Math.abs(positions[i * 3 + 2]) > 1000) {
@@ -521,7 +465,6 @@
       if (fw.userData.life <= 0) { scene.remove(fw); fw.geometry.dispose(); fw.material.dispose(); fireworksSystems.splice(i, 1); }
     }
   }
-
 
   // ==========================================
   // SECUENCIA DE CARTAS Y GIRASOL
