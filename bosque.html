@@ -3,44 +3,45 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>El Bosque Mágico de Nuestros Recuerdos ✨</title>
+<title>El Bosque Encantado ✨</title>
 <style>
   body { 
-    margin: 0; padding: 0; background: #000; 
+    margin: 0; padding: 0; background: #050b14; 
     overflow: hidden; font-family: 'Courier New', monospace; color: white; 
   }
   
-  /* Capa de entrada 2D (Fondo radial profundo) */
-  #entrada2D {
+  /* ================= FASE 1: 2D ================= */
+  #fase2D {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: radial-gradient(circle at center, #0a192f 0%, #000000 100%);
-    z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    transition: opacity 2.5s ease-in-out, transform 2.5s ease-in-out;
+    background: radial-gradient(circle at center, #0a192f 0%, #02040a 100%);
+    z-index: 10; transition: opacity 2s ease-in-out;
   }
 
-  /* Contenedor del árbol emoji original */
+  #canvasBosque2D { 
+    display: block; position: absolute; top: 0; left: 0; 
+    z-index: 11; pointer-events: none; 
+  }
+  
   .tree-container {
-    text-align: center; cursor: pointer;
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    z-index: 12; text-align: center; cursor: pointer;
     animation: float 4s ease-in-out infinite;
   }
-  .tree-emoji { 
-    font-size: 8rem; 
-    filter: drop-shadow(0 0 20px rgba(173, 255, 47, 0.6)); 
-  }
-  .hint { 
-    font-size: 1.2rem; color: #adff2f; margin-top: 10px; 
-    text-shadow: 0 0 10px #adff2f; font-weight: bold;
-  }
+  .tree-emoji { font-size: 8rem; filter: drop-shadow(0 0 20px rgba(173, 255, 47, 0.6)); transition: transform 0.3s; }
+  .tree-emoji:hover { transform: scale(1.1); filter: drop-shadow(0 0 40px rgba(173, 255, 47, 1)); }
+  .hint { font-size: 1.2rem; color: #adff2f; margin-top: 10px; text-shadow: 0 0 10px #adff2f; font-weight: bold; }
+  
   @keyframes float { 
-    0%, 100% { transform: translateY(0); } 
-    50% { transform: translateY(-15px); } 
+    0% { transform: translate(-50%, -50%); } 
+    50% { transform: translate(-50%, -55%); } 
+    100% { transform: translate(-50%, -50%); } 
   }
 
-  /* Modal Polaroid Original */
+  /* ================= MODAL ================= */
   #modalCarta {
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85); z-index: 20; flex-direction: column; 
-    align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.85); z-index: 30; flex-direction: column; 
+    align-items: center; justify-content: center; opacity: 1; transition: opacity 1s ease;
   }
   .polaroid {
     background: white; padding: 15px 15px 50px 15px; border-radius: 5px;
@@ -48,47 +49,38 @@
     max-width: 80%; text-align: center; color: #333; position: relative;
     animation: aparecerCarta 0.5s ease-out;
   }
-  @keyframes aparecerCarta {
-    from { opacity: 0; transform: translateY(50px) rotate(-10deg); }
-    to { opacity: 1; transform: translateY(0) rotate(-3deg); }
-  }
-  .polaroid img { 
-    width: 100%; max-width: 300px; height: auto; border: 1px solid #ddd; 
-  }
-  .polaroid-text { 
-    margin-top: 20px; font-size: 1.3rem; font-weight: bold; 
-    font-family: 'Courier New', monospace; color: #050b14;
-  }
+  @keyframes aparecerCarta { from { opacity: 0; transform: translateY(50px) rotate(-10deg); } to { opacity: 1; transform: translateY(0) rotate(-3deg); } }
+  .polaroid img { width: 100%; max-width: 300px; height: auto; border: 1px solid #ddd; }
+  .polaroid-text { margin-top: 20px; font-size: 1.3rem; font-weight: bold; }
   
-  /* Botón "Guardar Recuerdo" modificado para el viaje */
   .btn-viaje {
     margin-top: 30px; padding: 12px 25px; background: #adff2f; color: #050b14;
-    border: none; border-radius: 20px; font-size: 1.1rem; cursor: pointer; 
-    font-weight: bold; box-shadow: 0 0 15px rgba(173, 255, 47, 0.5);
-    transition: all 0.3s;
-  }
-  .btn-viaje:hover { transform: scale(1.05); box-shadow: 0 0 30px #adff2f; }
-  
-  /* El Lienzo del Mundo 3D */
-  #threeCanvas { 
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-    z-index: 1; display: none; /* Oculto al inicio */
+    border: none; border-radius: 20px; font-size: 1.1rem; cursor: pointer; font-weight: bold; box-shadow: 0 0 15px rgba(173, 255, 47, 0.5);
   }
 
-  /* Botón para regresar al inicio (visible en 3D) */
+  /* ================= FASE 2: 3D ================= */
+  #fase3D { 
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+    z-index: 5; display: none; /* Oculto al principio */
+  }
+
   .btn-volver {
-     position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-     z-index: 15; padding: 12px 25px; background: transparent; 
+     position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+     z-index: 40; padding: 12px 25px; background: rgba(0,0,0,0.5); 
      border: 2px solid #adff2f; color: #adff2f; border-radius: 25px; 
      cursor: pointer; font-family: 'Courier New', monospace; font-size: 1rem;
-     transition: all 0.3s; display: none; /* Oculto al inicio */
+     display: none; /* Aparece solo en el 3D */
   }
-  .btn-volver:hover { background: #adff2f; color: #050b14; box-shadow: 0 0 20px #adff2f; }
 </style>
 </head>
 <body>
 
-<div id="entrada2D">
+<audio id="musicaBosque" loop>
+  <source src="src_bosque/musica3.mp3" type="audio/mpeg">
+</audio>
+
+<div id="fase2D">
+  <canvas id="canvasBosque2D"></canvas>
   <div class="tree-container" id="arbolMagico">
     <div class="tree-emoji">🌲</div>
     <div class="hint">Toca el árbol</div>
@@ -100,259 +92,219 @@
     <img src="src_bosque/foto_bosque.jpg" alt="Nuestro recuerdo" onerror="this.src='https://via.placeholder.com/300x350?text=Tu+Foto+Aqui'">
     <div class="polaroid-text">Cada momento contigo es mágico ✨</div>
   </div>
-  <button class="btn-viaje" id="btnEmpezarViaje">Guardar recuerdo ✨</button>
+  <button class="btn-viaje" id="btnGuardarRecuerdo">Guardar recuerdo ✨</button>
 </div>
 
-<div id="threeCanvas"></div>
-
-<button class="btn-volver" id="btnVolverInicio">⬅️ Volver al inicio</button>
-
-<audio id="musicaBosque" loop>
-  <source src="src_bosque/musica3.mp3" type="audio/mpeg">
-</audio>
+<div id="fase3D"></div>
+<button class="btn-volver" id="btnVolverInicio" onclick="window.location.href='index.html'">⬅️ Volver al inicio</button>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
 <script>
-  // ==========================================
-  // LÓGICA DE TRANSICIÓN Y AUDIO
-  // ==========================================
-  const entrada2D = document.getElementById('entrada2D');
+  // ========================================================
+  // CONTROL GLOBAL Y MÚSICA
+  // ========================================================
+  const audio = document.getElementById('musicaBosque');
+  
+  function reproducirMusica() {
+    if (audio.paused) {
+      audio.play().then(() => {
+        window.removeEventListener('click', reproducirMusica);
+        window.removeEventListener('touchstart', reproducirMusica);
+      }).catch(e => console.log("Aún esperando interacción"));
+    }
+  }
+  // Suena al primer clic en cualquier lado
+  window.addEventListener('click', reproducirMusica);
+  window.addEventListener('touchstart', reproducirMusica);
+
+
+  // ========================================================
+  // MOTOR 2D: LUCIÉRNAGAS INICIALES
+  // ========================================================
+  const canvas2D = document.getElementById('canvasBosque2D');
+  const ctx2D = canvas2D.getContext('2d');
+  canvas2D.width = window.innerWidth;
+  canvas2D.height = window.innerHeight;
+
+  let fireflies2D = [];
+  const numFireflies2D = window.innerWidth < 768 ? 80 : 150; 
+  let mouse2D = { x: null, y: null };
+  let animacion2DActiva = true; 
+  let idAnimacion2D;
+
+  window.addEventListener('mousemove', (e) => { mouse2D.x = e.clientX; mouse2D.y = e.clientY; });
+  window.addEventListener('touchmove', (e) => { mouse2D.x = e.touches[0].clientX; mouse2D.y = e.touches[0].clientY; });
+
+  class Firefly2D {
+    constructor() {
+      this.x = Math.random() * canvas2D.width;
+      this.y = Math.random() * canvas2D.height;
+      this.size = Math.random() * 2 + 0.5;
+      this.speedX = Math.random() * 1 - 0.5;
+      this.speedY = Math.random() * 1 - 0.5;
+      this.angle = Math.random() * Math.PI * 2;
+      this.opacity = Math.random();
+      this.fadeSpeed = Math.random() * 0.02 + 0.01;
+      this.baseColor = Math.random() > 0.5 ? '173, 255, 47' : '152, 251, 152'; 
+    }
+    update() {
+      this.x += this.speedX; this.y += this.speedY;
+      this.angle += 0.05; this.opacity += Math.sin(this.angle) * this.fadeSpeed; 
+      if (this.x < 0 || this.x > canvas2D.width) this.speedX *= -1;
+      if (this.y < 0 || this.y > canvas2D.height) this.speedY *= -1;
+
+      if (mouse2D.x != null && mouse2D.y != null) {
+        let dx = mouse2D.x - this.x; let dy = mouse2D.y - this.y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < 100) { this.x -= dx * 0.02; this.y -= dy * 0.02; }
+      }
+    }
+    draw() {
+      ctx2D.beginPath();
+      ctx2D.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx2D.fillStyle = `rgba(${this.baseColor}, ${Math.abs(this.opacity)})`;
+      ctx2D.shadowBlur = 10; ctx2D.shadowColor = `rgba(${this.baseColor}, 1)`;
+      ctx2D.fill();
+    }
+  }
+
+  for (let i = 0; i < numFireflies2D; i++) fireflies2D.push(new Firefly2D());
+
+  function animate2D() {
+    if (!animacion2DActiva) return; // Si pasamos al 3D, detenemos esto para no quemar la PC
+    ctx2D.clearRect(0, 0, canvas2D.width, canvas2D.height);
+    fireflies2D.forEach(f => { f.update(); f.draw(); });
+    idAnimacion2D = requestAnimationFrame(animate2D);
+  }
+  animate2D();
+
+
+  // ========================================================
+  // INTERACCIÓN ÁRBOL -> MODAL -> VIAJE
+  // ========================================================
   const arbol = document.getElementById('arbolMagico');
   const modal = document.getElementById('modalCarta');
-  const btnViaje = document.getElementById('btnEmpezarViaje');
-  const canvas3D = document.getElementById('threeCanvas');
+  const btnGuardar = document.getElementById('btnGuardarRecuerdo');
+  const fase2D = document.getElementById('fase2D');
+  const fase3D = document.getElementById('fase3D');
   const btnVolver = document.getElementById('btnVolverInicio');
-  const audio = document.getElementById('musicaBosque');
 
-  // Asegurar que OrbitControls funcione
-  const OrbitControls = THREE.OrbitControls;
-
-  // Lógica del Árbol y Modal (Original)
-  arbol.addEventListener('click', () => {
+  arbol.addEventListener('click', (e) => {
+    e.stopPropagation();
     modal.style.display = 'flex';
+    reproducirMusica();
   });
 
-  // El Gran Viaje 3D
-  btnViaje.addEventListener('click', () => {
-    // 1. Cerrar modal rápidamente
-    modal.style.display = 'none';
+  btnGuardar.addEventListener('click', () => {
+    // 1. Ocultar el modal
+    modal.style.opacity = '0';
+    setTimeout(() => { modal.style.display = 'none'; }, 1000);
+
+    // 2. Desvanecer la capa 2D (el árbol y el fondo oscuro)
+    fase2D.style.opacity = '0';
     
-    // 2. Reproducir música (forzado)
-    audio.play().catch(e => console.log("Audio bloqueado"));
+    // 3. Preparar el mundo 3D por debajo
+    fase3D.style.display = 'block';
+    iniciarMundo3D();
 
-    // 3. Efecto visual de desvanecido y zoom out
-    entrada2D.style.opacity = '0';
-    entrada2D.style.transform = 'scale(0.8)';
-    
-    // 4. Mostrar el mundo 3D
-    canvas3D.style.display = 'block';
-
-    // 5. Iniciar motor 3D y animación de cámara entrada
-    init3DWorld();
-
-    // 6. Ocultar capa 2D completamente y mostrar botón volver
+    // 4. Apagar el motor 2D por completo después de 2 segundos
     setTimeout(() => {
-      entrada2D.style.display = 'none';
-      btnVolver.style.display = 'block';
-    }, 2500);
+      fase2D.style.display = 'none';
+      animacion2DActiva = false; 
+      cancelAnimationFrame(idAnimacion2D);
+      btnVolver.style.display = 'block'; // Mostrar botón de salir
+    }, 2000);
   });
 
-  btnVolver.addEventListener('click', () => {
-    window.location.href = 'index.html';
-  });
 
+  // ========================================================
+  // MOTOR 3D: EL LAGO Y EL ANIMALITO
+  // ========================================================
+  function iniciarMundo3D() {
+    const contenedor3D = document.getElementById('fase3D');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x02040a); // Fondo oscuro
+    scene.fog = new THREE.FogExp2(0x02040a, 0.003); // Niebla para disimular los bordes
 
-  // ==========================================
-  // MOTOR DEL MUNDO BOSQUE 3D (THREE.JS)
-  // ==========================================
-  let scene, camera, renderer, controls, firefliesSystem;
-  let worldInitialized = false;
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+    camera.position.set(0, 30, 150); // Cámara cerca del lago
 
-  function init3DWorld() {
-    if (worldInitialized) return;
-    worldInitialized = true;
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    contenedor3D.appendChild(renderer.domElement);
 
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-
-    // SCENE & FOG (Niebla mágica azul)
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000105);
-    scene.fog = new THREE.FogExp2(0x050b14, 0.002);
-
-    // CAMERA (Colocada lejos para la animación de entrada)
-    camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 10000);
-    camera.position.set(0, 100, 800); 
-
-    // RENDERER
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    canvas3D.appendChild(renderer.domElement);
-
-    // CONTROLS
-    controls = new OrbitControls(camera, renderer.domElement);
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.minDistance = 50;
-    controls.maxDistance = 1500;
-    controls.maxPolarAngle = Math.PI / 2 - 0.1; // No bajar del suelo
-    controls.enabled = false; // Bloqueado durante la intro
+    controls.maxPolarAngle = Math.PI / 2 - 0.05; // No ver por debajo del suelo
+    controls.minDistance = 20;
+    controls.maxDistance = 300;
 
-    // LIGHTS
-    const ambientLight = new THREE.AmbientLight(0x1a2a40, 1.2); // Luz ambiental azul noche
+    // LUZ MÁGICA
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
     scene.add(ambientLight);
+    const luzLago = new THREE.PointLight(0x00bfff, 2, 200);
+    luzLago.position.set(0, 10, 0);
+    scene.add(luzLago);
 
-    const sunLight = new THREE.PointLight(0xadff2f, 2, 800); // Sol verde luciérnaga central
-    sunLight.position.set(0, 150, 0);
-    scene.add(sunLight);
-
-    // --- ELEMENTOS DEL MUNDO ---
-
-    // 1. EL SUELO (Círculo verde oscuro texturizado)
-    const groundGeometry = new THREE.CircleGeometry(1000, 64);
-    const groundMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0x051a05, // Verde bosque muy oscuro
-      roughness: 1,
-      metalness: 0
-    });
-    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+    // SUELO BOSQUE
+    const groundGeo = new THREE.PlaneGeometry(1000, 1000);
+    const groundMat = new THREE.MeshStandardMaterial({ color: 0x051a05, roughness: 1 });
+    const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.rotation.x = -Math.PI / 2;
     scene.add(ground);
 
-    // 2. EL LAGO (Círculo azul brillante central)
-    const lakeGeometry = new THREE.CircleGeometry(250, 64);
-    const lakeMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0x00bfff, // Azul profundo brillante
-      emissive: 0x001a33, 
-      roughness: 0.1,
-      metalness: 0.9,
-      transparent: true,
-      opacity: 0.8
-    });
-    const lake = new THREE.Mesh(lakeGeometry, lakeMaterial);
-    lake.rotation.x = -Math.PI / 2;
-    lake.position.y = 1; // Un poco arriba del suelo
-    scene.add(lake);
+    // LAGO BRILLANTE
+    const lagoGeo = new THREE.CircleGeometry(60, 64);
+    const lagoMat = new THREE.MeshBasicMaterial({ color: 0x00bfff, transparent: true, opacity: 0.8 });
+    const lago = new THREE.Mesh(lagoGeo, lagoMat);
+    lago.rotation.x = -Math.PI / 2;
+    lago.position.y = 0.5; // Un pelín arriba del suelo
+    scene.add(lago);
 
-    const lakeLight = new THREE.PointLight(0x00bfff, 3, 300); // Luz azul del lago
-    lakeLight.position.set(0, 10, 0);
-    scene.add(lakeLight);
-
-    // 3. ANIMALITO MÁGICO (Conejito Sprite Brillante)
+    // ANIMALITO (Sprite PNG)
     const textureLoader = new THREE.TextureLoader();
-    // IMPORTANTE: Asegúrate de tener 'src_bosque/bunny.png' (fondo transparente)
-    // Usaremos un emoji brillante como fallback si no carga la foto
     textureLoader.load('src_bosque/bunny.png', (texture) => {
-      const bunnyMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true });
-      const bunny = new THREE.Sprite(bunnyMaterial);
-      bunny.scale.set(40, 40, 1);
-      bunny.position.set(200, 20, 100); // Cerca del lago
+      const bunnyMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
+      const bunny = new THREE.Sprite(bunnyMat);
+      bunny.scale.set(25, 25, 1);
+      bunny.position.set(40, 12, 20); // Al borde del lago
       scene.add(bunny);
-
-      const bunnyLight = new THREE.PointLight(0xffffff, 1.5, 100); // Luz propia del conejito
-      bunny.add(bunnyLight);
     }, undefined, () => {
-      // FALLBACK: Si no hay foto, ponemos una esfera de luz mágica
-      const sphereGeo = new THREE.SphereGeometry(15, 16, 16);
-      const sphereMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-      const magicSphere = new THREE.Mesh(sphereGeo, sphereMat);
-      magicSphere.position.set(200, 15, 100);
-      scene.add(magicSphere);
-       const bunnyLight = new THREE.PointLight(0xffffff, 2, 100);
-      magicSphere.add(bunnyLight);
+      // Si falla la imagen, pone una esfera de luz
+      const bolaLuz = new THREE.Mesh(new THREE.SphereGeometry(5, 16, 16), new THREE.MeshBasicMaterial({color: 0xffffff}));
+      bolaLuz.position.set(40, 5, 20);
+      scene.add(bolaLuz);
     });
 
-    // 4. LUCIÉRNAGAS 3D (Sistema de partículas)
-    const firefliesGeometry = new THREE.BufferGeometry();
-    const firefliesPositions = [];
-    const firefliesColors = [];
-    const numFireflies3D = 500;
-
-    for (let i = 0; i < numFireflies3D; i++) {
-      // Posiciones aleatorias en un volumen grande
-      firefliesPositions.push((Math.random() - 0.5) * 2000, Math.random() * 400, (Math.random() - 0.5) * 2000);
-      
-      // Color verde neón con variaciones
-      firefliesColors.push(0.6 + Math.random() * 0.4, 1.0, 0.1 + Math.random() * 0.3);
+    // LUCIÉRNAGAS 3D
+    const particlesGeo = new THREE.BufferGeometry();
+    const particlesPos = [];
+    for (let i = 0; i < 300; i++) {
+      particlesPos.push((Math.random() - 0.5) * 400, Math.random() * 100, (Math.random() - 0.5) * 400);
     }
+    particlesGeo.setAttribute('position', new THREE.Float32BufferAttribute(particlesPos, 3));
+    const particlesMat = new THREE.PointsMaterial({ color: 0xadff2f, size: 2, transparent: true, opacity: 0.8 });
+    const fireflies3D = new THREE.Points(particlesGeo, particlesMat);
+    scene.add(fireflies3D);
 
-    firefliesGeometry.setAttribute('position', new THREE.Float32BufferAttribute(firefliesPositions, 3));
-    firefliesGeometry.setAttribute('color', new THREE.Float32BufferAttribute(firefliesColors, 3));
-
-    const firefliesMaterial = new THREE.PointsMaterial({ 
-      size: 6, 
-      vertexColors: true, 
-      transparent: true, 
-      opacity: 0.9,
-      blending: THREE.AdditiveBlending // Brillo neón
-    });
-
-    firefliesSystem = new THREE.Points(firefliesGeometry, firefliesMaterial);
-    scene.add(firefliesSystem);
-
-    animate();
-    
-    // --- ANIMACIÓN DE ENTRADA DE CÁMARA ("El Viaje") ---
-    // Usaremos una animación simple de lerp para volar hacia el lago
-    introAnimationActive = true;
-    prevTime = Date.now();
-  }
-
-  let introAnimationActive = false;
-  let viajeProgress = 0;
-  let prevTime;
-
-  function animate() {
-    requestAnimationFrame(animate);
-    const time = Date.now();
-    const delta = (time - prevTime) / 1000;
-    prevTime = time;
-
-    // Lógica de Animación de Entrada
-    if (introAnimationActive) {
-      viajeProgress += delta * 0.4; // Velocidad del viaje
-      if (viajeProgress > 1) {
-        viajeProgress = 1;
-        introAnimationActive = false;
-        controls.enabled = true; // Desbloquear controles
-      }
-      
-      // Interpolación suave (Easing)
-      const t = Math.pow(viajeProgress, 3); // Ease out
-
-      const targetX = 0; const targetY = 200; const targetZ = 600;
-      camera.position.x = THREE.MathUtils.lerp(0, targetX, t);
-      camera.position.y = THREE.MathUtils.lerp(100, targetY, t);
-      camera.position.z = THREE.MathUtils.lerp(800, targetZ, t);
-      camera.lookAt(0, 0, 0); // Mirar al lago central
-    } else {
+    // Bucle de Animación 3D
+    function animate3D() {
+      requestAnimationFrame(animate3D);
       controls.update();
+      fireflies3D.rotation.y += 0.001; // Las luciérnagas 3D giran lentamente
+      renderer.render(scene, camera);
     }
+    animate3D();
 
-    // Animación de Luciérnagas 3D
-    if (firefliesSystem) {
-      firefliesSystem.rotation.y += 0.0005; // Rotación lenta del sistema
-      const positions = firefliesSystem.geometry.getAttribute('position').array;
-      for (let i = 0; i < numFireflies3D; i++) {
-        // Movimiento flotante individual
-        positions[i * 3 + 1] += Math.sin(time * 0.001 + positions[i * 3]) * 0.1;
-      }
-      firefliesSystem.geometry.getAttribute('position').needsUpdate = true;
-    }
-
-    renderer.render(scene, camera);
+    // Ajuste de pantalla 3D
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
   }
-
-  window.addEventListener('resize', () => {
-    if (!worldInitialized) return;
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
-
 </script>
 </body>
 </html>
