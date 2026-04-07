@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>El Viaje de Nuestro Hilo 🧵✨</title>
+<style>
+  body { margin: 0; background: #050510; overflow: hidden; font-family: 'Courier New', monospace; }
+  canvas { display: block; position: fixed; top: 0; left: 0; z-index: 1; }
+  
+  #contenedorRecuerdos {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 2; pointer-events: none;
+  }
+
+  .memoria {
+    position: absolute;
+    border: 3px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+    border-radius: 10px;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.1);
+    transition: transform 5s linear, opacity 1s;
+    object-fit: cover;
+  }
+
+  #controles {
+    position: fixed; bottom: 30px; width: 100%; text-align: center;
+    z-index: 10; display: none; animation: fadeIn 2s forwards;
+  }
+
+  .btn-final {
+    padding: 12px 25px; background: rgba(255,0,0,0.7); color: white;
+    border: 2px solid white; border-radius: 50px; cursor: pointer;
+    text-decoration: none; font-weight: bold; font-size: 1rem;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+
+<canvas id="canvasViaje"></canvas>
+<div id="contenedorRecuerdos"></div>
+
+<div id="controles">
+  <a href="hilo_rojo.html" class="btn-final">🧵 Volver</a>
+  <a href="index.html" class="btn-final">🏠 Inicio</a>
+</div>
+
+<script>
+const canvas = document.getElementById('canvasViaje');
+const ctx = canvas.getContext('2d');
+const contenedor = document.getElementById('contenedorRecuerdos');
+
+// --- CONFIGURACIÓN DE TUS RECUERDOS ---
+// Agrega aquí las rutas de tus fotos y videos
+const misRecuerdos = [
+  { type: 'img', src: 'fotos/foto1.jpg' },
+  { type: 'img', src: 'fotos/foto2.jpg' },
+  { type: 'img', src: 'fotos/foto3.jpg' },
+  { type: 'video', src: 'videos/recuerdo1.mp4' } 
+];
+
+let width, height;
+let particles = [];
+let frame = 0;
+
+function init() {
+  width = window.innerWidth;
+  height = window.innerHeight;
+  canvas.width = width;
+  canvas.height = height;
+  
+  // Crear estrellas de fondo
+  for(let i=0; i<200; i++) {
+    particles.push({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      z: Math.random() * width,
+      o: Math.random()
+    });
+  }
+}
+
+function spawnMemoria() {
+  if (misRecuerdos.length === 0) return;
+  
+  const data = misRecuerdos[Math.floor(Math.random() * misRecuerdos.length)];
+  const el = document.createElement(data.type === 'img' ? 'img' : 'video');
+  
+  el.src = data.src;
+  el.className = 'memoria';
+  if(data.type === 'video') { el.autoplay = true; el.muted = true; el.loop = true; }
+
+  // Posición aleatoria pero equilibrada
+  const posX = 20 + Math.random() * 60;
+  const posY = 20 + Math.random() * 60;
+  el.style.left = posX + '%';
+  el.style.top = posY + '%';
+
+  contenedor.appendChild(el);
+
+  // Animación estilo "Your Name" (se acerca y crece)
+  setTimeout(() => {
+    el.style.opacity = '1';
+    el.style.transform = `translate(-50%, -50%) scale(2.5) rotate(${Math.random()*20-10}deg)`;
+  }, 100);
+
+  // Desvanecer antes de quitar
+  setTimeout(() => { el.style.opacity = '0'; }, 4000);
+  setTimeout(() => { el.remove(); }, 5500);
+}
+
+function drawHilo(t) {
+  ctx.beginPath();
+  ctx.moveTo(-50, height / 2);
+  
+  ctx.bezierCurveTo(
+    width * 0.3, height * 0.2 + Math.sin(t * 0.002) * 100,
+    width * 0.7, height * 0.8 + Math.cos(t * 0.002) * 100,
+    width + 50, height / 2
+  );
+
+  ctx.strokeStyle = '#ff0000';
+  ctx.lineWidth = 5;
+  ctx.lineCap = 'round';
+  ctx.shadowBlur = 30;
+  ctx.shadowColor = '#ff0000';
+  ctx.stroke();
+  
+  // Brillo extra en el centro del hilo
+  ctx.strokeStyle = '#ffcccc';
+  ctx.lineWidth = 1.5;
+  ctx.shadowBlur = 0;
+  ctx.stroke();
+}
+
+function drawStars() {
+  ctx.fillStyle = 'white';
+  particles.forEach(p => {
+    // Las estrellas se mueven hacia afuera para dar efecto de velocidad
+    p.z -= 5;
+    if(p.z <= 0) p.z = width;
+    
+    const sx = (p.x - width/2) * (width/p.z) + width/2;
+    const sy = (p.y - height/2) * (width/p.z) + height/2;
+    const size = (1 - p.z/width) * 3;
+    
+    ctx.globalAlpha = 1 - p.z/width;
+    ctx.beginPath();
+    ctx.arc(sx, sy, size, 0, Math.PI*2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+}
+
+function loop(t) {
+  ctx.fillStyle = '#050510';
+  ctx.fillRect(0, 0, width, height);
+
+  drawStars();
+  drawHilo(t);
+
+  if(frame % 120 === 0) spawnMemoria(); // Lanza una foto cada 2 segundos aprox
+  
+  // Mostrar botones después de un tiempo de viaje
+  if(frame === 600) document.getElementById('controles').style.display = 'block';
+
+  frame++;
+  requestAnimationFrame(loop);
+}
+
+window.addEventListener('resize', init);
+init();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
