@@ -117,15 +117,19 @@
     <h2>Tú eres mi destino ❤️</h2>
     <p>Gracias por ser la persona que sostiene el otro extremo de mi hilo. Mi vida es mucho más bonita desde que estamos conectados.</p>
     
-    <div id="menuFinal">
-      <a href="ciudad_noche.html" class="btn-destino btn-ciudad">🎆 Ver los Fuegos Artificiales</a>
+   <div id="menuFinal">
+  <button onclick="iniciarViajeCinematico()" class="btn-destino" style="background: #ff0000; color: white;">🚀 Iniciar Viaje del Hilo</button>
 
-      <a href="bosque.html" class="btn-destino">🌲 Ir al Bosque Mágico</a>
-      
-      <a href="cumpleanos_solar.html" class="btn-destino" id="btnUniverso">🚀 Viajar al Universo</a>
-      
-      <a href="index.html" class="btn-destino" style="border-color: #555; margin-top: 10px; width: 200px; font-size: 0.8rem;">⬅️ Volver al Inicio</a>
-    </div>
+  <a href="ciudad_noche.html" class="btn-destino btn-ciudad">🎆 Ver los Fuegos Artificiales</a>
+  <a href="bosque.html" class="btn-destino">🌲 Ir al Bosque Mágico</a>
+  <a href="index.html" class="btn-destino" style="border-color: #555; margin-top: 10px; width: 200px; font-size: 0.8rem;">⬅️ Volver al Inicio</a>
+</div>
+
+<div id="viajeOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:100; overflow:hidden;">
+    <canvas id="canvasViaje"></canvas>
+    <div id="contenedorMedia" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></div>
+    <button onclick="cerrarViaje()" style="position:fixed; top:20px; right:20px; z-index:101; background:rgba(255,0,0,0.5); border:none; color:white; padding:10px; border-radius:50%; cursor:pointer;">✕</button>
+</div>
   </div>
 </section>
 
@@ -215,6 +219,100 @@
   window.addEventListener('resize', initCanvas);
   initCanvas();
   animateHilo();
+
+  /* --- MOTOR DEL VIAJE CINEMÁTICO --- */
+let viajeActivo = false;
+let mediaItems = [];
+const listaArchivos = [
+    {type: 'img', src: 'fotos/foto1.jpg'}, // Cambia por tus rutas
+    {type: 'img', src: 'fotos/foto2.jpg'},
+    {type: 'video', src: 'videos/video1.mp4'}, // Si tienes videos
+];
+
+function iniciarViajeCinematico() {
+    document.getElementById('viajeOverlay').style.display = 'block';
+    viajeActivo = true;
+    loopViaje();
+    lanzarMedia();
+}
+
+function cerrarViaje() {
+    document.getElementById('viajeOverlay').style.display = 'none';
+    viajeActivo = false;
+    document.getElementById('contenedorMedia').innerHTML = '';
+    mediaItems = [];
+}
+
+function lanzarMedia() {
+    if(!viajeActivo) return;
+
+    const item = listaArchivos[Math.floor(Math.random() * listaArchivos.length)];
+    const el = document.createElement(item.type === 'img' ? 'img' : 'video');
+    
+    el.src = item.src;
+    if(item.type === 'video') { el.autoplay = true; el.muted = true; el.loop = true; }
+    
+    // Estilo inicial (lejos y pequeño)
+    el.style.cssText = `
+        position: absolute;
+        left: ${Math.random() * 80 + 10}%;
+        top: ${Math.random() * 80 + 10}%;
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+        width: 200px;
+        border: 2px solid #ff0000;
+        box-shadow: 0 0 20px #ff0000;
+        transition: transform 4s linear, opacity 1s;
+    `;
+    
+    document.getElementById('contenedorMedia').appendChild(el);
+    
+    // Animación hacia la cámara
+    setTimeout(() => {
+        el.style.opacity = "1";
+        el.style.transform = "translate(-50%, -50%) scale(2)";
+    }, 100);
+
+    // Eliminar cuando pase la cámara
+    setTimeout(() => {
+        el.remove();
+    }, 4100);
+
+    setTimeout(lanzarMedia, 1500); // Lanza el siguiente recuerdo
+}
+
+// Canvas para el hilo en el viaje
+const canvasV = document.getElementById('canvasViaje');
+const ctxV = canvasV.getContext('2d');
+
+function loopViaje() {
+    if(!viajeActivo) return;
+    canvasV.width = window.innerWidth;
+    canvasV.height = window.innerHeight;
+    
+    ctxV.fillStyle = 'rgba(0,0,0,0.2)';
+    ctxV.fillRect(0,0, canvasV.width, canvasV.height);
+    
+    // Dibujar un hilo rojo que serpentea hacia el centro (túnel)
+    const time = Date.now() * 0.005;
+    ctxV.beginPath();
+    ctxV.moveTo(canvasV.width/2, canvasV.height/2);
+    
+    for(let i=0; i<20; i++) {
+        let x = canvasV.width/2 + Math.cos(time + i*0.3) * (i * 20);
+        let y = canvasV.height/2 + Math.sin(time + i*0.3) * (i * 20);
+        ctxV.lineTo(x, y);
+    }
+    
+    ctxV.strokeStyle = '#ff0000';
+    ctxV.lineWidth = 4;
+    ctxV.shadowBlur = 20;
+    ctxV.shadowColor = 'red';
+    ctxV.stroke();
+    
+    requestAnimationFrame(loopViaje);
+}
+  
 </script>
 
 </body>
