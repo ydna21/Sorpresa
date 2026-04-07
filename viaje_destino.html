@@ -12,28 +12,32 @@
   #contenedorMedia {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     z-index: 10; pointer-events: none;
+    perspective: 800px;
   }
 
   .recuerdo-3d {
     position: absolute;
-    border: 2px solid rgba(255, 0, 0, 0.5);
-    box-shadow: 0 0 20px rgba(255, 0, 0, 0.4);
-    border-radius: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 25px rgba(255, 0, 0, 0.5);
+    border-radius: 12px;
     object-fit: cover;
     transform-origin: center;
-    /* Se ocultan al inicio */
-    display: none;
+    display: none; /* Se activa por JS */
+    background: #111;
   }
 
   #controles {
-    position: fixed; bottom: 30px; width: 100%; text-align: center;
-    z-index: 100; display: none;
+    position: fixed; bottom: 40px; width: 100%; text-align: center;
+    z-index: 100; display: none; /* Aparece tras unos segundos de viaje */
   }
+  
   .btn {
-    padding: 12px 25px; background: rgba(255,0,0,0.8); color: white;
-    border: none; border-radius: 50px; cursor: pointer; text-decoration: none;
-    font-weight: bold; margin: 0 10px; box-shadow: 0 0 15px red;
+    padding: 14px 28px; background: rgba(0, 0, 0, 0.8); color: white;
+    border: 2px solid #ff0000; border-radius: 50px; cursor: pointer; 
+    text-decoration: none; font-weight: bold; margin: 0 10px;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.4); transition: 0.3s;
   }
+  .btn:hover { background: #ff0000; box-shadow: 0 0 40px #ff0000; transform: scale(1.1); }
 </style>
 </head>
 <body>
@@ -43,7 +47,7 @@
 
 <div id="controles">
   <a href="hilo_rojo.html" class="btn">🧵 Volver</a>
-  <a href="index.html" class="btn" style="background:#444; box-shadow:none;">🏠 Inicio</a>
+  <a href="index.html" class="btn" style="border-color: #555;">🏠 Inicio</a>
 </div>
 
 <script>
@@ -51,17 +55,24 @@ const canvas = document.getElementById('canvasMundo');
 const ctx = canvas.getContext('2d');
 const contenedor = document.getElementById('contenedorMedia');
 
-// --- TUS RECUERDOS (Pon aquí tus rutas reales) ---
-const misRecuerdos = [
+// --- CONFIGURACIÓN DE TUS RECUERDOS ---
+const misRecuerdosOriginales = [
   { type: 'img', src: 'fotos/foto1.jpg' },
   { type: 'img', src: 'fotos/foto2.jpg' },
-  { type: 'video', src: 'videos/video1.mp4' }
+  { type: 'img', src: 'fotos/foto3.jpg' },
+  { type: 'img', src: 'fotos/foto4.jpg' },
+  { type: 'img', src: 'fotos/foto5.jpg' },
+  { type: 'video', src: 'videos/video1.mp4' },
+  { type: 'video', src: 'videos/video2.mp4' },
+  { type: 'video', src: 'videos/video3.mp4' },
+  { type: 'video', src: 'videos/video4.mp4' }
 ];
 
+let recuerdosDisponibles = [...misRecuerdosOriginales];
 let width, height, centerX, centerY;
 let stars = [];
 let mediaObjects = [];
-const speed = 0.02; // Velocidad del viaje
+let frame = 0;
 
 function init() {
   width = window.innerWidth;
@@ -71,73 +82,90 @@ function init() {
   canvas.width = width;
   canvas.height = height;
 
-  // Generar Estrellas Iniciales
   stars = [];
-  for(let i=0; i<200; i++) {
+  for(let i=0; i<250; i++) {
     stars.push({ x: Math.random()*width - centerX, y: Math.random()*height - centerY, z: Math.random()*1000 });
+  }
+  shuffle(recuerdosDisponibles);
+}
+
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
   }
 }
 
-// Crear una foto/video en el espacio 3D
 function spawnMedia() {
-  const data = misRecuerdos[Math.floor(Math.random() * misRecuerdos.length)];
+  if (recuerdosDisponibles.length === 0) {
+    recuerdosDisponibles = [...misRecuerdosOriginales];
+    shuffle(recuerdosDisponibles);
+  }
+
+  const data = recuerdosDisponibles.pop();
   const el = document.createElement(data.type === 'img' ? 'img' : 'video');
   el.src = data.src;
   el.className = 'recuerdo-3d';
-  if(data.type === 'video') { el.autoplay = true; el.muted = true; el.loop = true; }
+  
+  if(data.type === 'video') { 
+      el.autoplay = true; 
+      el.muted = true; 
+      el.loop = true; 
+      el.playsInline = true; 
+  }
   
   contenedor.appendChild(el);
   
   mediaObjects.push({
     element: el,
-    x: (Math.random() - 0.5) * 800, // Dispersión lateral
-    y: (Math.random() - 0.5) * 600, // Dispersión vertical
-    z: 1000, // Aparecen al fondo
-    w: 200, // Ancho base
-    h: 150  // Alto base
+    x: (Math.random() - 0.5) * 1100, // Dispersión lateral para no tapar el centro
+    y: (Math.random() - 0.5) * 800,
+    z: 1000, 
+    w: 240, 
+    h: 180 
   });
 }
 
 function update() {
-  ctx.fillStyle = '#000';
+  // Fondo oscuro con leve rastro
+  ctx.fillStyle = 'black';
   ctx.fillRect(0, 0, width, height);
 
-  // 1. DIBUJAR ESTRELLAS
+  // 1. ESTRELLAS (TÚNEL)
   ctx.fillStyle = "white";
   stars.forEach(s => {
-    s.z -= 10;
+    s.z -= 12;
     if(s.z <= 0) s.z = 1000;
-    
     let f = 400 / s.z;
     let sx = s.x * f + centerX;
     let sy = s.y * f + centerY;
-    let size = f * 2;
-    
     ctx.globalAlpha = 1 - (s.z / 1000);
-    ctx.fillRect(sx, sy, size, size);
+    ctx.fillRect(sx, sy, f*2, f*2);
   });
 
-  // 2. DIBUJAR HILO ROJO EN TÚNEL
+  // 2. EL HILO ROJO (DINÁMICO HACIA EL FONDO)
   ctx.globalAlpha = 1;
   ctx.strokeStyle = '#ff0000';
   ctx.lineWidth = 4;
-  ctx.shadowBlur = 15;
+  ctx.shadowBlur = 25;
   ctx.shadowColor = 'red';
   ctx.beginPath();
   
-  for(let i=0; i<1000; i+=50) {
+  for(let i=10; i<1000; i+=20) {
     let f = 400 / i;
-    let curve = Math.sin(Date.now() * 0.002 + i * 0.005) * 50;
-    let hx = curve * f + centerX;
-    let hy = (Math.cos(i*0.01)*30) * f + centerY;
+    // Efecto de ondulación Your Name
+    let waveX = Math.sin(Date.now() * 0.003 + i * 0.01) * 70;
+    let waveY = Math.cos(Date.now() * 0.002 + i * 0.015) * 40;
+    let hx = waveX * f + centerX;
+    let hy = waveY * f + centerY;
     
-    if(i === 0) ctx.moveTo(hx, hy);
+    if(i === 10) ctx.moveTo(hx, hy);
     else ctx.lineTo(hx, hy);
   }
   ctx.stroke();
   ctx.shadowBlur = 0;
 
-  // 3. ACTUALIZAR FOTOS/VIDEOS
+  // 3. ACTUALIZAR RECUERDOS (FOTOS Y VIDEOS)
   mediaObjects.forEach((m, index) => {
     m.z -= 8; // Velocidad de acercamiento
     
@@ -156,14 +184,23 @@ function update() {
       m.element.style.top = (sy - sh/2) + 'px';
       m.element.style.width = sw + 'px';
       m.element.style.height = sh + 'px';
-      m.element.style.opacity = 1 - (m.z / 1000);
+      
+      // Aparecen gradualmente y se desvanecen justo antes de pasar
+      let op = 1 - (m.z / 1000);
+      if (m.z < 100) op = m.z / 100;
+      m.element.style.opacity = op;
+      
       m.element.style.zIndex = Math.floor(1000 - m.z);
     }
   });
 
-  if(Math.random() < 0.02) spawnMedia();
-  if(mediaObjects.length > 0) document.getElementById('controles').style.display = 'block';
+  // Spawn de recuerdos
+  if(frame % 140 === 0) spawnMedia();
+  
+  // Mostrar botones tras 5 segundos de viaje
+  if(frame === 300) document.getElementById('controles').style.display = 'block';
 
+  frame++;
   requestAnimationFrame(update);
 }
 
