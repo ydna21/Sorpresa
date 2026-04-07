@@ -3,177 +3,173 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>El Viaje de Nuestro Hilo 🧵✨</title>
+<title>Viaje al Centro de Nuestro Hilo 🧵✨</title>
 <style>
-  body { margin: 0; background: #010105; overflow: hidden; font-family: 'Courier New', monospace; }
+  body { margin: 0; background: #000; overflow: hidden; font-family: 'Courier New', monospace; }
+  canvas { display: block; position: fixed; top: 0; left: 0; }
   
-  /* El canvas del hilo y estrellas siempre al frente de las fotos */
-  #canvasViaje { position: fixed; top: 0; left: 0; z-index: 5; pointer-events: none; }
-  
-  #contenedorRecuerdos {
+  /* Contenedor de fotos/videos */
+  #contenedorMedia {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    z-index: 2; pointer-events: none;
-    perspective: 1000px; /* Añade profundidad 3D */
+    z-index: 10; pointer-events: none;
   }
 
-  .memoria {
+  .recuerdo-3d {
     position: absolute;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 0 15px rgba(255, 0, 0, 0.2);
-    border-radius: 6px;
-    opacity: 0;
-    /* Empezamos muy pequeños y lejos */
-    transform: translate(-50%, -50%) scale(0.1) translateZ(-500px);
-    transition: transform 6s linear, opacity 1.5s;
+    border: 2px solid rgba(255, 0, 0, 0.5);
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.4);
+    border-radius: 10px;
     object-fit: cover;
-    
-    /* MODIFICACIÓN: Límite estricto de tamaño */
-    max-width: 150px; 
-    max-height: 150px;
+    transform-origin: center;
+    /* Se ocultan al inicio */
+    display: none;
   }
 
   #controles {
     position: fixed; bottom: 30px; width: 100%; text-align: center;
-    z-index: 10; display: none; animation: fadeIn 2s forwards;
+    z-index: 100; display: none;
   }
-
-  .btn-final {
-    padding: 10px 20px; background: rgba(0,0,0,0.8); color: white;
-    border: 2px solid #ff0000; border-radius: 50px; cursor: pointer;
-    text-decoration: none; font-weight: bold; margin: 0 10px;
+  .btn {
+    padding: 12px 25px; background: rgba(255,0,0,0.8); color: white;
+    border: none; border-radius: 50px; cursor: pointer; text-decoration: none;
+    font-weight: bold; margin: 0 10px; box-shadow: 0 0 15px red;
   }
-
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 </style>
 </head>
 <body>
 
-<canvas id="canvasViaje"></canvas>
-<div id="contenedorRecuerdos"></div>
+<canvas id="canvasMundo"></canvas>
+<div id="contenedorMedia"></div>
 
 <div id="controles">
-  <a href="hilo_rojo.html" class="btn-final">🧵 Volver</a>
-  <a href="index.html" class="btn-final" style="border-color: #444;">🏠 Inicio</a>
+  <a href="hilo_rojo.html" class="btn">🧵 Volver</a>
+  <a href="index.html" class="btn" style="background:#444; box-shadow:none;">🏠 Inicio</a>
 </div>
 
 <script>
-const canvas = document.getElementById('canvasViaje');
-const ctx = canvas.getContext('2d', { alpha: false }); // Optimización
-const contenedor = document.getElementById('contenedorRecuerdos');
+const canvas = document.getElementById('canvasMundo');
+const ctx = canvas.getContext('2d');
+const contenedor = document.getElementById('contenedorMedia');
 
-// --- TUS RECUERDOS ---
+// --- TUS RECUERDOS (Pon aquí tus rutas reales) ---
 const misRecuerdos = [
   { type: 'img', src: 'fotos/foto1.jpg' },
   { type: 'img', src: 'fotos/foto2.jpg' },
-  { type: 'img', src: 'fotos/foto3.jpg' },
-  { type: 'img', src: 'fotos/foto4.jpg' },
-  { type: 'img', src: 'fotos/foto5.jpg' } // Añadí más para variedad
+  { type: 'video', src: 'videos/video1.mp4' }
 ];
 
-let width, height;
+let width, height, centerX, centerY;
 let stars = [];
-let frame = 0;
+let mediaObjects = [];
+const speed = 0.02; // Velocidad del viaje
 
 function init() {
   width = window.innerWidth;
   height = window.innerHeight;
+  centerX = width / 2;
+  centerY = height / 2;
   canvas.width = width;
   canvas.height = height;
+
+  // Generar Estrellas Iniciales
   stars = [];
-  for(let i=0; i<120; i++) { // Menos estrellas para no saturar
-    stars.push({ x: Math.random()*width, y: Math.random()*height, z: Math.random()*width });
+  for(let i=0; i<200; i++) {
+    stars.push({ x: Math.random()*width - centerX, y: Math.random()*height - centerY, z: Math.random()*1000 });
   }
 }
 
-function spawnMemoria() {
-  if (misRecuerdos.length === 0) return;
+// Crear una foto/video en el espacio 3D
+function spawnMedia() {
   const data = misRecuerdos[Math.floor(Math.random() * misRecuerdos.length)];
   const el = document.createElement(data.type === 'img' ? 'img' : 'video');
   el.src = data.src;
-  el.className = 'memoria';
+  el.className = 'recuerdo-3d';
+  if(data.type === 'video') { el.autoplay = true; el.muted = true; el.loop = true; }
   
-  // Aparecen lejos del centro para no tapar el hilo principal
-  const side = Math.random() > 0.5 ? 1 : -1;
-  el.style.left = (50 + (side * (25 + Math.random() * 20))) + '%';
-  el.style.top = (Math.random() * 60 + 20) + '%';
-
   contenedor.appendChild(el);
-
-  setTimeout(() => {
-    // MODIFICACIÓN: Más transparencia y escala menor
-    el.style.opacity = '0.5'; 
-    el.style.transform = `translate(-50%, -50%) scale(0.8) rotate(${Math.random()*10-5}deg) translateZ(0)`;
-  }, 100);
-
-  setTimeout(() => { el.style.opacity = '0'; }, 4800);
-  setTimeout(() => { el.remove(); }, 6500);
-}
-
-function drawHilo(t) {
-  ctx.save();
-  const pulse = Math.sin(t * 0.005) * 5;
   
-  ctx.beginPath();
-  ctx.moveTo(-50, height / 2);
-  
-  // Curva elegante central
-  ctx.bezierCurveTo(
-    width * 0.4, height * 0.1 + pulse,
-    width * 0.6, height * 0.9 - pulse,
-    width + 50, height / 2
-  );
-
-  // Brillo exterior (Glow)
-  ctx.strokeStyle = 'rgba(255, 0, 0, 0.4)';
-  ctx.lineWidth = 15 + Math.abs(pulse); // Más ancho el glow
-  ctx.stroke();
-
-  // Hilo principal
-  ctx.strokeStyle = '#ff0000';
-  ctx.lineWidth = 5;
-  ctx.stroke();
-  
-  // Núcleo brillante
-  ctx.strokeStyle = '#ffaabb';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-  
-  ctx.restore();
-}
-
-function drawStars() {
-  ctx.fillStyle = 'white';
-  stars.forEach(s => {
-    s.z -= 3; // Un poco más lento el warp
-    if(s.z <= 0) s.z = width;
-    const sx = (s.x - width/2) * (width/s.z) + width/2;
-    const sy = (s.y - height/2) * (width/s.z) + height/2;
-    const size = (1 - s.z/width) * 2;
-    ctx.globalAlpha = 1 - s.z/width;
-    ctx.fillRect(sx, sy, size, size); // fillRect es más rápido que arc
+  mediaObjects.push({
+    element: el,
+    x: (Math.random() - 0.5) * 800, // Dispersión lateral
+    y: (Math.random() - 0.5) * 600, // Dispersión vertical
+    z: 1000, // Aparecen al fondo
+    w: 200, // Ancho base
+    h: 150  // Alto base
   });
-  ctx.globalAlpha = 1;
 }
 
-function loop(t) {
-  // Fondo con rastro para efecto de velocidad
-  ctx.fillStyle = 'rgba(1, 1, 5, 0.2)';
+function update() {
+  ctx.fillStyle = '#000';
   ctx.fillRect(0, 0, width, height);
 
-  drawStars();
-  drawHilo(t);
+  // 1. DIBUJAR ESTRELLAS
+  ctx.fillStyle = "white";
+  stars.forEach(s => {
+    s.z -= 10;
+    if(s.z <= 0) s.z = 1000;
+    
+    let f = 400 / s.z;
+    let sx = s.x * f + centerX;
+    let sy = s.y * f + centerY;
+    let size = f * 2;
+    
+    ctx.globalAlpha = 1 - (s.z / 1000);
+    ctx.fillRect(sx, sy, size, size);
+  });
 
-  if(frame % 180 === 0) spawnMemoria(); // Un poco más lento el spawn
+  // 2. DIBUJAR HILO ROJO EN TÚNEL
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = '#ff0000';
+  ctx.lineWidth = 4;
+  ctx.shadowBlur = 15;
+  ctx.shadowColor = 'red';
+  ctx.beginPath();
   
-  if(frame === 360) document.getElementById('controles').style.display = 'block';
+  for(let i=0; i<1000; i+=50) {
+    let f = 400 / i;
+    let curve = Math.sin(Date.now() * 0.002 + i * 0.005) * 50;
+    let hx = curve * f + centerX;
+    let hy = (Math.cos(i*0.01)*30) * f + centerY;
+    
+    if(i === 0) ctx.moveTo(hx, hy);
+    else ctx.lineTo(hx, hy);
+  }
+  ctx.stroke();
+  ctx.shadowBlur = 0;
 
-  frame++;
-  requestAnimationFrame(loop);
+  // 3. ACTUALIZAR FOTOS/VIDEOS
+  mediaObjects.forEach((m, index) => {
+    m.z -= 8; // Velocidad de acercamiento
+    
+    if(m.z <= 0) {
+      m.element.remove();
+      mediaObjects.splice(index, 1);
+    } else {
+      let f = 400 / m.z;
+      let sx = m.x * f + centerX;
+      let sy = m.y * f + centerY;
+      let sw = m.w * f;
+      let sh = m.h * f;
+
+      m.element.style.display = 'block';
+      m.element.style.left = (sx - sw/2) + 'px';
+      m.element.style.top = (sy - sh/2) + 'px';
+      m.element.style.width = sw + 'px';
+      m.element.style.height = sh + 'px';
+      m.element.style.opacity = 1 - (m.z / 1000);
+      m.element.style.zIndex = Math.floor(1000 - m.z);
+    }
+  });
+
+  if(Math.random() < 0.02) spawnMedia();
+  if(mediaObjects.length > 0) document.getElementById('controles').style.display = 'block';
+
+  requestAnimationFrame(update);
 }
 
 window.addEventListener('resize', init);
 init();
-requestAnimationFrame(loop);
+update();
 </script>
 </body>
 </html>
