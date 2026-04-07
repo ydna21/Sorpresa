@@ -7,10 +7,8 @@
 <style>
   body { margin: 0; background: #050505; color: white; font-family: 'Courier New', monospace; overflow-x: hidden; }
   
-  /* Canvas de fondo para el hilo */
   canvas { position: fixed; top: 0; left: 0; z-index: 1; pointer-events: none; }
 
-  /* Secciones de scroll */
   .section {
     height: 100vh;
     display: flex;
@@ -39,29 +37,28 @@
   h2 { color: #ff0000; text-shadow: 0 0 15px #ff0000; font-size: 2.2rem; margin-bottom: 20px; }
   p { font-size: 1.2rem; line-height: 1.6; color: #ffcccc; }
 
-  /* Menú de botones al final */
   #menuFinal {
     display: none;
     flex-direction: column;
     align-items: center;
-    gap: 15px;
-    margin-top: 30px;
+    gap: 12px;
+    margin-top: 25px;
     animation: fadeIn 2s forwards;
   }
 
   .btn-destino {
     display: inline-block;
-    padding: 15px 30px;
+    padding: 12px 25px;
     background: transparent;
     color: white;
     border: 2px solid #ff0000;
     border-radius: 50px;
     text-decoration: none;
     font-weight: bold;
-    font-size: 1.1rem;
+    font-size: 1rem;
     transition: 0.4s;
     cursor: pointer;
-    width: 260px;
+    width: 280px;
     text-align: center;
   }
 
@@ -71,11 +68,19 @@
     transform: scale(1.05);
   }
 
-  /* El botón del Universo (Oculto inicialmente) */
-  #btnUniverso {
-    display: none; 
-    border-color: #ff1493; 
+  /* Botón de la Ciudad (Color Azul/Dorado para fuegos artificiales) */
+  .btn-ciudad {
+    border-color: #ffd700;
+    color: #ffd700;
   }
+  .btn-ciudad:hover {
+    background: #ffd700;
+    color: black;
+    box-shadow: 0 0 30px #ffd700;
+  }
+
+  /* Botón del Universo (Oculto hasta el cumple) */
+  #btnUniverso { display: none; border-color: #ff1493; }
   #btnUniverso:hover { background: #ff1493; box-shadow: 0 0 30px #ff1493; }
 
   .indicador-scroll {
@@ -113,17 +118,19 @@
     <p>Gracias por ser la persona que sostiene el otro extremo de mi hilo. Mi vida es mucho más bonita desde que estamos conectados.</p>
     
     <div id="menuFinal">
+      <a href="ciudad_noche.html" class="btn-destino btn-ciudad">🎆 Ver los Fuegos Artificiales</a>
+
       <a href="bosque.html" class="btn-destino">🌲 Ir al Bosque Mágico</a>
       
       <a href="cumpleanos_solar.html" class="btn-destino" id="btnUniverso">🚀 Viajar al Universo</a>
       
-      <a href="index.html" class="btn-destino" style="border-color: #555; margin-top: 15px;">⬅️ Volver al Inicio</a>
+      <a href="index.html" class="btn-destino" style="border-color: #555; margin-top: 10px; width: 200px; font-size: 0.8rem;">⬅️ Volver al Inicio</a>
     </div>
   </div>
 </section>
 
 <script>
-  /* --- CONFIGURACIÓN DEL HILO ELÁSTICO --- */
+  /* --- LÓGICA DEL HILO --- */
   const canvas = document.getElementById('canvasHilo');
   const ctx = canvas.getContext('2d');
   let points = [];
@@ -151,21 +158,15 @@
 
   function animateHilo() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     points[0].x += (mouseX - points[0].x) * 0.15;
     points[0].y += (mouseY - points[0].y) * 0.15;
-
     for (let i = 1; i < totalPoints; i++) {
       points[i].x += (points[i - 1].x - points[i].x) * 0.25;
       points[i].y += (points[i - 1].y - points[i].y) * 0.25 + 0.8; 
     }
-
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].y);
-    for (let i = 1; i < totalPoints; i++) {
-      ctx.lineTo(points[i].x, points[i].y);
-    }
-    
+    for (let i = 1; i < totalPoints; i++) { ctx.lineTo(points[i].x, points[i].y); }
     ctx.strokeStyle = '#ff0000';
     ctx.lineWidth = 3;
     ctx.lineCap = 'round';
@@ -173,11 +174,10 @@
     ctx.shadowBlur = 20;
     ctx.shadowColor = 'red';
     ctx.stroke();
-
     requestAnimationFrame(animateHilo);
   }
 
-  /* --- CONTROL DE APARICIÓN (SCROLL) --- */
+  /* --- SCROLL OBSERVER --- */
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -193,30 +193,23 @@
 
   document.querySelectorAll('.content').forEach(c => observer.observe(c));
 
-  /* --- SEGURO DE FECHA (CUMPLEAÑOS Y FUTURO) --- */
+  /* --- SEGURO DE FECHA --- */
   function verificarCumpleanos() {
     const hoy = new Date();
     const anioActual = hoy.getFullYear();
-    const mesActual = hoy.getMonth(); // Julio es 6
+    const mesActual = hoy.getMonth(); 
     const diaActual = hoy.getDate();
-
     const diaMeta = 8;
     const mesMeta = 6; 
 
-    // REGLA: Si ya es 2027+ o si es 2026 y ya pasó el 8 de julio
     let desbloqueado = false;
-    
-    if (anioActual > 2026) {
-      desbloqueado = true;
-    } else if (anioActual === 2026) {
+    if (anioActual > 2026) { desbloqueado = true; } 
+    else if (anioActual === 2026) {
       if (mesActual > mesMeta || (mesActual === mesMeta && diaActual >= diaMeta)) {
         desbloqueado = true;
       }
     }
-
-    if (desbloqueado) {
-      document.getElementById('btnUniverso').style.display = 'inline-block';
-    }
+    if (desbloqueado) { document.getElementById('btnUniverso').style.display = 'inline-block'; }
   }
 
   window.addEventListener('resize', initCanvas);
