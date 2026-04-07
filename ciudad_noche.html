@@ -5,61 +5,66 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nuestra Noche Mágica 🌃🎆</title>
 <style>
-  body { margin: 0; background: #000; overflow: hidden; font-family: 'Courier New', monospace; color: white; }
-  canvas { display: block; cursor: crosshair; }
+  body { margin: 0; background: #000205; overflow: hidden; font-family: 'Courier New', monospace; color: white; }
+  canvas { display: block; background: radial-gradient(circle at top, #0b0b1a 0%, #000 100%); }
 
   #ui {
     position: fixed; top: 30px; width: 100%; text-align: center;
     z-index: 10; pointer-events: none;
   }
   h1 { 
-    font-size: 2rem; color: #ffd700; text-shadow: 0 0 15px #ff0000;
-    margin: 0; animation: glow 2s infinite alternate;
+    font-size: 2.2rem; color: #ffd700; text-shadow: 0 0 20px #ff0000, 0 0 40px #ffd700;
+    margin: 0; animation: glow 2s ease-in-out infinite alternate;
   }
-  @keyframes glow { from { opacity: 0.8; } to { opacity: 1; } }
+  @keyframes glow { from { opacity: 0.8; } to { opacity: 1; transform: scale(1.02); } }
 
   .skyline {
     position: fixed; bottom: 30%; left: 0; width: 100%; height: 100px;
     z-index: 5; pointer-events: none; display: flex; align-items: flex-end; justify-content: space-around;
   }
   .building {
-    background: #05050a; width: 45px; position: relative;
+    background: #05050a; width: 50px; position: relative;
+    box-shadow: 0 0 10px rgba(0,0,0,1);
   }
   .window {
-    position: absolute; width: 3px; height: 3px; background: #111;
+    position: absolute; width: 4px; height: 4px; background: #111; border-radius: 1px;
   }
-  .window.on { background: #ffd700; }
+  .window.on { background: #ffd700; box-shadow: 0 0 8px #ffd700; }
 
   #botones {
     position: fixed; bottom: 30px; width: 100%; display: flex;
     justify-content: center; gap: 15px; z-index: 20;
   }
   .btn {
-    padding: 10px 20px; background: rgba(0,0,0,0.8); color: #ffd700;
+    padding: 12px 25px; background: rgba(0,0,0,0.8); color: #ffd700;
     border: 2px solid #ff0000; border-radius: 50px; cursor: pointer;
-    font-weight: bold; text-decoration: none; font-size: 0.9rem;
+    font-weight: bold; transition: 0.3s; text-decoration: none;
   }
+  .btn:hover { background: #ff0000; color: white; box-shadow: 0 0 30px #ff0000; }
 </style>
 </head>
 <body>
 
-<audio id="sfxFirework"><source src="sfx_firework.mp3" type="audio/mpeg"></audio>
+<audio id="sfxFirework">
+  <source src="sfx_firework.mp3" type="audio/mpeg">
+</audio>
 
 <div id="ui">
   <h1>Nuestra Noche Eterna 💖</h1>
 </div>
 
 <div class="skyline" id="skyline"></div>
+
 <canvas id="canvas"></canvas>
 
 <div id="botones">
-  <a href="hilo_rojo.html" class="btn">🧵 Volver</a>
+  <a href="hilo_rojo.html" class="btn">🧵 Volver al Hilo</a>
   <a href="index.html" class="btn" style="border-color: #444; color: #888;">🏠 Inicio</a>
 </div>
 
 <script>
 const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d', { alpha: false }); // Optimización de contexto
+const ctx = canvas.getContext('2d');
 const sfx = document.getElementById('sfxFirework');
 let fireworks = [];
 let particles = [];
@@ -68,102 +73,135 @@ let stars = [];
 function init() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-  stars = [];
-  for(let i=0; i<80; i++) {
-    stars.push({ x: Math.random()*canvas.width, y: Math.random()*(canvas.height*0.7), r: Math.random()*1.2 });
-  }
+  generarEstrellas();
   generarCiudad();
 }
 
+function generarEstrellas() {
+  stars = [];
+  for(let i=0; i<150; i++) {
+    stars.push({ x: Math.random()*canvas.width, y: Math.random()*(canvas.height*0.7), r: Math.random()*1.5, o: Math.random() });
+  }
+}
+
 function generarCiudad() {
-  const sky = document.getElementById('skyline');
-  sky.innerHTML = '';
+  const skyline = document.getElementById('skyline');
+  skyline.innerHTML = '';
   let x = 0;
   while (x < window.innerWidth) {
-    const w = 40 + Math.random() * 60;
-    const h = 50 + Math.random() * 100;
+    const w = 40 + Math.random() * 70;
+    const h = 60 + Math.random() * 120;
     const b = document.createElement('div');
     b.className = 'building';
-    b.style.width = w + 'px'; b.style.height = h + 'px';
-    sky.appendChild(b);
-    x += w + 15;
+    b.style.width = w + 'px';
+    b.style.height = h + 'px';
+    for(let i=0; i<15; i++) {
+      const win = document.createElement('div');
+      win.className = 'window' + (Math.random() > 0.8 ? ' on' : '');
+      win.style.left = Math.random() * (w-8) + 4 + 'px';
+      win.style.top = Math.random() * (h-8) + 4 + 'px';
+      b.appendChild(win);
+    }
+    skyline.appendChild(b);
+    x += w + 10;
   }
 }
 
 class Firework {
   constructor(sx, sy, tx, ty) {
     this.x = sx; this.y = sy; this.tx = tx; this.ty = ty;
+    this.vx = (tx - sx) / 40; this.vy = (ty - sy) / 40;
     this.hue = Math.random() * 360;
-    this.v = 0;
   }
   update(i) {
-    this.v += 0.02; // Progreso de 0 a 1
-    this.x = canvas.width/2 + (this.tx - canvas.width/2) * this.v;
-    this.y = canvas.height + (this.ty - canvas.height) * this.v;
-    if (this.v >= 1) {
+    this.x += this.vx; this.y += this.vy;
+    if (Math.abs(this.x - this.tx) < 5 && Math.abs(this.y - this.ty) < 5) {
       explode(this.tx, this.ty, this.hue);
       fireworks.splice(i, 1);
       if(sfx) { sfx.currentTime = 0; sfx.play().catch(()=>{}); }
     }
   }
   draw() {
-    ctx.fillStyle = `hsl(${this.hue}, 100%, 70%)`;
-    ctx.beginPath(); ctx.arc(this.x, this.y, 3, 0, 7); ctx.fill();
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, 2, 0, Math.PI*2);
+    ctx.fillStyle = `hsl(${this.hue}, 100%, 50%)`;
+    ctx.fill();
   }
 }
 
 class Particle {
   constructor(x, y, hue, isHeart) {
-    this.x = x; this.y = y; this.hue = hue;
-    this.alpha = 1; this.decay = 0.015 + Math.random() * 0.02;
-    this.angle = Math.random() * 6.28;
-    this.speed = Math.random() * 5 + 2;
-    this.isHeart = isHeart;
-    if(isHeart) {
-        let t = Math.random() * 6.28;
-        this.vx = 16 * Math.pow(Math.sin(t), 3) * 0.15;
-        this.vy = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) * 0.15;
+    this.x = x; this.y = y; this.hue = hue; this.isHeart = isHeart;
+    this.alpha = 1; this.decay = 0.01 + Math.random() * 0.02;
+    this.angle = Math.random() * Math.PI * 2;
+    this.speed = Math.random() * 6 + 1;
+    this.friction = 0.96; this.gravity = 0.15;
+    
+    if (this.isHeart) {
+      this.speed = 2; // Más lento para que se note la forma
+      let t = Math.random() * Math.PI * 2;
+      this.targetX = 16 * Math.pow(Math.sin(t), 3);
+      this.targetY = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
     }
   }
   update(i) {
-    if(this.isHeart) { this.x += this.vx; this.y += this.vy; }
-    else { this.x += Math.cos(this.angle) * this.speed; this.y += Math.sin(this.angle) * this.speed + 0.15; }
+    if (this.isHeart) {
+      this.x += this.targetX * 0.3;
+      this.y += this.targetY * 0.3;
+    } else {
+      this.speed *= this.friction;
+      this.x += Math.cos(this.angle) * this.speed;
+      this.y += Math.sin(this.angle) * this.speed + this.gravity;
+    }
     this.alpha -= this.decay;
     if (this.alpha <= 0) particles.splice(i, 1);
   }
   draw() {
     ctx.fillStyle = `hsla(${this.hue}, 100%, 60%, ${this.alpha})`;
-    ctx.fillRect(this.x, this.y, 2.5, 2.5); // Usar rect es más rápido que arc
+    ctx.beginPath(); ctx.arc(this.x, this.y, 2, 0, Math.PI*2); ctx.fill();
+    
+    // Reflejo en el agua
+    let waterY = canvas.height - (this.y - (canvas.height * 0.7));
+    if (this.y < canvas.height * 0.7) {
+      ctx.fillStyle = `hsla(${this.hue}, 100%, 40%, ${this.alpha * 0.3})`;
+      ctx.beginPath(); ctx.arc(this.x, canvas.height - (this.y * 0.3), 1.5, 0, Math.PI*2); ctx.fill();
+    }
   }
 }
 
 function explode(x, y, hue) {
-  let heart = Math.random() > 0.8;
-  let count = heart ? 60 : 40;
-  for(let i=0; i<count; i++) particles.push(new Particle(x, y, hue, heart));
+  let isHeart = Math.random() > 0.7;
+  for(let i=0; i < (isHeart ? 100 : 60); i++) particles.push(new Particle(x, y, hue, isHeart));
+}
+
+function drawStars() {
+  stars.forEach(s => {
+    ctx.fillStyle = `rgba(255, 255, 255, ${Math.abs(Math.sin(Date.now()*0.001 + s.o))})`;
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill();
+  });
 }
 
 function loop() {
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; // Rastro suave
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   
-  // Estrellas
-  ctx.fillStyle = "white";
-  stars.forEach(s => ctx.fillRect(s.x, s.y, s.r, s.r));
-
-  // Agua
-  ctx.fillStyle = '#000';
+  drawStars();
+  
+  // Línea del horizonte (agua)
+  ctx.fillStyle = '#000105';
   ctx.fillRect(0, canvas.height * 0.7, canvas.width, canvas.height * 0.3);
 
   fireworks.forEach((f, i) => { f.draw(); f.update(i); });
   particles.forEach((p, i) => { p.draw(); p.update(i); });
 
-  if (Math.random() < 0.01) fireworks.push(new Firework(0,0, Math.random()*canvas.width, Math.random()*canvas.height*0.5));
+  if (Math.random() < 0.015) {
+    fireworks.push(new Firework(canvas.width/2, canvas.height, Math.random()*canvas.width, Math.random()*(canvas.height*0.5)));
+  }
   requestAnimationFrame(loop);
 }
 
 canvas.addEventListener('click', (e) => {
-  fireworks.push(new Firework(0,0, e.clientX, e.clientY));
+  fireworks.push(new Firework(canvas.width/2, canvas.height, e.clientX, e.clientY));
 });
 
 window.addEventListener('resize', init);
