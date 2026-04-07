@@ -7,10 +7,10 @@
 <style>
   body { margin: 0; background: #050505; color: white; font-family: 'Courier New', monospace; overflow-x: hidden; }
   
-  /* El Canvas que dibuja el hilo de fondo */
+  /* Canvas de fondo para el hilo */
   canvas { position: fixed; top: 0; left: 0; z-index: 1; pointer-events: none; }
 
-  /* Secciones de texto para el scroll */
+  /* Secciones de scroll */
   .section {
     height: 100vh;
     display: flex;
@@ -24,11 +24,11 @@
 
   .content {
     max-width: 600px;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.85);
     padding: 40px;
     border-radius: 30px;
-    border: 1px solid rgba(255, 0, 0, 0.2);
-    box-shadow: 0 0 40px rgba(255, 0, 0, 0.1);
+    border: 1px solid rgba(255, 0, 0, 0.3);
+    box-shadow: 0 0 50px rgba(255, 0, 0, 0.15);
     opacity: 0;
     transform: translateY(50px);
     transition: all 1.2s ease;
@@ -36,20 +36,21 @@
 
   .content.visible { opacity: 1; transform: translateY(0); }
 
-  h2 { color: #ff0000; text-shadow: 0 0 15px #ff0000; font-size: 2rem; }
+  h2 { color: #ff0000; text-shadow: 0 0 15px #ff0000; font-size: 2.2rem; margin-bottom: 20px; }
   p { font-size: 1.2rem; line-height: 1.6; color: #ffcccc; }
 
-  /* Botones finales */
-  .final-menu {
+  /* Menú de botones al final */
+  #menuFinal {
     display: none;
-    gap: 15px;
     flex-direction: column;
     align-items: center;
+    gap: 15px;
     margin-top: 30px;
     animation: fadeIn 2s forwards;
   }
 
   .btn-destino {
+    display: inline-block;
     padding: 15px 30px;
     background: transparent;
     color: white;
@@ -60,7 +61,8 @@
     font-size: 1.1rem;
     transition: 0.4s;
     cursor: pointer;
-    width: 250px;
+    width: 260px;
+    text-align: center;
   }
 
   .btn-destino:hover {
@@ -68,6 +70,13 @@
     box-shadow: 0 0 30px #ff0000;
     transform: scale(1.05);
   }
+
+  /* El botón del Universo (Oculto inicialmente) */
+  #btnUniverso {
+    display: none; 
+    border-color: #ff1493; 
+  }
+  #btnUniverso:hover { background: #ff1493; box-shadow: 0 0 30px #ff1493; }
 
   .indicador-scroll {
     position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
@@ -82,45 +91,48 @@
 
 <canvas id="canvasHilo"></canvas>
 
-<div class="indicador-scroll" id="guia">🧵 Desliza para seguir el hilo...</div>
+<div class="indicador-scroll" id="guia">🧵 Desliza para seguir nuestro hilo...</div>
 
 <section class="section">
   <div class="content">
-    <h2>La Leyenda dice...</h2>
-    <p>Que un hilo rojo invisible conecta a aquellos que están destinados a encontrarse, sin importar el tiempo, el lugar o la distancia.</p>
+    <h2>La Leyenda del Hilo Rojo</h2>
+    <p>"Un hilo rojo invisible conecta a aquellos que están destinados a encontrarse, sin importar el tiempo, el lugar o la distancia."</p>
   </div>
 </section>
 
 <section class="section">
   <div class="content">
-    <h2>A veces se enreda...</h2>
-    <p>El hilo puede estirarse o tensarse, pero nunca se romperá. Cada desafío que pasamos solo hizo que este nudo fuera más fuerte.</p>
+    <h2>Nudo a nudo...</h2>
+    <p>El hilo puede estirarse, contraerse o enredarse, pero nunca se romperá. Cada momento compartido ha fortalecido esta unión.</p>
   </div>
 </section>
 
 <section class="section">
   <div class="content">
-    <h2>Tú eres mi destino</h2>
-    <p>Gracias por ser la otra punta de mi hilo. Te amo hoy, mañana y siempre. ❤️</p>
+    <h2>Tú eres mi destino ❤️</h2>
+    <p>Gracias por ser la persona que sostiene el otro extremo de mi hilo. Mi vida es mucho más bonita desde que estamos conectados.</p>
     
-    <div class="final-menu" id="menuFinal">
+    <div id="menuFinal">
       <a href="bosque.html" class="btn-destino">🌲 Ir al Bosque Mágico</a>
-      <a href="cumpleanos_solar.html" class="btn-destino">🚀 Viajar al Universo</a>
-      <a href="index.html" class="btn-destino" style="border-color: #444; margin-top: 20px;">⬅️ Volver al Inicio</a>
+      
+      <a href="cumpleanos_solar.html" class="btn-destino" id="btnUniverso">🚀 Viajar al Universo</a>
+      
+      <a href="index.html" class="btn-destino" style="border-color: #555; margin-top: 15px;">⬅️ Volver al Inicio</a>
     </div>
   </div>
 </section>
 
 <script>
+  /* --- CONFIGURACIÓN DEL HILO ELÁSTICO --- */
   const canvas = document.getElementById('canvasHilo');
   const ctx = canvas.getContext('2d');
   let points = [];
-  const totalPoints = 30;
+  const totalPoints = 35;
 
-  function init() {
+  function initCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    // Llenar puntos iniciales
+    points = [];
     for (let i = 0; i < totalPoints; i++) {
       points.push({ x: canvas.width / 2, y: canvas.height / 2 });
     }
@@ -129,30 +141,25 @@
   let mouseX = window.innerWidth / 2;
   let mouseY = window.innerHeight / 2;
 
-  window.addEventListener('mousemove', (e) => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-  });
+  const updateMouse = (e) => {
+    mouseX = e.clientX || (e.touches && e.touches[0].clientX);
+    mouseY = e.clientY || (e.touches && e.touches[0].clientY);
+  };
 
-  window.addEventListener('touchmove', (e) => {
-    mouseX = e.touches[0].clientX;
-    mouseY = e.touches[0].clientY;
-  });
+  window.addEventListener('mousemove', updateMouse);
+  window.addEventListener('touchmove', updateMouse);
 
-  function draw() {
+  function animateHilo() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // El primer punto sigue al mouse/toque suavemente
     points[0].x += (mouseX - points[0].x) * 0.15;
     points[0].y += (mouseY - points[0].y) * 0.15;
 
-    // Los demás puntos siguen al anterior (efecto elástico)
     for (let i = 1; i < totalPoints; i++) {
       points[i].x += (points[i - 1].x - points[i].x) * 0.25;
-      points[i].y += (points[i - 1].y - points[i].y) * 0.25 + 0.5; // Un poco de gravedad
+      points[i].y += (points[i - 1].y - points[i].y) * 0.25 + 0.8; 
     }
 
-    // Dibujar el hilo
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].y);
     for (let i = 1; i < totalPoints; i++) {
@@ -163,14 +170,14 @@
     ctx.lineWidth = 3;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    ctx.shadowBlur = 15;
+    ctx.shadowBlur = 20;
     ctx.shadowColor = 'red';
     ctx.stroke();
 
-    requestAnimationFrame(draw);
+    requestAnimationFrame(animateHilo);
   }
 
-  // Observer para detectar cuando las frases entran en pantalla
+  /* --- CONTROL DE APARICIÓN (SCROLL) --- */
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -178,6 +185,7 @@
         if (entry.target.querySelector('#menuFinal')) {
           document.getElementById('menuFinal').style.display = 'flex';
           document.getElementById('guia').style.display = 'none';
+          verificarCumpleanos();
         }
       }
     });
@@ -185,9 +193,36 @@
 
   document.querySelectorAll('.content').forEach(c => observer.observe(c));
 
-  window.addEventListener('resize', init);
-  init();
-  draw();
+  /* --- SEGURO DE FECHA (CUMPLEAÑOS Y FUTURO) --- */
+  function verificarCumpleanos() {
+    const hoy = new Date();
+    const anioActual = hoy.getFullYear();
+    const mesActual = hoy.getMonth(); // Julio es 6
+    const diaActual = hoy.getDate();
+
+    const diaMeta = 8;
+    const mesMeta = 6; 
+
+    // REGLA: Si ya es 2027+ o si es 2026 y ya pasó el 8 de julio
+    let desbloqueado = false;
+    
+    if (anioActual > 2026) {
+      desbloqueado = true;
+    } else if (anioActual === 2026) {
+      if (mesActual > mesMeta || (mesActual === mesMeta && diaActual >= diaMeta)) {
+        desbloqueado = true;
+      }
+    }
+
+    if (desbloqueado) {
+      document.getElementById('btnUniverso').style.display = 'inline-block';
+    }
+  }
+
+  window.addEventListener('resize', initCanvas);
+  initCanvas();
+  animateHilo();
 </script>
+
 </body>
 </html>
