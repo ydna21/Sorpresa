@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>El Hilo Rojo del Destino 🧵</title>
+<style>
+  body { margin: 0; background: #050505; color: white; font-family: 'Courier New', monospace; overflow-x: hidden; }
+  
+  /* El Canvas que dibuja el hilo de fondo */
+  canvas { position: fixed; top: 0; left: 0; z-index: 1; pointer-events: none; }
+
+  /* Secciones de texto para el scroll */
+  .section {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .content {
+    max-width: 600px;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 40px;
+    border-radius: 30px;
+    border: 1px solid rgba(255, 0, 0, 0.2);
+    box-shadow: 0 0 40px rgba(255, 0, 0, 0.1);
+    opacity: 0;
+    transform: translateY(50px);
+    transition: all 1.2s ease;
+  }
+
+  .content.visible { opacity: 1; transform: translateY(0); }
+
+  h2 { color: #ff0000; text-shadow: 0 0 15px #ff0000; font-size: 2rem; }
+  p { font-size: 1.2rem; line-height: 1.6; color: #ffcccc; }
+
+  /* Botones finales */
+  .final-menu {
+    display: none;
+    gap: 15px;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 30px;
+    animation: fadeIn 2s forwards;
+  }
+
+  .btn-destino {
+    padding: 15px 30px;
+    background: transparent;
+    color: white;
+    border: 2px solid #ff0000;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.1rem;
+    transition: 0.4s;
+    cursor: pointer;
+    width: 250px;
+  }
+
+  .btn-destino:hover {
+    background: #ff0000;
+    box-shadow: 0 0 30px #ff0000;
+    transform: scale(1.05);
+  }
+
+  .indicador-scroll {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    color: #ff0000; font-size: 0.9rem; z-index: 3; animation: blink 2s infinite;
+  }
+
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+
+<canvas id="canvasHilo"></canvas>
+
+<div class="indicador-scroll" id="guia">🧵 Desliza para seguir el hilo...</div>
+
+<section class="section">
+  <div class="content">
+    <h2>La Leyenda dice...</h2>
+    <p>Que un hilo rojo invisible conecta a aquellos que están destinados a encontrarse, sin importar el tiempo, el lugar o la distancia.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="content">
+    <h2>A veces se enreda...</h2>
+    <p>El hilo puede estirarse o tensarse, pero nunca se romperá. Cada desafío que pasamos solo hizo que este nudo fuera más fuerte.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="content">
+    <h2>Tú eres mi destino</h2>
+    <p>Gracias por ser la otra punta de mi hilo. Te amo hoy, mañana y siempre. ❤️</p>
+    
+    <div class="final-menu" id="menuFinal">
+      <a href="bosque.html" class="btn-destino">🌲 Ir al Bosque Mágico</a>
+      <a href="cumpleanos_solar.html" class="btn-destino">🚀 Viajar al Universo</a>
+      <a href="index.html" class="btn-destino" style="border-color: #444; margin-top: 20px;">⬅️ Volver al Inicio</a>
+    </div>
+  </div>
+</section>
+
+<script>
+  const canvas = document.getElementById('canvasHilo');
+  const ctx = canvas.getContext('2d');
+  let points = [];
+  const totalPoints = 30;
+
+  function init() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    // Llenar puntos iniciales
+    for (let i = 0; i < totalPoints; i++) {
+      points.push({ x: canvas.width / 2, y: canvas.height / 2 });
+    }
+  }
+
+  let mouseX = window.innerWidth / 2;
+  let mouseY = window.innerHeight / 2;
+
+  window.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  });
+
+  window.addEventListener('touchmove', (e) => {
+    mouseX = e.touches[0].clientX;
+    mouseY = e.touches[0].clientY;
+  });
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // El primer punto sigue al mouse/toque suavemente
+    points[0].x += (mouseX - points[0].x) * 0.15;
+    points[0].y += (mouseY - points[0].y) * 0.15;
+
+    // Los demás puntos siguen al anterior (efecto elástico)
+    for (let i = 1; i < totalPoints; i++) {
+      points[i].x += (points[i - 1].x - points[i].x) * 0.25;
+      points[i].y += (points[i - 1].y - points[i].y) * 0.25 + 0.5; // Un poco de gravedad
+    }
+
+    // Dibujar el hilo
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < totalPoints; i++) {
+      ctx.lineTo(points[i].x, points[i].y);
+    }
+    
+    ctx.strokeStyle = '#ff0000';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = 'red';
+    ctx.stroke();
+
+    requestAnimationFrame(draw);
+  }
+
+  // Observer para detectar cuando las frases entran en pantalla
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        if (entry.target.querySelector('#menuFinal')) {
+          document.getElementById('menuFinal').style.display = 'flex';
+          document.getElementById('guia').style.display = 'none';
+        }
+      }
+    });
+  }, { threshold: 0.5 });
+
+  document.querySelectorAll('.content').forEach(c => observer.observe(c));
+
+  window.addEventListener('resize', init);
+  init();
+  draw();
+</script>
+</body>
+</html>
