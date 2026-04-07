@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nuestra Noche Mágica 🌃🎆</title>
+<style>
+  body { margin: 0; background: #020205; overflow: hidden; font-family: 'Courier New', monospace; color: white; }
+  
+  canvas { display: block; }
+
+  #ui {
+    position: fixed; top: 20px; width: 100%; text-align: center;
+    z-index: 10; pointer-events: none;
+  }
+  h1 { 
+    font-size: 1.8rem; color: #ffd700; text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+    margin: 0; animation: fadeIn 3s ease;
+  }
+  p { font-size: 1rem; color: #aaa; margin-top: 5px; }
+
+  /* Silueta de la ciudad */
+  .skyline {
+    position: fixed; bottom: 0; left: 0; width: 100%; height: 150px;
+    background: linear-gradient(to top, #000 20%, transparent 100%);
+    z-index: 5; pointer-events: none;
+  }
+  .building {
+    position: absolute; bottom: 0; background: #050508;
+    box-shadow: inset 0 20px 20px rgba(0,0,0,0.5);
+  }
+  /* Ventanitas iluminadas aleatorias */
+  .window {
+    position: absolute; width: 3px; height: 3px; background: #222;
+  }
+  .window.on { background: #ffd700; box-shadow: 0 0 5px #ffd700; }
+
+  #botones {
+    position: fixed; bottom: 30px; width: 100%; display: flex;
+    justify-content: center; gap: 15px; z-index: 20;
+  }
+  .btn {
+    padding: 12px 25px; background: rgba(0,0,0,0.7); color: #ffd700;
+    border: 1px solid #ffd700; border-radius: 20px; cursor: pointer;
+    font-weight: bold; transition: 0.3s; text-decoration: none; font-size: 0.9rem;
+  }
+  .btn:hover { background: #ffd700; color: black; box-shadow: 0 0 20px #ffd700; }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+
+<div id="ui">
+  <h1>Nuestra celebración 🎆</h1>
+  <p>Toca el cielo para lanzar fuegos artificiales</p>
+</div>
+
+<div class="skyline" id="skyline"></div>
+
+<canvas id="canvas"></canvas>
+
+<div id="botones">
+  <a href="hilo_rojo.html" class="btn">🧵 Volver al Hilo</a>
+  <a href="index.html" class="btn" style="border-color: #555; color: #ccc;">🏠 Inicio</a>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let fireworks = [];
+let particles = [];
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  generarCiudad();
+}
+
+// --- GENERADOR DE CIUDAD ---
+function generarCiudad() {
+  const skyline = document.getElementById('skyline');
+  skyline.innerHTML = '';
+  const width = window.innerWidth;
+  let currentX = 0;
+  
+  while (currentX < width) {
+    const bW = 40 + Math.random() * 60;
+    const bH = 50 + Math.random() * 80;
+    const b = document.createElement('div');
+    b.className = 'building';
+    b.style.left = currentX + 'px';
+    b.style.width = bW + 'px';
+    b.style.height = bH + 'px';
+    
+    // Agregar ventanas
+    for(let i=0; i<10; i++) {
+        const win = document.createElement('div');
+        win.className = 'window' + (Math.random() > 0.7 ? ' on' : '');
+        win.style.left = Math.random() * (bW-5) + 'px';
+        win.style.top = Math.random() * (bH-5) + 'px';
+        b.appendChild(win);
+    }
+    
+    skyline.appendChild(b);
+    currentX += bW - 5;
+  }
+}
+
+// --- CLASE FUEGO ARTIFICIAL ---
+class Firework {
+  constructor(sx, sy, tx, ty) {
+    this.x = sx; this.y = sy; this.tx = tx; this.ty = ty;
+    this.dist = Math.sqrt(Math.pow(tx-sx, 2) + Math.pow(ty-sy, 2));
+    this.distTraveled = 0;
+    this.angle = Math.atan2(ty - sy, tx - sx);
+    this.speed = 2; this.accel = 1.05;
+    this.brightness = Math.random() * 50 + 50;
+  }
+  update(index) {
+    this.speed *= this.accel;
+    let vx = Math.cos(this.angle) * this.speed;
+    let vy = Math.sin(this.angle) * this.speed;
+    this.distTraveled = Math.sqrt(Math.pow((this.x + vx) - this.x, 2) + Math.pow((this.y + vy) - this.y, 2));
+    
+    if (this.distTraveled >= this.dist || this.y <= this.ty) {
+      crearExplosion(this.tx, this.ty);
+      fireworks.splice(index, 1);
+    } else {
+      this.x += vx; this.y += vy;
+    }
+  }
+  draw() {
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y);
+    ctx.lineTo(this.x, this.y);
+    ctx.strokeStyle = `hsl(${Math.random() * 360}, 100%, ${this.brightness}%)`;
+    ctx.stroke();
+  }
+}
+
+class Particle {
+  constructor(x, y) {
+    this.x = x; this.y = y;
+    this.angle = Math.random() * Math.PI * 2;
+    this.speed = Math.random() * 10 + 1;
+    this.friction = 0.95; this.gravity = 1;
+    this.hue = Math.random() * 360;
+    this.brightness = Math.random() * 50 + 50;
+    this.alpha = 1; this.decay = Math.random() * 0.03 + 0.01;
+  }
+  update(index) {
+    this.speed *= this.friction;
+    this.x += Math.cos(this.angle) * this.speed;
+    this.y += Math.sin(this.angle) * this.speed + this.gravity;
+    this.alpha -= this.decay;
+    if (this.alpha <= this.decay) particles.splice(index, 1);
+  }
+  draw() {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+    ctx.fillStyle = `hsla(${this.hue}, 100%, ${this.brightness}%, ${this.alpha})`;
+    ctx.fill();
+  }
+}
+
+function crearExplosion(x, y) {
+  let count = 80;
+  while (count--) particles.push(new Particle(x, y));
+}
+
+function loop() {
+  requestAnimationFrame(loop);
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.globalCompositeOperation = 'lighter';
+  
+  fireworks.forEach((f, i) => { f.draw(); f.update(i); });
+  particles.forEach((p, i) => { p.draw(); p.update(i); });
+  
+  if (Math.random() < 0.02) {
+    fireworks.push(new Firework(canvas.width/2, canvas.height, Math.random()*canvas.width, Math.random()*(canvas.height/2)));
+  }
+}
+
+canvas.addEventListener('mousedown', (e) => {
+  fireworks.push(new Firework(canvas.width/2, canvas.height, e.clientX, e.clientY));
+});
+
+canvas.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  fireworks.push(new Firework(canvas.width/2, canvas.height, e.touches[0].clientX, e.touches[0].clientY));
+});
+
+window.addEventListener('resize', resize);
+resize();
+loop();
+</script>
+</body>
+</html>
