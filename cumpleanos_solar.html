@@ -45,7 +45,6 @@
 
   #threeCanvas { display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
   
-  /* AJUSTADO: raised slightly to avoid covering buttons */
   #mainContent {
     position: absolute; bottom: 100px; left: 0; width: 100%;
     z-index: 2; display: flex; flex-direction: column;
@@ -56,9 +55,22 @@
   h1 { font-size: 3.5rem; color: #fff; text-shadow: 0 0 20px #ff69b4, 0 0 30px #ff1493; margin-bottom: 10px; animation: glow 2s ease-in-out infinite alternate; margin-top: 0; }
   p { font-size: 1.5rem; color: #ffb6c1; max-width: 600px; margin-top: 0; margin-bottom: 0; }
   
-  @keyframes glow {
-    from { text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #ff69b4; }
-    to { text-shadow: 0 0 20px #fff, 0 0 30px #ffb6c1, 0 0 40px #ff1493; }
+  /* ESTILO DE LA TORTA INICIAL (Apagada) */
+  #pastelBtn {
+    display: inline-block;
+    cursor: default;
+    pointer-events: none;
+    opacity: 0.7;
+    transition: all 1s ease;
+  }
+
+  /* CLASE QUE SE ACTIVA AL MINUTO */
+  .pastel-activo {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    animation: latidoPastel 1.5s infinite;
+    filter: drop-shadow(0 0 15px #ff69b4);
   }
 
   @keyframes latidoPastel {
@@ -67,18 +79,10 @@
     100% { transform: scale(1); }
   }
 
-  /* NUEVO: Contenedor para alinear los dos botones abajo estilo ESPACIO */
   #contenedorBotones {
-    position: fixed; 
-    bottom: 30px; 
-    left: 50%; 
-    transform: translateX(-50%);
-    z-index: 20; 
-    display: none; 
-    gap: 15px; 
-    justify-content: center; /* Esto lo centrará perfectamente */
-    width: auto; /* Cambiado de 100% a auto para que no tape clics innecesarios */
-}
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    z-index: 20; display: none; gap: 15px; justify-content: center; width: auto;
+  }
 
   .btn-volver-flotante {
      padding: 12px 25px; background: rgba(0,0,0,0.6); 
@@ -108,7 +112,7 @@
 <div id="threeCanvas"></div>
 
 <div id="mainContent">
-  <h1 id="tituloCumple">¡Feliz Cumpleaños! <span id="pastelBtn" style="cursor:pointer; pointer-events:auto;" title="Toca para regresar">🎂</span>💖</h1>
+  <h1 id="tituloCumple">¡Feliz Cumpleaños! <span id="pastelBtn" title="Regresar al inicio">🎂</span>💖</h1>
   <p id="parrafoCumple">Eres el sol que ilumina mi universo. Que este nuevo año cumplas muchas cosas y sigamos siempre juntos❤️</p>
 </div>
 
@@ -151,7 +155,6 @@ let audioContext, analyser, dataArray;
 let composer, bloomPass;
 const sfxFirework = document.getElementById('sfxFirework');
 
-// Lógica de los Botones Nuevos
 document.getElementById('btnRepetirViaje').addEventListener('click', () => window.location.reload());
 
 document.getElementById('btnEmpezarUniverso').addEventListener('click', function() {
@@ -179,33 +182,33 @@ document.getElementById('btnEmpezarUniverso').addEventListener('click', function
     setTimeout(() => {
         pantalla.style.display = 'none';
         document.getElementById('mainContent').style.opacity = '1';
-        document.getElementById('contenedorBotones').style.display = 'flex'; // Muestra botones
+        document.getElementById('contenedorBotones').style.display = 'flex'; 
         controls.enabled = true;
         enViaje = false;
         if (!esCelular) { camera.fov = 75; camera.updateProjectionMatrix(); }
+        
+        // ACTIVACIÓN DE LA TORTA TRAS 60 SEGUNDOS DE HABER ENTRADO
+        setTimeout(() => {
+            document.getElementById('pastelBtn').classList.add('pastel-activo');
+        }, 60000);
+
     }, viajeDuration + 500); 
 });
 
+// Evento de clic en la torta (Solo funcionará cuando pointer-events cambie vía clase)
 document.getElementById('pastelBtn').addEventListener('click', () => window.location.href = 'index.html');
 
 if (esCelular) {
     const titulo = document.getElementById('tituloCumple');
     const parrafo = document.getElementById('parrafoCumple');
-    const pastel = document.getElementById('pastelBtn');
-    
     titulo.style.fontSize = "1.8rem";      
     titulo.style.marginBottom = "5px";
     parrafo.style.fontSize = "1.1rem";     
     parrafo.style.maxWidth = "90%";
     parrafo.style.padding = "0 15px";
-    pastel.style.display = "inline-block";
-    pastel.style.animation = "latidoPastel 1.5s infinite";
-} else {
-    const pastel = document.getElementById('pastelBtn');
-    pastel.style.display = "inline-block";
-    pastel.style.animation = "latidoPastel 1.5s infinite";
 }
 
+// ... (Resto del código de Three.js se mantiene igual)
 let scene, camera, renderer, controls, sun;
 let width, height, starfield, systemRotationGroup;
 let detailedPlanets = []; 
@@ -244,16 +247,12 @@ function init() {
   renderer.setPixelRatio(esCelular ? 1 : Math.min(window.devicePixelRatio, 2)); 
   document.getElementById('threeCanvas').appendChild(renderer.domElement);
 
-  // --- SOLUCIÓN DEL BRILLO EXTREMO ---
   if (!esCelular) {
       const renderScene = new THREE.RenderPass(scene, camera);
       bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-      
-      // AJUSTES ESTRICTOS PARA PROTEGER LAS FOTOS
-      bloomPass.threshold = 0.8;  // Solo atrapa luz extrema
-      bloomPass.strength = 0.15;  // Brillo base mínimo
-      bloomPass.radius = 0.2;     // Expansión del brillo reducida
-
+      bloomPass.threshold = 0.8;
+      bloomPass.strength = 0.15;
+      bloomPass.radius = 0.2;
       composer = new THREE.EffectComposer(renderer);
       composer.addPass(renderScene);
       composer.addPass(bloomPass);
@@ -262,13 +261,9 @@ function init() {
   controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true; 
   controls.dampingFactor = 0.05;
-  
-  // --- FRENOS DE LA CÁMARA CORREGIDOS ---
-  controls.minDistance = 900;  // Límite de zoom: Evita que te estrelles con el sol
-  controls.maxDistance = 6000; // Límite de alejamiento: Evita que te pierdas en el espacio
-  controls.enablePan = false;  // Bloqueo: Evita arrastrar el sol fuera del centro de la pantalla
-
-  
+  controls.minDistance = 900; 
+  controls.maxDistance = 6000;
+  controls.enablePan = false; 
 
   systemRotationGroup = new THREE.Group();
   scene.add(systemRotationGroup);
@@ -315,13 +310,10 @@ function createDetailedPlanet(radius, color, distance, speed, hasRing, hasMoon, 
     const geometry = new THREE.SphereGeometry(radius, esCelular ? 12 : 32, esCelular ? 12 : 32); 
     const material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6, emissive: 0x000000 });
     const mesh = new THREE.Mesh(geometry, material);
-    
     mesh.userData.baseColor = color; 
     mesh.userData.mensaje = mensaje; 
-    
     const angle = Math.random() * Math.PI * 2;
     mesh.position.set(Math.cos(angle) * distance, 0, Math.sin(angle) * distance);
-    
     let moonPivot = null;
     if (!esCelular && hasMoon) {
         moonPivot = new THREE.Group();
@@ -332,10 +324,8 @@ function createDetailedPlanet(radius, color, distance, speed, hasRing, hasMoon, 
         moonPivot.add(moon);
         mesh.add(moonPivot); 
     }
-
     detailedPlanets.push({ mesh: mesh, distance, angle, speed, selfRotation: 0.01 + Math.random()*0.02, moonPivot: moonPivot });
     systemRotationGroup.add(mesh); 
-    
     createOrbitRing(distance);
     if (hasRing) createSaturnRing(mesh, radius);
 }
@@ -430,9 +420,7 @@ function loadPhotoStars() {
 }
 
 function triggerSunExplosion() {
-    // NUEVO: SFX Fuego Artificial
     if (sfxFirework) { sfxFirework.currentTime = 0; sfxFirework.play().catch(e=>console.log("SFX bloq")); }
-
     const totalExplosionParticles = esCelular ? 250 : 500; 
     const geometry = new THREE.BufferGeometry();
     const positions = []; const velocities = []; const sizes = [];
@@ -478,12 +466,10 @@ function mostrarMensajeEspecial(texto) {
 
 function onWorldClick(e) {
   raycaster.setFromCamera(mouse, camera);
-  
   if (raycaster.intersectObject(sun).length > 0) {
       triggerSunExplosion();
       return; 
   }
-  
   if (!esCelular) {
       const intersectPlanetas = raycaster.intersectObjects(detailedPlanets.map(p => p.mesh));
       if (intersectPlanetas.length > 0) {
@@ -493,7 +479,6 @@ function onWorldClick(e) {
   }
 }
 
-// NUEVO: Soporte para toque en móvil sincronizado con onWorldClick
 function onWorldTouch(e) {
   if (e.touches.length > 0) {
     mouse.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
@@ -510,16 +495,13 @@ function animate() {
   const delta = (time - prevTime) / 1000; 
   prevTime = time;
 
-  // --- AUDIO REACTIVIDAD CONTROLADA ---
   if (!esCelular && analyser && dataArray && !enViaje) {
       analyser.getByteFrequencyData(dataArray);
       let sum = 0;
       for(let i = 0; i < 15; i++) sum += dataArray[i];
       let avgBass = sum / 15;
-      
       let scale = 1 + (avgBass / 256) * 0.3; 
       sun.scale.set(scale, scale, scale);
-      
       if (bloomPass) {
           bloomPass.strength = 0.15 + (avgBass / 256) * 0.2; 
       }
@@ -528,7 +510,6 @@ function animate() {
   }
 
   sun.rotation.y += 0.002;
-  
   photoStars.forEach(sprite => {
       if (Math.random() < 0.01) sprite.userData.pulseOpacity = 0.6 + Math.random() * 0.4;
       sprite.material.opacity = THREE.MathUtils.lerp(sprite.material.opacity, sprite.userData.pulseOpacity, 0.05);
@@ -538,14 +519,11 @@ function animate() {
       viajeProgress += delta * 1000;
       if (viajeProgress > viajeDuration) viajeProgress = viajeDuration;
       const ratio = viajeProgress / viajeDuration;
-      
       const targetX = 0; const targetY = 300; const targetZ = 1100;
       const t = Math.pow(ratio, 2); 
-      
       camera.position.x = THREE.MathUtils.lerp(0, targetX, t);
       camera.position.y = THREE.MathUtils.lerp(1000, targetY, t);
       camera.position.z = THREE.MathUtils.lerp(5000, targetZ, t);
-      
       if (!esCelular) {
           const warpFov = Math.sin(ratio * Math.PI) * 50; 
           camera.fov = 75 + warpFov;
@@ -562,21 +540,16 @@ function animate() {
       controls.update();
       starfield.rotation.y += 0.0001;
       systemRotationGroup.rotation.y += 0.001;
-      
       if (!esCelular) {
           targetCameraX = mouseXParallax * 0.15;
           targetCameraY = -mouseYParallax * 0.15 + 300; 
-          
           camera.position.x += (targetCameraX - camera.position.x) * 0.02;
           camera.position.y += (targetCameraY - camera.position.y) * 0.02;
           camera.lookAt(scene.position); 
-          
           raycaster.setFromCamera(mouse, camera);
           let intersects = raycaster.intersectObjects(detailedPlanets.map(p => p.mesh));
-          
           detailedPlanets.forEach(p => p.mesh.material.emissive.setHex(0x000000));
           document.body.style.cursor = 'default';
-
           if (intersects.length > 0) {
               intersects[0].object.material.emissive.setHex(0xff1493); 
               document.body.style.cursor = 'pointer';
@@ -590,10 +563,7 @@ function animate() {
     p.mesh.position.x = Math.cos(p.angle) * p.distance;
     p.mesh.position.z = Math.sin(p.angle) * p.distance;
     p.mesh.rotation.y += p.selfRotation; 
-    
-    if (p.moonPivot) {
-        p.moonPivot.rotation.y += 0.04;
-    }
+    if (p.moonPivot) p.moonPivot.rotation.y += 0.04;
   });
   
   if (!esCelular) {
@@ -627,11 +597,8 @@ function animate() {
       exp.geometry.getAttribute('position').needsUpdate = true;
   }
 
-  if (!esCelular && composer) {
-      composer.render(); 
-  } else {
-      renderer.render(scene, camera); 
-  }
+  if (!esCelular && composer) composer.render(); 
+  else renderer.render(scene, camera); 
 }
 
 window.addEventListener('resize', () => {
@@ -640,9 +607,7 @@ window.addEventListener('resize', () => {
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
   renderer.setSize(width, height);
-  if (composer && !esCelular) {
-      composer.setSize(width, height);
-  }
+  if (composer && !esCelular) composer.setSize(width, height);
 });
 
 init();
