@@ -11,7 +11,7 @@
   #contenedorMedia {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     z-index: 10; pointer-events: none;
-    perspective: 1200px; /* Aumentada la perspectiva para más profundidad */
+    perspective: 1200px;
   }
 
   .recuerdo-3d {
@@ -51,7 +51,7 @@
   <source src="videos/musicarojo.mp3" type="audio/mpeg">
 </audio>
 
-<div id="musicStatus">TOCA PARA INICIAR EL VIAJE PROFUNDO 🎵</div>
+<div id="musicStatus">MUEVE EL CURSOR PARA GUIAR EL DESTINO 🎵</div>
 
 <canvas id="canvasMundo"></canvas>
 <div id="contenedorMedia"></div>
@@ -73,7 +73,10 @@ for (let i = 1; i <= 40; i++) { misRecuerdosOriginales.push({ type: 'img', src: 
 for (let j = 1; j <= 10; j++) { misRecuerdosOriginales.push({ type: 'video', src: `videos/video${j}.mp4` }); }
 
 let recuerdosDisponibles = [...misRecuerdosOriginales];
-let width, height, centerX, centerY;
+let width, height;
+// Posiciones para el seguimiento del cursor
+let centerX, centerY;
+let targetX, targetY;
 let stars = [];
 let mediaObjects = [];
 let frame = 0;
@@ -81,18 +84,32 @@ let frame = 0;
 function init() {
   width = window.innerWidth;
   height = window.innerHeight;
+  // Inicializamos el centro en la mitad de la pantalla
   centerX = width / 2;
   centerY = height / 2;
+  targetX = centerX;
+  targetY = centerY;
+  
   canvas.width = width;
   canvas.height = height;
 
   stars = [];
-  // Estrellas también nacen desde más lejos (2000)
   for(let i=0; i<300; i++) {
-    stars.push({ x: Math.random()*width*2 - width, y: Math.random()*height*2 - height, z: Math.random()*2000 });
+    stars.push({ x: Math.random()*width*3 - width*1.5, y: Math.random()*height*3 - height*1.5, z: Math.random()*2000 });
   }
   shuffle(recuerdosDisponibles);
 }
+
+// Seguimiento del ratón o toque
+window.addEventListener('mousemove', (e) => {
+    targetX = e.clientX;
+    targetY = e.clientY;
+});
+
+window.addEventListener('touchmove', (e) => {
+    targetX = e.touches[0].clientX;
+    targetY = e.touches[0].clientY;
+});
 
 function shuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
@@ -104,7 +121,7 @@ function shuffle(array) {
 window.addEventListener('click', () => {
     if (audio.paused) {
         audio.play().then(() => {
-            statusTxt.innerText = "VIAJANDO EN EL INFINITO 🎶";
+            statusTxt.innerText = "GUIANDO EL DESTINO 🎶";
             statusTxt.style.color = "#ff4444";
         });
     }
@@ -132,19 +149,23 @@ function spawnMedia() {
   
   mediaObjects.push({
     element: el,
-    x: (Math.random() - 0.5) * 1500, // Más dispersión lateral
-    y: (Math.random() - 0.5) * 1000,
-    z: 2000, // NACEN EL DOBLE DE LEJOS (Antes era 1000)
+    x: (Math.random() - 0.5) * 1800,
+    y: (Math.random() - 0.5) * 1200,
+    z: 2000, 
     w: 240, 
     h: 180 
   });
 }
 
 function update() {
+  // Suavizado del movimiento del centro (Ease-out)
+  centerX += (targetX - centerX) * 0.05;
+  centerY += (targetY - centerY) * 0.05;
+
   ctx.fillStyle = 'black';
   ctx.fillRect(0, 0, width, height);
 
-  // ESTRELLAS DESDE EL FONDO
+  // ESTRELLAS
   ctx.fillStyle = "white";
   stars.forEach(s => {
     s.z -= 15;
@@ -156,7 +177,7 @@ function update() {
     ctx.fillRect(sx, sy, f*2.5, f*2.5);
   });
 
-  // HILO ROJO DINÁMICO
+  // EL HILO SIGUE EL CURSOR
   ctx.globalAlpha = 1;
   ctx.strokeStyle = '#ff0000';
   ctx.lineWidth = 4;
@@ -166,6 +187,7 @@ function update() {
   
   for(let i=10; i<2000; i+=40) {
     let f = 400 / i;
+    // La "wave" se suma a la posición del centro
     let waveX = Math.sin(Date.now() * 0.003 + i * 0.008) * 80;
     let waveY = Math.cos(Date.now() * 0.002 + i * 0.012) * 50;
     let hx = waveX * f + centerX;
@@ -176,9 +198,9 @@ function update() {
   ctx.stroke();
   ctx.shadowBlur = 0;
 
-  // RECUERDOS DESDE EL FONDO
+  // RECUERDOS SIGUEN EL CURSOR
   mediaObjects.forEach((m, index) => {
-    m.z -= 10; // Velocidad de vuelo constante
+    m.z -= 12; 
     
     if(m.z <= 0) {
       m.element.remove();
@@ -196,15 +218,13 @@ function update() {
       m.element.style.width = sw + 'px';
       m.element.style.height = sh + 'px';
       
-      // Opacidad basada en la nueva distancia de 2000
       let op = 1 - (m.z / 2000); 
-      if (m.z < 150) op = m.z / 150; // Desvanecer antes de chocar con la cámara
+      if (m.z < 150) op = m.z / 150;
       m.element.style.opacity = Math.max(0, op);
       m.element.style.zIndex = Math.floor(2000 - m.z);
     }
   });
 
-  // Salen recuerdos más seguido para llenar el túnel largo
   if(frame % 70 === 0) spawnMedia();
   if(frame === 350) document.getElementById('controles').style.display = 'block';
 
