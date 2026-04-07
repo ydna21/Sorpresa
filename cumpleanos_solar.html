@@ -69,9 +69,16 @@
 
   /* NUEVO: Contenedor para alinear los dos botones abajo estilo ESPACIO */
   #contenedorBotones {
-    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-    z-index: 20; display: none; gap: 15px; flex-wrap: wrap; justify-content: center; width: 100%;
-  }
+    position: fixed; 
+    bottom: 30px; 
+    left: 50%; 
+    transform: translateX(-50%);
+    z-index: 20; 
+    display: none; 
+    gap: 15px; 
+    justify-content: center; /* Esto lo centrará perfectamente */
+    width: auto; /* Cambiado de 100% a auto para que no tape clics innecesarios */
+}
 
   .btn-volver-flotante {
      padding: 12px 25px; background: rgba(0,0,0,0.6); 
@@ -107,7 +114,6 @@
 
 <div id="contenedorBotones">
   <button class="btn-volver-flotante" id="btnRepetirViaje">🚀 Repetir Viaje</button>
-  <button class="btn-volver-flotante" id="btnVolverInicio" onclick="window.location.href='index.html'">⬅️ Volver al inicio</button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -195,7 +201,9 @@ if (esCelular) {
     pastel.style.display = "inline-block";
     pastel.style.animation = "latidoPastel 1.5s infinite";
 } else {
-    document.getElementById('pastelBtn').style.display = "none";
+    const pastel = document.getElementById('pastelBtn');
+    pastel.style.display = "inline-block";
+    pastel.style.animation = "latidoPastel 1.5s infinite";
 }
 
 let scene, camera, renderer, controls, sun;
