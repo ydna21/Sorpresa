@@ -8,7 +8,6 @@
   body { margin: 0; background: #000; overflow: hidden; font-family: 'Courier New', monospace; }
   canvas { display: block; position: fixed; top: 0; left: 0; }
   
-  /* Contenedor de fotos/videos */
   #contenedorMedia {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     z-index: 10; pointer-events: none;
@@ -22,13 +21,13 @@
     border-radius: 12px;
     object-fit: cover;
     transform-origin: center;
-    display: none; /* Se activa por JS */
+    display: none;
     background: #111;
   }
 
   #controles {
     position: fixed; bottom: 40px; width: 100%; text-align: center;
-    z-index: 100; display: none; /* Aparece tras unos segundos de viaje */
+    z-index: 100; display: none;
   }
   
   .btn {
@@ -37,10 +36,23 @@
     text-decoration: none; font-weight: bold; margin: 0 10px;
     box-shadow: 0 0 20px rgba(255, 0, 0, 0.4); transition: 0.3s;
   }
-  .btn:hover { background: #ff0000; box-shadow: 0 0 40px #ff0000; transform: scale(1.1); }
+  .btn:hover { background: #ff0000; transform: scale(1.1); }
+
+  /* Indicador de música */
+  #musicStatus {
+    position: fixed; top: 20px; left: 20px; z-index: 100;
+    color: rgba(255, 255, 255, 0.6); font-size: 0.7rem;
+    letter-spacing: 1px; text-transform: uppercase;
+  }
 </style>
 </head>
 <body>
+
+<audio id="musicaRojo" loop>
+  <source src="videos/musicarojo.mp3" type="audio/mpeg">
+</audio>
+
+<div id="musicStatus">PULSA PARA INICIAR EL AUDIO 🎵</div>
 
 <canvas id="canvasMundo"></canvas>
 <div id="contenedorMedia"></div>
@@ -54,6 +66,8 @@
 const canvas = document.getElementById('canvasMundo');
 const ctx = canvas.getContext('2d');
 const contenedor = document.getElementById('contenedorMedia');
+const audio = document.getElementById('musicaRojo');
+const statusTxt = document.getElementById('musicStatus');
 
 // --- CONFIGURACIÓN DE TUS RECUERDOS ---
 const misRecuerdosOriginales = [
@@ -96,6 +110,16 @@ function shuffle(array) {
   }
 }
 
+// LOGICA DE AUDIO: Reproducir al interactuar
+window.addEventListener('click', () => {
+    if (audio.paused) {
+        audio.play().then(() => {
+            statusTxt.innerText = "REPRODUCIENDO: MUSICAROJO 🎶";
+            statusTxt.style.color = "#ff0000";
+        });
+    }
+});
+
 function spawnMedia() {
   if (recuerdosDisponibles.length === 0) {
     recuerdosDisponibles = [...misRecuerdosOriginales];
@@ -109,7 +133,7 @@ function spawnMedia() {
   
   if(data.type === 'video') { 
       el.autoplay = true; 
-      el.muted = true; 
+      el.muted = true; // Se mantienen mudos para no tapar la canción principal
       el.loop = true; 
       el.playsInline = true; 
   }
@@ -118,7 +142,7 @@ function spawnMedia() {
   
   mediaObjects.push({
     element: el,
-    x: (Math.random() - 0.5) * 1100, // Dispersión lateral para no tapar el centro
+    x: (Math.random() - 0.5) * 1100,
     y: (Math.random() - 0.5) * 800,
     z: 1000, 
     w: 240, 
@@ -127,11 +151,9 @@ function spawnMedia() {
 }
 
 function update() {
-  // Fondo oscuro con leve rastro
   ctx.fillStyle = 'black';
   ctx.fillRect(0, 0, width, height);
 
-  // 1. ESTRELLAS (TÚNEL)
   ctx.fillStyle = "white";
   stars.forEach(s => {
     s.z -= 12;
@@ -143,7 +165,6 @@ function update() {
     ctx.fillRect(sx, sy, f*2, f*2);
   });
 
-  // 2. EL HILO ROJO (DINÁMICO HACIA EL FONDO)
   ctx.globalAlpha = 1;
   ctx.strokeStyle = '#ff0000';
   ctx.lineWidth = 4;
@@ -153,7 +174,6 @@ function update() {
   
   for(let i=10; i<1000; i+=20) {
     let f = 400 / i;
-    // Efecto de ondulación Your Name
     let waveX = Math.sin(Date.now() * 0.003 + i * 0.01) * 70;
     let waveY = Math.cos(Date.now() * 0.002 + i * 0.015) * 40;
     let hx = waveX * f + centerX;
@@ -165,10 +185,8 @@ function update() {
   ctx.stroke();
   ctx.shadowBlur = 0;
 
-  // 3. ACTUALIZAR RECUERDOS (FOTOS Y VIDEOS)
   mediaObjects.forEach((m, index) => {
-    m.z -= 8; // Velocidad de acercamiento
-    
+    m.z -= 8;
     if(m.z <= 0) {
       m.element.remove();
       mediaObjects.splice(index, 1);
@@ -185,7 +203,6 @@ function update() {
       m.element.style.width = sw + 'px';
       m.element.style.height = sh + 'px';
       
-      // Aparecen gradualmente y se desvanecen justo antes de pasar
       let op = 1 - (m.z / 1000);
       if (m.z < 100) op = m.z / 100;
       m.element.style.opacity = op;
@@ -194,10 +211,7 @@ function update() {
     }
   });
 
-  // Spawn de recuerdos
   if(frame % 140 === 0) spawnMedia();
-  
-  // Mostrar botones tras 5 segundos de viaje
   if(frame === 300) document.getElementById('controles').style.display = 'block';
 
   frame++;
