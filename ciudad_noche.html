@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nuestra Noche Mágica 🌃🎆</title>
 <style>
-  body { margin: 0; background: #000205; overflow: hidden; font-family: 'Courier New', monospace; color: white; }
-  canvas { display: block; background: radial-gradient(circle at top, #0b0b1a 0%, #000 100%); }
+  body { margin: 0; background: #000103; overflow: hidden; font-family: 'Courier New', monospace; color: white; }
+  canvas { display: block; }
 
   #ui {
     position: fixed; top: 30px; width: 100%; text-align: center;
@@ -16,15 +16,19 @@
     font-size: 2.2rem; color: #ffd700; text-shadow: 0 0 20px #ff0000, 0 0 40px #ffd700;
     margin: 0; animation: glow 2s ease-in-out infinite alternate;
   }
+  /* Eliminamos el estilo de la frase instructiva */
+
   @keyframes glow { from { opacity: 0.8; } to { opacity: 1; transform: scale(1.02); } }
 
   .skyline {
-    position: fixed; bottom: 30%; left: 0; width: 100%; height: 100px;
+    position: fixed; bottom: 30%; left: 0; width: 100%; height: 110px;
     z-index: 5; pointer-events: none; display: flex; align-items: flex-end; justify-content: space-around;
+    transition: filter 0.2s ease; /* Para el efecto de iluminación global */
   }
   .building {
     background: #05050a; width: 50px; position: relative;
     box-shadow: 0 0 10px rgba(0,0,0,1);
+    transition: background 0.2s ease; /* Iluminación de los edificios */
   }
   .window {
     position: absolute; width: 4px; height: 4px; background: #111; border-radius: 1px;
@@ -51,8 +55,7 @@
 
 <div id="ui">
   <h1>Nuestra Noche Eterna 💖</h1>
-  <p>Toca el cielo para celebrar nuestro amor</p>
-</div>
+  </div>
 
 <div class="skyline" id="skyline"></div>
 
@@ -67,9 +70,11 @@
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const sfx = document.getElementById('sfxFirework');
+const skyline = document.getElementById('skyline');
 let fireworks = [];
 let particles = [];
 let stars = [];
+let flashAlpha = 0; // Para el efecto de flash de explosión
 
 function init() {
   canvas.width = window.innerWidth;
@@ -86,7 +91,6 @@ function generarEstrellas() {
 }
 
 function generarCiudad() {
-  const skyline = document.getElementById('skyline');
   skyline.innerHTML = '';
   let x = 0;
   while (x < window.innerWidth) {
@@ -111,7 +115,7 @@ function generarCiudad() {
 class Firework {
   constructor(sx, sy, tx, ty) {
     this.x = sx; this.y = sy; this.tx = tx; this.ty = ty;
-    this.vx = (tx - sx) / 40; this.vy = (ty - sy) / 40;
+    this.vx = (tx - sx) / 50; this.vy = (ty - sy) / 50;
     this.hue = Math.random() * 360;
   }
   update(i) {
@@ -120,35 +124,41 @@ class Firework {
       explode(this.tx, this.ty, this.hue);
       fireworks.splice(i, 1);
       if(sfx) { sfx.currentTime = 0; sfx.play().catch(()=>{}); }
+      flashAlpha = 0.2; // Activamos el flash
+      iluminarCiudad(this.hue); // Iluminamos la ciudad
     }
   }
   draw() {
     ctx.beginPath();
-    ctx.arc(this.x, this.y, 2, 0, Math.PI*2);
-    ctx.fillStyle = `hsl(${this.hue}, 100%, 50%)`;
+    ctx.arc(this.x, this.y, 2.5, 0, Math.PI*2);
+    ctx.fillStyle = `hsl(${this.hue}, 100%, 70%)`;
     ctx.fill();
+    ctx.shadowBlur = 10; ctx.shadowColor = `hsl(${this.hue}, 100%, 70%)`;
   }
 }
 
 class Particle {
-  constructor(x, y, hue, isHeart) {
-    this.x = x; this.y = y; this.hue = hue; this.isHeart = isHeart;
-    this.alpha = 1; this.decay = 0.01 + Math.random() * 0.02;
+  constructor(x, y, hue, type) {
+    this.x = x; this.y = y; this.hue = hue; this.type = type;
+    this.alpha = 1; this.decay = 0.005 + Math.random() * 0.015;
     this.angle = Math.random() * Math.PI * 2;
-    this.speed = Math.random() * 6 + 1;
-    this.friction = 0.96; this.gravity = 0.15;
+    this.speed = Math.random() * 8 + 1;
+    this.friction = 0.97; this.gravity = 0.12;
     
-    if (this.isHeart) {
-      this.speed = 2; // Más lento para que se note la forma
+    if (this.type === 'willow') {
+      this.gravity = 0.03; this.speed = 1.5 + Math.random() * 2; this.friction = 0.99;
+    }
+    if (this.type === 'heart') {
+      this.hue = 40; // Dorado
+      this.speed = 2; this.gravity = 0.05;
       let t = Math.random() * Math.PI * 2;
       this.targetX = 16 * Math.pow(Math.sin(t), 3);
       this.targetY = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
     }
   }
   update(i) {
-    if (this.isHeart) {
-      this.x += this.targetX * 0.3;
-      this.y += this.targetY * 0.3;
+    if (this.type === 'heart') {
+      this.x += this.targetX * 0.1; this.y += this.targetY * 0.1;
     } else {
       this.speed *= this.friction;
       this.x += Math.cos(this.angle) * this.speed;
@@ -159,20 +169,33 @@ class Particle {
   }
   draw() {
     ctx.fillStyle = `hsla(${this.hue}, 100%, 60%, ${this.alpha})`;
-    ctx.beginPath(); ctx.arc(this.x, this.y, 2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(this.x, this.y, (this.type === 'willow' ? 3 : 2), 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = (this.type === 'willow' ? 5 : 0); ctx.shadowColor = `hsl(${this.hue}, 100%, 60%)`;
     
     // Reflejo en el agua
-    let waterY = canvas.height - (this.y - (canvas.height * 0.7));
     if (this.y < canvas.height * 0.7) {
-      ctx.fillStyle = `hsla(${this.hue}, 100%, 40%, ${this.alpha * 0.3})`;
+      ctx.fillStyle = `hsla(${this.hue}, 100%, 40%, ${this.alpha * 0.2})`;
       ctx.beginPath(); ctx.arc(this.x, canvas.height - (this.y * 0.3), 1.5, 0, Math.PI*2); ctx.fill();
     }
   }
 }
 
 function explode(x, y, hue) {
-  let isHeart = Math.random() > 0.7;
-  for(let i=0; i < (isHeart ? 100 : 60); i++) particles.push(new Particle(x, y, hue, isHeart));
+  let count = 120;
+  let type = Math.random() > 0.8 ? 'heart' : (Math.random() > 0.5 ? 'willow' : 'normal');
+  while (count--) particles.push(new Particle(x, y, hue, type));
+}
+
+function iluminarCiudad(hue) {
+  const buildings = document.querySelectorAll('.building');
+  buildings.forEach(b => {
+    b.style.background = `hsl(${hue}, 80%, 15%)`;
+  });
+  skyline.style.filter = `drop-shadow(0 0 15px hsl(${hue}, 100%, 70%))`;
+  setTimeout(() => {
+    buildings.forEach(b => b.style.background = '#05050a');
+    skyline.style.filter = 'none';
+  }, 250);
 }
 
 function drawStars() {
@@ -182,11 +205,22 @@ function drawStars() {
   });
 }
 
+function drawFlash() {
+  if (flashAlpha > 0) {
+    ctx.fillStyle = `rgba(255, 255, 255, ${flashAlpha})`;
+    ctx.fillRect(0, 0, canvas.width, canvas.height * 0.7);
+    flashAlpha -= 0.05; // Se desvanece rápido
+  }
+}
+
 function loop() {
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'; // Rastro más largo para las estelas
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.globalCompositeOperation = 'lighter';
   
   drawStars();
+  drawFlash();
   
   // Línea del horizonte (agua)
   ctx.fillStyle = '#000105';
@@ -195,7 +229,7 @@ function loop() {
   fireworks.forEach((f, i) => { f.draw(); f.update(i); });
   particles.forEach((p, i) => { p.draw(); p.update(i); });
 
-  if (Math.random() < 0.015) {
+  if (Math.random() < 0.01) { // Menos automático para que los clics destaquen
     fireworks.push(new Firework(canvas.width/2, canvas.height, Math.random()*canvas.width, Math.random()*(canvas.height*0.5)));
   }
   requestAnimationFrame(loop);
