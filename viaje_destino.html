@@ -5,19 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Viaje al Centro de Nuestro Hilo 🧵✨</title>
 <style>
-  body { margin: 0; background: #000; overflow: hidden; font-family: 'Courier New', monospace; }
+  body { margin: 0; background: #000; overflow: hidden; font-family: 'Courier New', monospace; color: white; }
   canvas { display: block; position: fixed; top: 0; left: 0; }
   
   #contenedorMedia {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     z-index: 10; pointer-events: none;
-    perspective: 800px;
+    perspective: 1200px; /* Aumentada la perspectiva para más profundidad */
   }
 
   .recuerdo-3d {
     position: absolute;
-    border: 2px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 0 25px rgba(255, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 25px rgba(255, 0, 0, 0.4);
     border-radius: 12px;
     object-fit: cover;
     transform-origin: center;
@@ -40,7 +40,7 @@
 
   #musicStatus {
     position: fixed; top: 20px; left: 20px; z-index: 100;
-    color: rgba(255, 255, 255, 0.6); font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.5); font-size: 0.7rem;
     letter-spacing: 1px; text-transform: uppercase;
   }
 </style>
@@ -51,7 +51,7 @@
   <source src="videos/musicarojo.mp3" type="audio/mpeg">
 </audio>
 
-<div id="musicStatus">PULSA PARA INICIAR EL VIAJE Y EL AUDIO 🎵</div>
+<div id="musicStatus">TOCA PARA INICIAR EL VIAJE PROFUNDO 🎵</div>
 
 <canvas id="canvasMundo"></canvas>
 <div id="contenedorMedia"></div>
@@ -68,18 +68,9 @@ const contenedor = document.getElementById('contenedorMedia');
 const audio = document.getElementById('musicaRojo');
 const statusTxt = document.getElementById('musicStatus');
 
-// --- GENERACIÓN AUTOMÁTICA DE LISTA ---
 const misRecuerdosOriginales = [];
-
-// Cargar 40 fotos automáticamente
-for (let i = 1; i <= 40; i++) {
-    misRecuerdosOriginales.push({ type: 'img', src: `fotos/foto${i}.jpg` });
-}
-
-// Cargar hasta 10 videos (puedes subir el número si pones más)
-for (let j = 1; j <= 10; j++) {
-    misRecuerdosOriginales.push({ type: 'video', src: `videos/video${j}.mp4` });
-}
+for (let i = 1; i <= 40; i++) { misRecuerdosOriginales.push({ type: 'img', src: `fotos/foto${i}.jpg` }); }
+for (let j = 1; j <= 10; j++) { misRecuerdosOriginales.push({ type: 'video', src: `videos/video${j}.mp4` }); }
 
 let recuerdosDisponibles = [...misRecuerdosOriginales];
 let width, height, centerX, centerY;
@@ -96,8 +87,9 @@ function init() {
   canvas.height = height;
 
   stars = [];
-  for(let i=0; i<250; i++) {
-    stars.push({ x: Math.random()*width - centerX, y: Math.random()*height - centerY, z: Math.random()*1000 });
+  // Estrellas también nacen desde más lejos (2000)
+  for(let i=0; i<300; i++) {
+    stars.push({ x: Math.random()*width*2 - width, y: Math.random()*height*2 - height, z: Math.random()*2000 });
   }
   shuffle(recuerdosDisponibles);
 }
@@ -112,8 +104,8 @@ function shuffle(array) {
 window.addEventListener('click', () => {
     if (audio.paused) {
         audio.play().then(() => {
-            statusTxt.innerText = "VIAJANDO EN EL DESTINO 🎶";
-            statusTxt.style.color = "#ff0000";
+            statusTxt.innerText = "VIAJANDO EN EL INFINITO 🎶";
+            statusTxt.style.color = "#ff4444";
         });
     }
 });
@@ -129,24 +121,20 @@ function spawnMedia() {
   el.src = data.src;
   el.className = 'recuerdo-3d';
   
-  // Si es video, manejar errores por si el archivo no existe aún
   if(data.type === 'video') { 
-      el.autoplay = true; 
-      el.muted = true; 
-      el.loop = true; 
-      el.playsInline = true; 
-      el.onerror = () => { el.remove(); spawnMedia(); }; // Si no existe el video, saca otro recuerdo
+      el.autoplay = true; el.muted = true; el.loop = true; el.playsInline = true; 
+      el.onerror = () => { el.remove(); spawnMedia(); };
   } else {
-      el.onerror = () => { el.remove(); spawnMedia(); }; // Si la foto falla, saca otra
+      el.onerror = () => { el.remove(); spawnMedia(); };
   }
   
   contenedor.appendChild(el);
   
   mediaObjects.push({
     element: el,
-    x: (Math.random() - 0.5) * 1200,
-    y: (Math.random() - 0.5) * 900,
-    z: 1000, 
+    x: (Math.random() - 0.5) * 1500, // Más dispersión lateral
+    y: (Math.random() - 0.5) * 1000,
+    z: 2000, // NACEN EL DOBLE DE LEJOS (Antes era 1000)
     w: 240, 
     h: 180 
   });
@@ -156,17 +144,19 @@ function update() {
   ctx.fillStyle = 'black';
   ctx.fillRect(0, 0, width, height);
 
+  // ESTRELLAS DESDE EL FONDO
   ctx.fillStyle = "white";
   stars.forEach(s => {
-    s.z -= 12;
-    if(s.z <= 0) s.z = 1000;
+    s.z -= 15;
+    if(s.z <= 0) s.z = 2000;
     let f = 400 / s.z;
     let sx = s.x * f + centerX;
     let sy = s.y * f + centerY;
-    ctx.globalAlpha = 1 - (s.z / 1000);
-    ctx.fillRect(sx, sy, f*2, f*2);
+    ctx.globalAlpha = Math.max(0, 1 - (s.z / 2000));
+    ctx.fillRect(sx, sy, f*2.5, f*2.5);
   });
 
+  // HILO ROJO DINÁMICO
   ctx.globalAlpha = 1;
   ctx.strokeStyle = '#ff0000';
   ctx.lineWidth = 4;
@@ -174,10 +164,10 @@ function update() {
   ctx.shadowColor = 'red';
   ctx.beginPath();
   
-  for(let i=10; i<1000; i+=20) {
+  for(let i=10; i<2000; i+=40) {
     let f = 400 / i;
-    let waveX = Math.sin(Date.now() * 0.003 + i * 0.01) * 70;
-    let waveY = Math.cos(Date.now() * 0.002 + i * 0.015) * 40;
+    let waveX = Math.sin(Date.now() * 0.003 + i * 0.008) * 80;
+    let waveY = Math.cos(Date.now() * 0.002 + i * 0.012) * 50;
     let hx = waveX * f + centerX;
     let hy = waveY * f + centerY;
     if(i === 10) ctx.moveTo(hx, hy);
@@ -186,8 +176,10 @@ function update() {
   ctx.stroke();
   ctx.shadowBlur = 0;
 
+  // RECUERDOS DESDE EL FONDO
   mediaObjects.forEach((m, index) => {
-    m.z -= 9; // Un poquito más rápido para que se sienta el flujo
+    m.z -= 10; // Velocidad de vuelo constante
+    
     if(m.z <= 0) {
       m.element.remove();
       mediaObjects.splice(index, 1);
@@ -204,16 +196,17 @@ function update() {
       m.element.style.width = sw + 'px';
       m.element.style.height = sh + 'px';
       
-      let op = 1 - (m.z / 1000);
-      if (m.z < 100) op = m.z / 100;
-      m.element.style.opacity = op;
-      m.element.style.zIndex = Math.floor(1000 - m.z);
+      // Opacidad basada en la nueva distancia de 2000
+      let op = 1 - (m.z / 2000); 
+      if (m.z < 150) op = m.z / 150; // Desvanecer antes de chocar con la cámara
+      m.element.style.opacity = Math.max(0, op);
+      m.element.style.zIndex = Math.floor(2000 - m.z);
     }
   });
 
-  // Salen recuerdos más seguido (cada 90 cuadros) para que veas las 40 fotos rápido
-  if(frame % 90 === 0) spawnMedia();
-  if(frame === 300) document.getElementById('controles').style.display = 'block';
+  // Salen recuerdos más seguido para llenar el túnel largo
+  if(frame % 70 === 0) spawnMedia();
+  if(frame === 350) document.getElementById('controles').style.display = 'block';
 
   frame++;
   requestAnimationFrame(update);
