@@ -7,30 +7,27 @@
 <style>
   body { margin: 0; background: #050505; color: white; font-family: 'Courier New', monospace; overflow-x: hidden; }
   
-  /* Canvas de fondo */
   canvas { position: fixed; top: 0; left: 0; z-index: 1; pointer-events: none; }
 
-  /* Secciones de scroll */
+  /* Icono de sonido para forzar la activación en móviles */
+  #musicStatus {
+    position: fixed; top: 20px; right: 20px; z-index: 100;
+    background: rgba(255, 0, 0, 0.2); border: 1px solid #ff0000;
+    padding: 8px 15px; border-radius: 20px; font-size: 0.8rem;
+    cursor: pointer; color: #ffcccc; animation: fadeIn 2s;
+  }
+
   .section {
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    z-index: 2;
-    padding: 20px;
-    text-align: center;
+    height: 100vh; display: flex; align-items: center;
+    justify-content: center; position: relative; z-index: 2;
+    padding: 20px; text-align: center;
   }
 
   .content {
-    max-width: 600px;
-    background: rgba(0, 0, 0, 0.85);
-    padding: 40px;
-    border-radius: 30px;
-    border: 1px solid rgba(255, 0, 0, 0.3);
+    max-width: 600px; background: rgba(0, 0, 0, 0.85);
+    padding: 40px; border-radius: 30px; border: 1px solid rgba(255, 0, 0, 0.3);
     box-shadow: 0 0 50px rgba(255, 0, 0, 0.15);
-    opacity: 0;
-    transform: translateY(50px);
+    opacity: 0; transform: translateY(50px);
     transition: all 1.2s ease;
   }
 
@@ -39,50 +36,23 @@
   h2 { color: #ff0000; text-shadow: 0 0 15px #ff0000; font-size: 2.2rem; margin-bottom: 20px; }
   p { font-size: 1.2rem; line-height: 1.6; color: #ffcccc; }
 
-  /* Menú de botones al final */
   #menuFinal {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-    margin-top: 30px;
-    animation: fadeIn 2s forwards;
+    display: none; flex-direction: column; align-items: center; gap: 15px;
+    margin-top: 30px; animation: fadeIn 2s forwards;
   }
 
   .btn-destino {
-    display: inline-block;
-    padding: 15px 30px;
-    background: transparent;
-    color: white;
-    border: 2px solid #ff0000;
-    border-radius: 50px;
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 1.1rem;
-    transition: 0.4s;
-    cursor: pointer;
-    width: 280px;
-    text-align: center;
+    display: inline-block; padding: 15px 30px; background: transparent;
+    color: white; border: 2px solid #ff0000; border-radius: 50px;
+    text-decoration: none; font-weight: bold; transition: 0.4s;
+    cursor: pointer; width: 280px; text-align: center;
   }
 
-  .btn-destino:hover {
-    background: #ff0000;
-    box-shadow: 0 0 30px #ff0000;
-    transform: scale(1.05);
-  }
+  .btn-destino:hover { background: #ff0000; box-shadow: 0 0 30px #ff0000; transform: scale(1.05); }
 
-  .btn-viaje {
-    background: #ff0000;
-    border: none;
-    box-shadow: 0 0 25px #ff0000;
-    animation: pulse 2s infinite;
-  }
+  .btn-viaje { background: #ff0000; border: none; animation: pulse 2s infinite; }
 
-  @keyframes pulse {
-    0% { box-shadow: 0 0 10px #ff0000; }
-    50% { box-shadow: 0 0 30px #ff4444; }
-    100% { box-shadow: 0 0 10px #ff0000; }
-  }
+  @keyframes pulse { 0%, 100% { box-shadow: 0 0 10px #ff0000; } 50% { box-shadow: 0 0 30px #ff4444; } }
 
   #btnUniverso { display: none; border-color: #ff1493; }
 
@@ -95,11 +65,11 @@
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 </style>
 </head>
-<body>
-
-<audio id="musicaFondo" loop>
+<body onclick="iniciarAudio()"> <audio id="musicaFondo" loop>
   <source src="videos/musicainicio.mp3" type="audio/mpeg">
 </audio>
+
+<div id="musicStatus">TAP PARA SONIDO 🎵</div>
 
 <canvas id="canvasHilo"></canvas>
 
@@ -108,26 +78,25 @@
 <section class="section">
   <div class="content">
     <h2>La Leyenda del Hilo Rojo</h2>
-    <p>"Un hilo rojo invisible conecta a aquellos que están destinados a encontrarse, sin importar el tiempo, el lugar o la distancia."</p>
+    <p>"Un hilo rojo invisible conecta a aquellos que están destinados a encontrarse..."</p>
   </div>
 </section>
 
 <section class="section">
   <div class="content">
     <h2>Nudo a nudo...</h2>
-    <p>El hilo puede estirarse, contraerse o enredarse, pero nunca se romperá. Cada momento compartido ha fortalecido esta unión.</p>
+    <p>El hilo puede estirarse o enredarse, pero nunca se romperá.</p>
   </div>
 </section>
 
 <section class="section">
   <div class="content">
     <h2>Tú eres mi destino ❤️</h2>
-    <p>Gracias por ser la persona que sostiene el otro extremo de mi hilo. Mi vida es mucho más bonita desde que estamos conectados.</p>
+    <p>Gracias por sostener el otro extremo de mi hilo.</p>
     
     <div id="menuFinal">
       <a href="viaje_destino.html" class="btn-destino btn-viaje">💫 Iniciar Viaje del Destino</a>
       <a href="ciudad_noche.html" class="btn-destino" style="border-color: #ffd700; color: #ffd700;">🎆 Ver los Fuegos Artificiales</a>
-      <a href="bosque.html" class="btn-destino">🌲 Ir al Bosque Mágico</a>
       <a href="cumpleanos_solar.html" class="btn-destino" id="btnUniverso">🚀 Viajar al Universo</a>
       <a href="index.html" class="btn-destino" style="border-color: #555; margin-top: 15px; width: 200px; font-size: 0.8rem;">⬅️ Volver al Inicio</a>
     </div>
@@ -135,29 +104,27 @@
 </section>
 
 <script>
-  /* --- CONFIGURACIÓN DEL AUDIO --- */
   const musica = document.getElementById('musicaFondo');
+  const statusTxt = document.getElementById('musicStatus');
 
+  // Función mejorada para móviles
   function iniciarAudio() {
     if (musica.paused) {
-      musica.play().catch(e => console.log("Esperando interacción para audio..."));
-      // Una vez activado, removemos los escuchas para ahorrar recursos
-      window.removeEventListener('scroll', iniciarAudio);
-      window.removeEventListener('click', iniciarAudio);
-      window.removeEventListener('touchstart', iniciarAudio);
+      musica.play().then(() => {
+        statusTxt.innerText = "MUSICA: ON 🎵";
+        statusTxt.style.borderColor = "#00ff00";
+        statusTxt.style.color = "#00ff00";
+        // Desaparece después de unos segundos
+        setTimeout(() => { statusTxt.style.display = 'none'; }, 3000);
+      }).catch(e => console.log("Error de audio:", e));
     }
   }
 
-  // Escuchar interacciones para saltar el bloqueo de autoplay del navegador
-  window.addEventListener('scroll', iniciarAudio);
-  window.addEventListener('click', iniciarAudio);
-  window.addEventListener('touchstart', iniciarAudio);
-
-  /* --- CONFIGURACIÓN DEL HILO --- */
+  /* --- FISICA DEL HILO --- */
   const canvas = document.getElementById('canvasHilo');
   const ctx = canvas.getContext('2d');
   let points = [];
-  const totalPoints = 35;
+  const totalPoints = 30;
 
   function initCanvas() {
     canvas.width = window.innerWidth;
@@ -171,13 +138,16 @@
   let mouseX = window.innerWidth / 2;
   let mouseY = window.innerHeight / 2;
 
-  const updateMouse = (e) => {
-    mouseX = e.clientX || (e.touches && e.touches[0].clientX);
-    mouseY = e.clientY || (e.touches && e.touches[0].clientY);
-  };
-
-  window.addEventListener('mousemove', updateMouse);
-  window.addEventListener('touchmove', updateMouse);
+  window.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY; });
+  window.addEventListener('touchstart', (e) => { 
+    mouseX = e.touches[0].clientX; 
+    mouseY = e.touches[0].clientY;
+    iniciarAudio(); // Activa audio al primer toque
+  });
+  window.addEventListener('touchmove', (e) => {
+    mouseX = e.touches[0].clientX;
+    mouseY = e.touches[0].clientY;
+  });
 
   function animateHilo() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -192,15 +162,13 @@
     for (let i = 1; i < totalPoints; i++) { ctx.lineTo(points[i].x, points[i].y); }
     ctx.strokeStyle = '#ff0000';
     ctx.lineWidth = 3;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.shadowBlur = 20;
+    ctx.shadowBlur = 15;
     ctx.shadowColor = 'red';
     ctx.stroke();
     requestAnimationFrame(animateHilo);
   }
 
-  /* --- CONTROL DE SCROLL E INTERSECCIÓN --- */
+  /* --- OBSERVER --- */
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -212,29 +180,15 @@
         }
       }
     });
-  }, { threshold: 0.5 });
+  }, { threshold: 0.3 });
 
   document.querySelectorAll('.content').forEach(c => observer.observe(c));
 
-  /* --- SEGURO DE FECHA --- */
   function verificarCumpleanos() {
     const hoy = new Date();
-    const anioActual = hoy.getFullYear();
-    const mesActual = hoy.getMonth(); 
-    const diaActual = hoy.getDate();
-    const diaMeta = 8;
-    const mesMeta = 6; // Julio (0=Ene, 6=Jul)
-
-    let desbloqueado = false;
-    if (anioActual > 2026) { desbloqueado = true; } 
-    else if (anioActual === 2026) {
-      if (mesActual > mesMeta || (mesActual === mesMeta && diaActual >= diaMeta)) {
-        desbloqueado = true;
-      }
-    }
-    if (desbloqueado) { 
-      const btnU = document.getElementById('btnUniverso');
-      if(btnU) btnU.style.display = 'inline-block'; 
+    // Junio es mes 5 en JavaScript (0-11)
+    if (hoy.getFullYear() >= 2026 && hoy.getMonth() >= 5 && hoy.getDate() >= 8) {
+      document.getElementById('btnUniverso').style.display = 'inline-block';
     }
   }
 
