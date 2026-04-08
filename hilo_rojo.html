@@ -71,7 +71,6 @@
     transform: scale(1.05);
   }
 
-  /* Botón Especial Estilo Your Name */
   .btn-viaje {
     background: #ff0000;
     border: none;
@@ -85,7 +84,6 @@
     100% { box-shadow: 0 0 10px #ff0000; }
   }
 
-  /* Botón del Universo (Oculto hasta el cumple) */
   #btnUniverso { display: none; border-color: #ff1493; }
 
   .indicador-scroll {
@@ -98,6 +96,10 @@
 </style>
 </head>
 <body>
+
+<audio id="musicaFondo" loop>
+  <source src="videos/musicainicio.mp3" type="audio/mpeg">
+</audio>
 
 <canvas id="canvasHilo"></canvas>
 
@@ -124,19 +126,33 @@
     
     <div id="menuFinal">
       <a href="viaje_destino.html" class="btn-destino btn-viaje">💫 Iniciar Viaje del Destino</a>
-
       <a href="ciudad_noche.html" class="btn-destino" style="border-color: #ffd700; color: #ffd700;">🎆 Ver los Fuegos Artificiales</a>
-      
       <a href="bosque.html" class="btn-destino">🌲 Ir al Bosque Mágico</a>
-      
       <a href="cumpleanos_solar.html" class="btn-destino" id="btnUniverso">🚀 Viajar al Universo</a>
-      
       <a href="index.html" class="btn-destino" style="border-color: #555; margin-top: 15px; width: 200px; font-size: 0.8rem;">⬅️ Volver al Inicio</a>
     </div>
   </div>
 </section>
 
 <script>
+  /* --- CONFIGURACIÓN DEL AUDIO --- */
+  const musica = document.getElementById('musicaFondo');
+
+  function iniciarAudio() {
+    if (musica.paused) {
+      musica.play().catch(e => console.log("Esperando interacción para audio..."));
+      // Una vez activado, removemos los escuchas para ahorrar recursos
+      window.removeEventListener('scroll', iniciarAudio);
+      window.removeEventListener('click', iniciarAudio);
+      window.removeEventListener('touchstart', iniciarAudio);
+    }
+  }
+
+  // Escuchar interacciones para saltar el bloqueo de autoplay del navegador
+  window.addEventListener('scroll', iniciarAudio);
+  window.addEventListener('click', iniciarAudio);
+  window.addEventListener('touchstart', iniciarAudio);
+
   /* --- CONFIGURACIÓN DEL HILO --- */
   const canvas = document.getElementById('canvasHilo');
   const ctx = canvas.getContext('2d');
@@ -184,7 +200,7 @@
     requestAnimationFrame(animateHilo);
   }
 
-  /* --- CONTROL DE SCROLL --- */
+  /* --- CONTROL DE SCROLL E INTERSECCIÓN --- */
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -207,7 +223,7 @@
     const mesActual = hoy.getMonth(); 
     const diaActual = hoy.getDate();
     const diaMeta = 8;
-    const mesMeta = 6; // Julio
+    const mesMeta = 6; // Julio (0=Ene, 6=Jul)
 
     let desbloqueado = false;
     if (anioActual > 2026) { desbloqueado = true; } 
@@ -216,7 +232,10 @@
         desbloqueado = true;
       }
     }
-    if (desbloqueado) { document.getElementById('btnUniverso').style.display = 'inline-block'; }
+    if (desbloqueado) { 
+      const btnU = document.getElementById('btnUniverso');
+      if(btnU) btnU.style.display = 'inline-block'; 
+    }
   }
 
   window.addEventListener('resize', initCanvas);
