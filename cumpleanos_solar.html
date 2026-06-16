@@ -195,7 +195,7 @@ document.getElementById('btnEmpezarUniverso').addEventListener('click', function
     }, viajeDuration + 500); 
 });
 
-// Evento de clic en la torta (Solo funcionará cuando pointer-events cambie vía clase)
+// Evento de clic en la torta
 document.getElementById('pastelBtn').addEventListener('click', () => window.location.href = 'index.html');
 
 if (esCelular) {
@@ -208,7 +208,6 @@ if (esCelular) {
     parrafo.style.padding = "0 15px";
 }
 
-// ... (Resto del código de Three.js se mantiene igual)
 let scene, camera, renderer, controls, sun;
 let width, height, starfield, systemRotationGroup;
 let detailedPlanets = []; 
@@ -219,6 +218,12 @@ const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
 let mouseXParallax = 0, mouseYParallax = 0, targetCameraX = 0, targetCameraY = 300;
+
+// --- NUEVAS VARIABLES PARA EL EVENTO FINAL ---
+let planetasLeidos = new Set();
+let eventoFinalActivo = false;
+let tiempoEventoFinal = 0;
+let indiceFotoActual = -1;
 
 const frasesPlanetas = [
     "Eres mi estrella favorita ✨",
@@ -464,6 +469,18 @@ function mostrarMensajeEspecial(texto) {
     setTimeout(() => { div.style.display = 'none'; }, 4000);
 }
 
+// --- FUNCIÓN DEL EVENTO FINAL ---
+function iniciarEventoFinal() {
+    eventoFinalActivo = true;
+    mostrarMensajeEspecial("Nuestros recuerdos en el universo... ✨💖");
+
+    // Ocultamos las fotos pequeñas que estaban de fondo girando
+    photoStars.forEach(sprite => {
+        sprite.material.opacity = 0;
+        sprite.userData.pulseOpacity = 0;
+    });
+}
+
 function onWorldClick(e) {
   raycaster.setFromCamera(mouse, camera);
   if (raycaster.intersectObject(sun).length > 0) {
@@ -475,6 +492,17 @@ function onWorldClick(e) {
       if (intersectPlanetas.length > 0) {
           const mensajeSecreto = intersectPlanetas[0].object.userData.mensaje;
           mostrarMensajeEspecial(mensajeSecreto);
+          
+          // --- LÓGICA DEL EVENTO FINAL ---
+          if (!planetasLeidos.has(mensajeSecreto)) {
+              planetasLeidos.add(mensajeSecreto);
+              
+              // Si ya leyó todos los planetas y el evento no ha iniciado
+              if (planetasLeidos.size === frasesPlanetas.length && !eventoFinalActivo) {
+                  // Esperamos 4 segundos para que termine de leer el último mensaje
+                  setTimeout(iniciarEventoFinal, 4000); 
+              }
+          }
       }
   }
 }
@@ -511,8 +539,11 @@ function animate() {
 
   sun.rotation.y += 0.002;
   photoStars.forEach(sprite => {
-      if (Math.random() < 0.01) sprite.userData.pulseOpacity = 0.6 + Math.random() * 0.4;
-      sprite.material.opacity = THREE.MathUtils.lerp(sprite.material.opacity, sprite.userData.pulseOpacity, 0.05);
+      // Evitamos sobreescribir la opacidad de los recuerdos activos
+      if(!sprite.userData.esRecuerdoActivo){
+          if (Math.random() < 0.01) sprite.userData.pulseOpacity = 0.6 + Math.random() * 0.4;
+          sprite.material.opacity = THREE.MathUtils.lerp(sprite.material.opacity, sprite.userData.pulseOpacity, 0.05);
+      }
   });
 
   if (enViaje) {
@@ -595,6 +626,49 @@ function animate() {
           exp.positions[j * 3 + 2] += exp.velocities[j * 3 + 2]; 
       }
       exp.geometry.getAttribute('position').needsUpdate = true;
+  }
+
+  // --- ANIMACIÓN DEL EVENTO EMOCIONAL ---
+  if (eventoFinalActivo) {
+      tiempoEventoFinal += delta;
+
+      // 1. Efecto Espiral: Rotación acelerada del sistema y las estrellas
+      systemRotationGroup.rotation.y += delta * 2.0; // Giro rápido
+      systemRotationGroup.rotation.x += delta * 0.3;
+      starfield.rotation.y += delta * 0.8;
+      starfield.rotation.z += delta * 0.3;
+
+      // 2. Proceso de Recuerdos: Mostrar foto por foto cada 2 segundos
+      let nuevoIndice = Math.floor(tiempoEventoFinal / 2.0);
+      
+      // Si toca mostrar una nueva foto y aún quedan fotos en el arreglo
+      if (nuevoIndice > indiceFotoActual && nuevoIndice < photoStars.length) {
+          indiceFotoActual = nuevoIndice;
+          let sprite = photoStars[indiceFotoActual];
+
+          // Sacamos la foto del grupo giratorio para ponerla estática
+          systemRotationGroup.remove(sprite);
+          scene.add(sprite);
+
+          // Calculamos la posición exacta frente a la cámara actual
+          let direccionCamara = new THREE.Vector3();
+          camera.getWorldDirection(direccionCamara);
+          // Ponemos la foto a 600 unidades de distancia frente a la vista
+          let posicionFrente = camera.position.clone().add(direccionCamara.multiplyScalar(600));
+
+          sprite.position.copy(posicionFrente);
+          sprite.scale.set(350, 350, 1); // Hacemos la foto mucho más grande
+          sprite.material.opacity = 1;
+          sprite.userData.esRecuerdoActivo = true; // Marcamos para animarla
+      }
+
+      // 3. Desvanecer y elevar las fotos mostradas para dar paso a la siguiente
+      photoStars.forEach(sprite => {
+          if (sprite.userData.esRecuerdoActivo) {
+              sprite.position.y += delta * 40; // Flota hacia arriba suavemente
+              sprite.material.opacity -= delta * 0.4; // Se desvanece
+          }
+      });
   }
 
   if (!esCelular && composer) composer.render(); 
