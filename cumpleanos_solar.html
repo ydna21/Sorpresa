@@ -126,8 +126,9 @@
   <p id="parrafoCumple">Eres el sol que ilumina mi universo. Que este nuevo año cumplas muchas cosas y sigamos siempre juntos❤️</p>
 </div>
 
+<!-- CONTENEDOR DE LA CARTA FINAL MODIFICADA -->
 <div id="cartaFinal">
-  <h3>Para mi universo, Pierina ✨</h3>
+  <h3>Para mi universo ✨</h3>
   <p>Cada recuerdo a tu lado es una estrella que ilumina mi vida. Quería hacer algo verdaderamente especial para demostrarte que mi mundo entero gira a tu alrededor.</p>
   <p>Que este nuevo año te traiga tanta felicidad como la que tú me das todos los días. Te amo infinitamente.</p>
   <p class="firma">- Andy</p>
@@ -241,7 +242,7 @@ let mouseXParallax = 0, mouseYParallax = 0, targetCameraX = 0, targetCameraY = 3
 
 // --- VARIABLES PARA EL EVENTO FINAL ---
 let planetasLeidos = new Set();
-let faseEvento = 0; // 0: Normal, 1: Recuerdos, 2: Constelación, 3: Estrella Gigante, 4: Carta
+let faseEvento = 0; 
 let tiempoEventoFinal = 0;
 let indiceFotoActual = -1;
 let estrellasFugacesEspeciales = []; 
@@ -517,7 +518,7 @@ function crearEstrellaFugazEspecial() {
     estrellasFugacesEspeciales.push(star);
 }
 
-// --- GENERADOR DE LA CONSTELACIÓN P Y A ---
+// --- GENERADOR DE LA CONSTELACIÓN P Y A MODIFICADO ---
 function crearConstelacionTexto() {
     const canvas = document.createElement('canvas');
     canvas.width = 1024; canvas.height = 512;
@@ -533,12 +534,12 @@ function crearConstelacionTexto() {
     const targetPositions = [];
     const randomPositions = [];
 
+    // Ajustamos la escala para que se arme más cerca de la cámara (escalado más pequeño)
     for(let y=0; y<512; y+=6) {
         for(let x=0; x<1024; x+=6) {
             const idx = (y * 1024 + x) * 4;
             if(imgData[idx] > 128) { 
-                // Invertimos la X para que el texto no salga al revés al mirarlo
-                targetPositions.push(-(x - 512) * 2.5, -(y - 256) * 2.5, 0);
+                targetPositions.push(-(x - 512) * 1.2, -(y - 256) * 1.2, 0);
                 randomPositions.push(
                     (Math.random() - 0.5) * 8000,
                     (Math.random() - 0.5) * 8000,
@@ -552,12 +553,15 @@ function crearConstelacionTexto() {
     geom.setAttribute('position', new THREE.Float32BufferAttribute(randomPositions, 3));
     geom.setAttribute('targetPos', new THREE.Float32BufferAttribute(targetPositions, 3));
     
-    const mat = new THREE.PointsMaterial({color: 0xffb6c1, size: esCelular? 12 : 8, transparent: true, opacity: 0, blending: THREE.AdditiveBlending});
+    // Partículas un poco más chicas porque la constelación estará más cerca
+    const mat = new THREE.PointsMaterial({color: 0xffb6c1, size: esCelular? 6 : 4, transparent: true, opacity: 0, blending: THREE.AdditiveBlending});
     grupoConstelacion = new THREE.Points(geom, mat);
     
     let dir = new THREE.Vector3();
     camera.getWorldDirection(dir);
-    let posFrente = camera.position.clone().add(dir.multiplyScalar(1500));
+    // Ahora aparece a solo 600 unidades delante de la cámara, poniéndolo firmemente DELANTE del sol
+    let posFrente = camera.position.clone().add(dir.multiplyScalar(600));
+    posFrente.y += 100; // Lo subimos ligeramente para que quede perfectamente centrado
     grupoConstelacion.position.copy(posFrente);
     grupoConstelacion.lookAt(camera.position);
     
@@ -578,7 +582,6 @@ function crearEstrellaGigante() {
     let dir = new THREE.Vector3();
     camera.getWorldDirection(dir);
     
-    // Nace lejos al fondo
     let startPos = camera.position.clone().add(dir.clone().multiplyScalar(6000));
     startPos.y += 1500;
     startPos.x += 1500;
@@ -681,16 +684,15 @@ function animate() {
   } else {
       controls.update();
       
-      // ROTACIÓN BASE CORREGIDA: Se aplica la normal si Fase es 0
       if (faseEvento === 0) {
           starfield.rotation.y += 0.0001;
           systemRotationGroup.rotation.y += 0.001;
-      } else if (faseEvento === 1) { // Gira muy rápido solo en los recuerdos
+      } else if (faseEvento === 1) { 
           systemRotationGroup.rotation.y += delta * 2.0; 
           systemRotationGroup.rotation.x += delta * 0.3;
           starfield.rotation.y += delta * 0.8;
           starfield.rotation.z += delta * 0.3;
-      } else { // Gira suave y lento en la constelación y carta
+      } else { 
           systemRotationGroup.rotation.y += delta * 0.1; 
           systemRotationGroup.rotation.x += delta * 0.05;
           starfield.rotation.y += delta * 0.05;
@@ -789,7 +791,6 @@ function animate() {
               sprite.userData.esRecuerdoActivo = true; 
           }
 
-          // Inicia la Constelación (Fase 2) después de la última foto
           if (nuevoIndice >= photoStars.length) {
               faseEvento = 2;
               tiempoEventoFinal = 0;
@@ -813,8 +814,8 @@ function animate() {
           }
           grupoConstelacion.geometry.attributes.position.needsUpdate = true;
 
-          // Inicia la Estrella Gigante (Fase 3) tras 8 segundos de constelación
-          if (tiempoEventoFinal > 8) {
+          // SE AÑADIÓ 10 SEGUNDOS MÁS DE RETRASO (Ahora espera 18 segundos en total)
+          if (tiempoEventoFinal > 18) {
               faseEvento = 3;
               crearEstrellaGigante();
           }
