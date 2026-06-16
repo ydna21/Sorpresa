@@ -37,7 +37,8 @@
   #mensajePlaneta {
     display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
     background: rgba(20, 0, 10, 0.85); border: 2px solid #ff1493; color: white;
-    padding: 20px 40px; border-radius: 20px; font-size: 1.8rem; text-align: center;
+    /* TAMAÑO DE LETRA DE PLANETAS REDUCIDO */
+    padding: 15px 30px; border-radius: 20px; font-size: 1.4rem; text-align: center;
     z-index: 1000; box-shadow: 0 0 40px #ff1493; animation: aparecerMensaje 0.5s ease;
     pointer-events: none; text-shadow: 0 0 10px #ffb6c1;
   }
@@ -52,8 +53,9 @@
     opacity: 0; transition: opacity 2s ease;
   }
   
-  h1 { font-size: 3.5rem; color: #fff; text-shadow: 0 0 20px #ff69b4, 0 0 30px #ff1493; margin-bottom: 10px; animation: glow 2s ease-in-out infinite alternate; margin-top: 0; }
-  p { font-size: 1.5rem; color: #ffb6c1; max-width: 600px; margin-top: 0; margin-bottom: 0; }
+  /* TAMAÑO DE LETRAS PRINCIPALES REDUCIDO */
+  h1 { font-size: 2.6rem; color: #fff; text-shadow: 0 0 20px #ff69b4, 0 0 30px #ff1493; margin-bottom: 10px; animation: glow 2s ease-in-out infinite alternate; margin-top: 0; }
+  p { font-size: 1.2rem; color: #ffb6c1; max-width: 600px; margin-top: 0; margin-bottom: 0; }
   
   /* ESTILO DE LA TORTA INICIAL (Apagada) */
   #pastelBtn {
@@ -198,12 +200,13 @@ document.getElementById('btnEmpezarUniverso').addEventListener('click', function
 // Evento de clic en la torta
 document.getElementById('pastelBtn').addEventListener('click', () => window.location.href = 'index.html');
 
+// --- REDUCCIÓN DE TEXTOS PARA CELULAR ---
 if (esCelular) {
     const titulo = document.getElementById('tituloCumple');
     const parrafo = document.getElementById('parrafoCumple');
-    titulo.style.fontSize = "1.8rem";      
+    titulo.style.fontSize = "1.4rem";      
     titulo.style.marginBottom = "5px";
-    parrafo.style.fontSize = "1.1rem";     
+    parrafo.style.fontSize = "0.95rem";     
     parrafo.style.maxWidth = "90%";
     parrafo.style.padding = "0 15px";
 }
@@ -224,6 +227,7 @@ let planetasLeidos = new Set();
 let eventoFinalActivo = false;
 let tiempoEventoFinal = 0;
 let indiceFotoActual = -1;
+let estrellasFugacesEspeciales = []; // Array para la lluvia de estrellas
 
 const frasesPlanetas = [
     "Eres mi estrella favorita ✨",
@@ -469,11 +473,36 @@ function mostrarMensajeEspecial(texto) {
     setTimeout(() => { div.style.display = 'none'; }, 4000);
 }
 
-// --- FUNCIÓN DEL EVENTO FINAL ---
+// --- GENERADOR DE ESTRELLAS FUGACES PARA EL EVENTO FINAL ---
+function crearEstrellaFugazEspecial() {
+    const geom = new THREE.BoxGeometry(2, 2, 100 + Math.random() * 200);
+    const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
+    const star = new THREE.Mesh(geom, mat);
+
+    const startPos = new THREE.Vector3(
+        (Math.random() - 0.5) * 8000,
+        (Math.random() - 0.5) * 8000,
+        (Math.random() - 0.5) * 8000
+    );
+    star.position.copy(startPos);
+    
+    const v = new THREE.Vector3(
+        (Math.random() - 0.5),
+        (Math.random() - 0.5),
+        (Math.random() - 0.5)
+    ).normalize().multiplyScalar(4000 + Math.random() * 2000); // Mucha velocidad
+    
+    star.userData = { velocity: v, life: 2.0 }; // 2 segundos de vida
+    star.lookAt(star.position.clone().add(v));
+
+    scene.add(star);
+    estrellasFugacesEspeciales.push(star);
+}
+
+// --- INICIO DEL EVENTO FINAL ---
 function iniciarEventoFinal() {
     eventoFinalActivo = true;
-    mostrarMensajeEspecial("Nuestros recuerdos en el universo... ✨💖");
-
+    
     // Ocultamos las fotos pequeñas que estaban de fondo girando
     photoStars.forEach(sprite => {
         sprite.material.opacity = 0;
@@ -499,7 +528,7 @@ function onWorldClick(e) {
               
               // Si ya leyó todos los planetas y el evento no ha iniciado
               if (planetasLeidos.size === frasesPlanetas.length && !eventoFinalActivo) {
-                  // Esperamos 4 segundos para que termine de leer el último mensaje
+                  // Esperamos 4 segundos para que termine de leer el último mensaje e iniciamos en silencio
                   setTimeout(iniciarEventoFinal, 4000); 
               }
           }
@@ -633,12 +662,30 @@ function animate() {
       tiempoEventoFinal += delta;
 
       // 1. Efecto Espiral: Rotación acelerada del sistema y las estrellas
-      systemRotationGroup.rotation.y += delta * 2.0; // Giro rápido
+      systemRotationGroup.rotation.y += delta * 2.0; 
       systemRotationGroup.rotation.x += delta * 0.3;
       starfield.rotation.y += delta * 0.8;
       starfield.rotation.z += delta * 0.3;
 
-      // 2. Proceso de Recuerdos: Mostrar foto por foto cada 2 segundos
+      // 2. Disparar lluvia de estrellas fugaces (probabilidad en cada frame)
+      if (Math.random() < 0.15) { // 15% de probabilidad de generar una estrella fugaz nueva cada milisegundo
+          crearEstrellaFugazEspecial();
+      }
+
+      // Animar las estrellas fugaces creadas
+      for (let i = estrellasFugacesEspeciales.length - 1; i >= 0; i--) {
+          let star = estrellasFugacesEspeciales[i];
+          star.position.add(star.userData.velocity.clone().multiplyScalar(delta));
+          star.userData.life -= delta;
+          if (star.userData.life <= 0) {
+              scene.remove(star);
+              star.geometry.dispose();
+              star.material.dispose();
+              estrellasFugacesEspeciales.splice(i, 1);
+          }
+      }
+
+      // 3. Proceso de Recuerdos: Mostrar foto por foto cada 2 segundos
       let nuevoIndice = Math.floor(tiempoEventoFinal / 2.0);
       
       // Si toca mostrar una nueva foto y aún quedan fotos en el arreglo
@@ -653,20 +700,19 @@ function animate() {
           // Calculamos la posición exacta frente a la cámara actual
           let direccionCamara = new THREE.Vector3();
           camera.getWorldDirection(direccionCamara);
-          // Ponemos la foto a 600 unidades de distancia frente a la vista
           let posicionFrente = camera.position.clone().add(direccionCamara.multiplyScalar(600));
 
           sprite.position.copy(posicionFrente);
-          sprite.scale.set(350, 350, 1); // Hacemos la foto mucho más grande
+          sprite.scale.set(350, 350, 1); 
           sprite.material.opacity = 1;
-          sprite.userData.esRecuerdoActivo = true; // Marcamos para animarla
+          sprite.userData.esRecuerdoActivo = true; 
       }
 
-      // 3. Desvanecer y elevar las fotos mostradas para dar paso a la siguiente
+      // 4. Desvanecer y elevar las fotos mostradas para dar paso a la siguiente
       photoStars.forEach(sprite => {
           if (sprite.userData.esRecuerdoActivo) {
-              sprite.position.y += delta * 40; // Flota hacia arriba suavemente
-              sprite.material.opacity -= delta * 0.4; // Se desvanece
+              sprite.position.y += delta * 40; 
+              sprite.material.opacity -= delta * 0.4; 
           }
       });
   }
