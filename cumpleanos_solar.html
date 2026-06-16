@@ -37,7 +37,6 @@
   #mensajePlaneta {
     display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
     background: rgba(20, 0, 10, 0.85); border: 2px solid #ff1493; color: white;
-    /* TAMAÑO DE LETRA DE PLANETAS REDUCIDO */
     padding: 15px 30px; border-radius: 20px; font-size: 1.4rem; text-align: center;
     z-index: 1000; box-shadow: 0 0 40px #ff1493; animation: aparecerMensaje 0.5s ease;
     pointer-events: none; text-shadow: 0 0 10px #ffb6c1;
@@ -53,11 +52,9 @@
     opacity: 0; transition: opacity 2s ease;
   }
   
-  /* TAMAÑO DE LETRAS PRINCIPALES REDUCIDO */
   h1 { font-size: 2.6rem; color: #fff; text-shadow: 0 0 20px #ff69b4, 0 0 30px #ff1493; margin-bottom: 10px; animation: glow 2s ease-in-out infinite alternate; margin-top: 0; }
   p { font-size: 1.2rem; color: #ffb6c1; max-width: 600px; margin-top: 0; margin-bottom: 0; }
   
-  /* ESTILO DE LA TORTA INICIAL (Apagada) */
   #pastelBtn {
     display: inline-block;
     cursor: default;
@@ -66,7 +63,6 @@
     transition: all 1s ease;
   }
 
-  /* CLASE QUE SE ACTIVA AL MINUTO */
   .pastel-activo {
     cursor: pointer !important;
     pointer-events: auto !important;
@@ -93,6 +89,18 @@
      transition: all 0.3s; white-space: nowrap; box-shadow: 0 0 15px rgba(255, 105, 180, 0.4); pointer-events: auto;
   }
   .btn-volver-flotante:hover { background: #ff69b4; color: white; box-shadow: 0 0 30px #ff69b4; }
+
+  /* --- ESTILOS DE LA CARTA FINAL --- */
+  #cartaFinal {
+      display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: rgba(15, 0, 10, 0.75); border: 2px solid #ff1493; color: white;
+      padding: 40px; border-radius: 15px; text-align: center; z-index: 2000;
+      box-shadow: 0 0 50px #ff69b4; opacity: 0; transition: opacity 2s ease;
+      max-width: 85%; width: 500px; backdrop-filter: blur(5px);
+  }
+  #cartaFinal h3 { font-size: 2.2rem; margin-top: 0; color: #ffb6c1; text-shadow: 0 0 15px #ff1493; margin-bottom: 20px;}
+  #cartaFinal p { font-size: 1.1rem; line-height: 1.8; color: #fdfdfd; margin-bottom: 15px;}
+  #cartaFinal .firma { font-weight: bold; color: #ff69b4; font-size: 1.4rem; text-align: right; margin-top: 30px;}
 </style>
 </head>
 <body>
@@ -116,6 +124,13 @@
 <div id="mainContent">
   <h1 id="tituloCumple">¡Feliz Cumpleaños! <span id="pastelBtn" title="Regresar al inicio">🎂</span>💖</h1>
   <p id="parrafoCumple">Eres el sol que ilumina mi universo. Que este nuevo año cumplas muchas cosas y sigamos siempre juntos❤️</p>
+</div>
+
+<div id="cartaFinal">
+  <h3>Para mi universo, Pierina ✨</h3>
+  <p>Cada recuerdo a tu lado es una estrella que ilumina mi vida. Quería hacer algo verdaderamente especial para demostrarte que mi mundo entero gira a tu alrededor.</p>
+  <p>Que este nuevo año te traiga tanta felicidad como la que tú me das todos los días. Te amo infinitamente.</p>
+  <p class="firma">- Andy</p>
 </div>
 
 <div id="contenedorBotones">
@@ -189,7 +204,6 @@ document.getElementById('btnEmpezarUniverso').addEventListener('click', function
         enViaje = false;
         if (!esCelular) { camera.fov = 75; camera.updateProjectionMatrix(); }
         
-        // ACTIVACIÓN DE LA TORTA TRAS 60 SEGUNDOS DE HABER ENTRADO
         setTimeout(() => {
             document.getElementById('pastelBtn').classList.add('pastel-activo');
         }, 60000);
@@ -197,10 +211,8 @@ document.getElementById('btnEmpezarUniverso').addEventListener('click', function
     }, viajeDuration + 500); 
 });
 
-// Evento de clic en la torta
 document.getElementById('pastelBtn').addEventListener('click', () => window.location.href = 'index.html');
 
-// --- REDUCCIÓN DE TEXTOS PARA CELULAR ---
 if (esCelular) {
     const titulo = document.getElementById('tituloCumple');
     const parrafo = document.getElementById('parrafoCumple');
@@ -209,6 +221,11 @@ if (esCelular) {
     parrafo.style.fontSize = "0.95rem";     
     parrafo.style.maxWidth = "90%";
     parrafo.style.padding = "0 15px";
+    
+    const carta = document.getElementById('cartaFinal');
+    carta.style.padding = "25px";
+    carta.querySelector('h3').style.fontSize = "1.8rem";
+    carta.querySelector('p').style.fontSize = "0.95rem";
 }
 
 let scene, camera, renderer, controls, sun;
@@ -222,12 +239,14 @@ const mouse = new THREE.Vector2();
 
 let mouseXParallax = 0, mouseYParallax = 0, targetCameraX = 0, targetCameraY = 300;
 
-// --- NUEVAS VARIABLES PARA EL EVENTO FINAL ---
+// --- VARIABLES PARA EL CONTROL DE FASES DEL EVENTO ---
 let planetasLeidos = new Set();
-let eventoFinalActivo = false;
+let faseEvento = 0; // 0: Normal, 1: Fotos, 2: Constelación, 3: Estrella Gigante, 4: Carta Mostrada
 let tiempoEventoFinal = 0;
 let indiceFotoActual = -1;
-let estrellasFugacesEspeciales = []; // Array para la lluvia de estrellas
+let estrellasFugacesEspeciales = []; 
+let grupoConstelacion = null;
+let estrellaGigante = null;
 
 const frasesPlanetas = [
     "Eres mi estrella favorita ✨",
@@ -473,7 +492,6 @@ function mostrarMensajeEspecial(texto) {
     setTimeout(() => { div.style.display = 'none'; }, 4000);
 }
 
-// --- GENERADOR DE ESTRELLAS FUGACES PARA EL EVENTO FINAL ---
 function crearEstrellaFugazEspecial() {
     const geom = new THREE.BoxGeometry(2, 2, 100 + Math.random() * 200);
     const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
@@ -490,20 +508,89 @@ function crearEstrellaFugazEspecial() {
         (Math.random() - 0.5),
         (Math.random() - 0.5),
         (Math.random() - 0.5)
-    ).normalize().multiplyScalar(4000 + Math.random() * 2000); // Mucha velocidad
+    ).normalize().multiplyScalar(4000 + Math.random() * 2000); 
     
-    star.userData = { velocity: v, life: 2.0 }; // 2 segundos de vida
+    star.userData = { velocity: v, life: 2.0 };
     star.lookAt(star.position.clone().add(v));
 
     scene.add(star);
     estrellasFugacesEspeciales.push(star);
 }
 
-// --- INICIO DEL EVENTO FINAL ---
-function iniciarEventoFinal() {
-    eventoFinalActivo = true;
+// --- GENERADOR DE LA CONSTELACIÓN P Y A ---
+function crearConstelacionTexto() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024; canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'black'; ctx.fillRect(0, 0, 1024, 512);
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 150px "Courier New"';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText("P Y A", 512, 256);
+
+    const imgData = ctx.getImageData(0, 0, 1024, 512).data;
+    const targetPositions = [];
+    const randomPositions = [];
+
+    // Leemos los píxeles blancos del canvas para convertirlos a coordenadas 3D
+    for(let y=0; y<512; y+=6) {
+        for(let x=0; x<1024; x+=6) {
+            const idx = (y * 1024 + x) * 4;
+            if(imgData[idx] > 128) { 
+                targetPositions.push((x - 512) * 2.5, -(y - 256) * 2.5, 0);
+                randomPositions.push(
+                    (Math.random() - 0.5) * 8000,
+                    (Math.random() - 0.5) * 8000,
+                    (Math.random() - 0.5) * 8000
+                );
+            }
+        }
+    }
+
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute('position', new THREE.Float32BufferAttribute(randomPositions, 3));
+    geom.setAttribute('targetPos', new THREE.Float32BufferAttribute(targetPositions, 3));
     
-    // Ocultamos las fotos pequeñas que estaban de fondo girando
+    const mat = new THREE.PointsMaterial({color: 0xffb6c1, size: esCelular? 15 : 10, transparent: true, opacity: 0, blending: THREE.AdditiveBlending});
+    grupoConstelacion = new THREE.Points(geom, mat);
+    
+    let dir = new THREE.Vector3();
+    camera.getWorldDirection(dir);
+    let posFrente = camera.position.clone().add(dir.multiplyScalar(1500));
+    grupoConstelacion.position.copy(posFrente);
+    grupoConstelacion.lookAt(camera.position);
+    
+    scene.add(grupoConstelacion);
+}
+
+// --- ESTRELLA FUGAZ GIGANTE QUE TRAE LA CARTA ---
+function crearEstrellaGigante() {
+    const geom = new THREE.SphereGeometry(25, 32, 32);
+    const mat = new THREE.MeshBasicMaterial({color: 0xffffff});
+    estrellaGigante = new THREE.Mesh(geom, mat);
+    
+    const glowGeom = new THREE.SphereGeometry(70, 32, 32);
+    const glowMat = new THREE.MeshBasicMaterial({color: 0xff69b4, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending});
+    const glow = new THREE.Mesh(glowGeom, glowMat);
+    estrellaGigante.add(glow);
+
+    let dir = new THREE.Vector3();
+    camera.getWorldDirection(dir);
+    
+    // Nace lejos al fondo, arriba a la derecha
+    let startPos = camera.position.clone().add(dir.clone().multiplyScalar(6000));
+    startPos.y += 1500;
+    startPos.x += 1500;
+    estrellaGigante.position.copy(startPos);
+    
+    // Su objetivo de impacto será la cámara
+    estrellaGigante.userData.target = camera.position.clone();
+    scene.add(estrellaGigante);
+}
+
+function iniciarEventoFinal() {
+    faseEvento = 1;
     photoStars.forEach(sprite => {
         sprite.material.opacity = 0;
         sprite.userData.pulseOpacity = 0;
@@ -522,13 +609,10 @@ function onWorldClick(e) {
           const mensajeSecreto = intersectPlanetas[0].object.userData.mensaje;
           mostrarMensajeEspecial(mensajeSecreto);
           
-          // --- LÓGICA DEL EVENTO FINAL ---
           if (!planetasLeidos.has(mensajeSecreto)) {
               planetasLeidos.add(mensajeSecreto);
               
-              // Si ya leyó todos los planetas y el evento no ha iniciado
-              if (planetasLeidos.size === frasesPlanetas.length && !eventoFinalActivo) {
-                  // Esperamos 4 segundos para que termine de leer el último mensaje e iniciamos en silencio
+              if (planetasLeidos.size === frasesPlanetas.length && faseEvento === 0) {
                   setTimeout(iniciarEventoFinal, 4000); 
               }
           }
@@ -568,7 +652,6 @@ function animate() {
 
   sun.rotation.y += 0.002;
   photoStars.forEach(sprite => {
-      // Evitamos sobreescribir la opacidad de los recuerdos activos
       if(!sprite.userData.esRecuerdoActivo){
           if (Math.random() < 0.01) sprite.userData.pulseOpacity = 0.6 + Math.random() * 0.4;
           sprite.material.opacity = THREE.MathUtils.lerp(sprite.material.opacity, sprite.userData.pulseOpacity, 0.05);
@@ -599,7 +682,20 @@ function animate() {
   } else {
       controls.update();
       starfield.rotation.y += 0.0001;
-      systemRotationGroup.rotation.y += 0.001;
+      
+      // Controlar la velocidad de giro normal vs eventos
+      let velGiro = 0.001;
+      if (faseEvento === 1) velGiro = 2.0;       // Giro acelerado
+      else if (faseEvento === 2 || faseEvento === 3) velGiro = 0.2; // Giro suave
+      else if (faseEvento === 4) velGiro = 0.05; // Giro casi estático en la carta
+      
+      systemRotationGroup.rotation.y += velGiro * delta * (faseEvento > 0 ? 1 : 1000); // 1000 para ajustar la escala original que no usaba delta
+      
+      if (faseEvento > 0) {
+          systemRotationGroup.rotation.x += delta * 0.2;
+          starfield.rotation.y += delta * (velGiro * 0.4);
+      }
+
       if (!esCelular) {
           targetCameraX = mouseXParallax * 0.15;
           targetCameraY = -mouseYParallax * 0.15 + 300; 
@@ -657,64 +753,96 @@ function animate() {
       exp.geometry.getAttribute('position').needsUpdate = true;
   }
 
-  // --- ANIMACIÓN DEL EVENTO EMOCIONAL ---
-  if (eventoFinalActivo) {
+  // --- MÁQUINA DE ESTADOS DEL EVENTO FINAL ---
+  if (faseEvento >= 1 && faseEvento <= 3) {
       tiempoEventoFinal += delta;
 
-      // 1. Efecto Espiral: Rotación acelerada del sistema y las estrellas
-      systemRotationGroup.rotation.y += delta * 2.0; 
-      systemRotationGroup.rotation.x += delta * 0.3;
-      starfield.rotation.y += delta * 0.8;
-      starfield.rotation.z += delta * 0.3;
+      // Generar lluvia de estrellas fugaces
+      if (Math.random() < 0.15) crearEstrellaFugazEspecial();
 
-      // 2. Disparar lluvia de estrellas fugaces (probabilidad en cada frame)
-      if (Math.random() < 0.15) { // 15% de probabilidad de generar una estrella fugaz nueva cada milisegundo
-          crearEstrellaFugazEspecial();
-      }
-
-      // Animar las estrellas fugaces creadas
       for (let i = estrellasFugacesEspeciales.length - 1; i >= 0; i--) {
           let star = estrellasFugacesEspeciales[i];
           star.position.add(star.userData.velocity.clone().multiplyScalar(delta));
           star.userData.life -= delta;
           if (star.userData.life <= 0) {
               scene.remove(star);
-              star.geometry.dispose();
-              star.material.dispose();
+              star.geometry.dispose(); star.material.dispose();
               estrellasFugacesEspeciales.splice(i, 1);
           }
       }
 
-      // 3. Proceso de Recuerdos: Mostrar foto por foto cada 2 segundos
-      let nuevoIndice = Math.floor(tiempoEventoFinal / 2.0);
-      
-      // Si toca mostrar una nueva foto y aún quedan fotos en el arreglo
-      if (nuevoIndice > indiceFotoActual && nuevoIndice < photoStars.length) {
-          indiceFotoActual = nuevoIndice;
-          let sprite = photoStars[indiceFotoActual];
+      // FASE 1: MOSTRAR LAS FOTOS
+      if (faseEvento === 1) {
+          let nuevoIndice = Math.floor(tiempoEventoFinal / 2.0);
+          
+          if (nuevoIndice > indiceFotoActual && nuevoIndice < photoStars.length) {
+              indiceFotoActual = nuevoIndice;
+              let sprite = photoStars[indiceFotoActual];
+              systemRotationGroup.remove(sprite);
+              scene.add(sprite);
 
-          // Sacamos la foto del grupo giratorio para ponerla estática
-          systemRotationGroup.remove(sprite);
-          scene.add(sprite);
+              let direccionCamara = new THREE.Vector3();
+              camera.getWorldDirection(direccionCamara);
+              let posicionFrente = camera.position.clone().add(direccionCamara.multiplyScalar(600));
 
-          // Calculamos la posición exacta frente a la cámara actual
-          let direccionCamara = new THREE.Vector3();
-          camera.getWorldDirection(direccionCamara);
-          let posicionFrente = camera.position.clone().add(direccionCamara.multiplyScalar(600));
+              sprite.position.copy(posicionFrente);
+              sprite.scale.set(350, 350, 1); 
+              sprite.material.opacity = 1;
+              sprite.userData.esRecuerdoActivo = true; 
+          }
 
-          sprite.position.copy(posicionFrente);
-          sprite.scale.set(350, 350, 1); 
-          sprite.material.opacity = 1;
-          sprite.userData.esRecuerdoActivo = true; 
+          // Transición a la FASE 2: CONSTELACIÓN
+          if (nuevoIndice >= photoStars.length) {
+              faseEvento = 2;
+              tiempoEventoFinal = 0; 
+              crearConstelacionTexto();
+          }
       }
 
-      // 4. Desvanecer y elevar las fotos mostradas para dar paso a la siguiente
+      // Desvanecer fotos activas
       photoStars.forEach(sprite => {
           if (sprite.userData.esRecuerdoActivo) {
               sprite.position.y += delta * 40; 
               sprite.material.opacity -= delta * 0.4; 
           }
       });
+
+      // FASE 2: ANIMAR LA CONSTELACIÓN
+      if (faseEvento === 2 && grupoConstelacion) {
+          grupoConstelacion.material.opacity = Math.min(1, grupoConstelacion.material.opacity + delta * 0.5);
+          
+          const pos = grupoConstelacion.geometry.attributes.position.array;
+          const target = grupoConstelacion.geometry.attributes.targetPos.array;
+          for(let i = 0; i < pos.length; i++) {
+              pos[i] += (target[i] - pos[i]) * 0.03; // Movimiento magnético suave
+          }
+          grupoConstelacion.geometry.attributes.position.needsUpdate = true;
+
+          // Transición a la FASE 3: ESTRELLA GIGANTE (después de 7 segundos)
+          if (tiempoEventoFinal > 7) {
+              faseEvento = 3;
+              crearEstrellaGigante();
+          }
+      }
+
+      // FASE 3: IMPACTO DE LA ESTRELLA GIGANTE
+      if (faseEvento === 3 && estrellaGigante) {
+          let current = estrellaGigante.position;
+          let target = estrellaGigante.userData.target;
+          
+          current.lerp(target, delta * 1.5); // Viaja a la cámara
+          estrellaGigante.scale.addScalar(delta * 12); // Crece masivamente
+          
+          // Transición a la FASE 4: MOSTRAR CARTA (cuando la estrella choca)
+          if (current.distanceTo(target) < 300) {
+              faseEvento = 4;
+              scene.remove(estrellaGigante);
+              
+              const carta = document.getElementById('cartaFinal');
+              carta.style.display = 'block';
+              setTimeout(() => { carta.style.opacity = '1'; }, 100);
+          }
+      }
   }
 
   if (!esCelular && composer) composer.render(); 
