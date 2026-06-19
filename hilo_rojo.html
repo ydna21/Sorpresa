@@ -92,7 +92,7 @@
   <section class="section">
   <div class="content">
     <h2>Inrompible..</h2>
-    <p>"Asi como el hilo y nuetro destino juntos."</p>
+    <p>"Asi como el hilo y nuestro destino juntos."</p>
   </div>
 </section>
 
@@ -103,8 +103,11 @@
     
     <div id="menuFinal">
       <a href="viaje_destino.html" class="btn-destino btn-viaje">💫 Iniciar Viaje del Destino</a>
+      
+      <a href="bosque.html" class="btn-destino" style="border-color: #4CAF50; color: #4CAF50;">🌳 Explorar el Bosque</a>
+      
       <a href="ciudad_noche.html" class="btn-destino" style="border-color: #ffd700; color: #ffd700;">🎆 Ver los Fuegos Artificiales</a>
-      <a href="cumpleanos_solar.html" class="btn-destino" id="btnUniverso">🚀 Viajar al Universo</a>
+      <a href="cumpleanos_solar.html" class="btn-destino" id="btnUniverso" style="color: #ff1493;">🚀 Viajar al Universo</a>
       <a href="index.html" class="btn-destino" style="border-color: #555; margin-top: 15px; width: 200px; font-size: 0.8rem;">⬅️ Volver al Inicio</a>
     </div>
   </div>
@@ -114,14 +117,12 @@
   const musica = document.getElementById('musicaFondo');
   const statusTxt = document.getElementById('musicStatus');
 
-  // Función mejorada para móviles
   function iniciarAudio() {
     if (musica.paused) {
       musica.play().then(() => {
         statusTxt.innerText = "MUSICA: ON 🎵";
         statusTxt.style.borderColor = "#00ff00";
         statusTxt.style.color = "#00ff00";
-        // Desaparece después de unos segundos
         setTimeout(() => { statusTxt.style.display = 'none'; }, 3000);
       }).catch(e => console.log("Error de audio:", e));
     }
@@ -149,7 +150,7 @@
   window.addEventListener('touchstart', (e) => { 
     mouseX = e.touches[0].clientX; 
     mouseY = e.touches[0].clientY;
-    iniciarAudio(); // Activa audio al primer toque
+    iniciarAudio(); 
   });
   window.addEventListener('touchmove', (e) => {
     mouseX = e.touches[0].clientX;
@@ -193,8 +194,11 @@
 
   function verificarCumpleanos() {
     const hoy = new Date();
-    // Junio es mes 5 en JavaScript (0-11)
-    if (hoy.getFullYear() >= 2026 && hoy.getMonth() >= 5 && hoy.getDate() >= 8) {
+    // Definimos el 8 de julio de 2026 (Mes 6 porque Enero es 0)
+    const fechaSorpresa = new Date(2026, 6, 8); 
+
+    // Si la fecha actual es mayor o igual a la fecha de la sorpresa, mostramos el botón
+    if (hoy >= fechaSorpresa) {
       document.getElementById('btnUniverso').style.display = 'inline-block';
     }
   }
