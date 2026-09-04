@@ -91,8 +91,8 @@
     let score = 0;
     let gameState = "START"; // START, PLAYING, GAMEOVER
 
-    // Variables del corazón (jugador)
-    const heart = {
+    // Variables del jugador
+      const heart = {
       x: 50,
       y: 150,
       radius: 12,
@@ -100,12 +100,24 @@
       gravity: 0.25,
       jump: -4.5,
       draw() {
+        ctx.save(); // 1. Guarda el estado actual del canvas
+
+        // 2. Mueve el origen al centro del jugador y voltea el eje X
+        ctx.translate(this.x, this.y);
+        ctx.scale(-1, 1); 
+
+        // 3. Dibuja el emoji (ahora invertido). 
+        // Como el origen está en (this.x, this.y), dibujamos relativo a (0,0)
         ctx.font = "24px Arial";
-        ctx.fillText("💖", this.x - 12, this.y + 8);
+        ctx.fillText("🐦", -12, 8); 
+
+        ctx.restore(); // 4. Restaura el canvas para no afectar a otros elementos
       },
       update() {
         this.velocity += this.gravity;
         this.y += this.velocity;
+      }
+    };
         
         // Colisión con el suelo o el techo
         if (this.y + this.radius >= canvas.height || this.y - this.radius <= 0) {
