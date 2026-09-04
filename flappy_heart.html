@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flappy Heart</title>
+<style>
+  body {
+    margin: 0; background: black; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; min-height: 100vh;
+    font-family: 'Courier New', monospace; color: white; overflow: hidden;
+  }
+  h2 { color: #ff69b4; text-shadow: 0 0 10px #ff69b4; margin: 10px 0; text-align: center; }
+  p { margin-top: 0; margin-bottom: 10px; color: #ddd; font-size: 0.9rem; text-align: center; }
+  
+  #gameWrapper {
+    position: relative;
+    width: 300px;
+    height: 400px;
+  }
+
+  #gameCanvas {
+    background: #111; border: 2px solid #ff69b4; border-radius: 10px;
+    box-shadow: 0 0 20px rgba(255,105,180,0.4); display: block;
+  }
+
+  #scoreDisplay {
+    position: absolute; top: 10px; left: 0; width: 100%;
+    text-align: center; font-size: 2rem; font-weight: bold;
+    color: white; text-shadow: 2px 2px 4px #000, 0 0 10px #ff69b4;
+    pointer-events: none; z-index: 5;
+  }
+
+  #gameOverScreen {
+    display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); border-radius: 10px; z-index: 10;
+    flex-direction: column; align-items: center; justify-content: center; text-align: center;
+  }
+  
+  #gameOverScreen h3 { color: #ff69b4; font-size: 1.8rem; margin: 0 0 10px 0; }
+  #finalScore { font-size: 1.2rem; margin-bottom: 20px; font-weight: bold; }
+  
+  .btn-accion {
+    padding: 10px 20px; font-size: 1rem; background: #ff69b4;
+    color: white; border: none; border-radius: 10px; cursor: pointer;
+    box-shadow: 0 0 15px rgba(255,105,180,0.5); font-family: 'Courier New', monospace;
+    font-weight: bold; transition: 0.3s;
+  }
+  .btn-accion:hover { transform: scale(1.05); }
+
+  .btn-regresar {
+    margin-top: 20px; padding: 10px 20px; font-size: 1rem; background: #333;
+    color: white; border: none; border-radius: 10px; cursor: pointer;
+    text-decoration: none; transition: 0.3s;
+  }
+  .btn-regresar:hover { background: #555; }
+</style>
+</head>
+<body>
+
+  <h2>💖 Flappy Heart 💖</h2>
+  <p>Toca la pantalla para volar. ¡Esquiva los muros! 🎵</p>
+
+  <audio id="musicaJuego" loop>
+    <source src="../musica.mp3" type="audio/mpeg">
+  </audio>
+
+  <div id="gameWrapper">
+    <div id="scoreDisplay">0</div>
+    <canvas id="gameCanvas" width="300" height="400"></canvas>
+    
+    <div id="gameOverScreen">
+      <h3>¡Ups!</h3>
+      <p id="finalScore">Puntuación: 0</p>
+      <p style="font-size: 0.9rem; margin-bottom: 20px; padding: 0 10px;">¡Vuelve a intentarlo, mi amor! ❤️</p>
+      <button id="btnRestart" class="btn-accion">Volver a Jugar</button>
+    </div>
+  </div>
+  
+  <a href="../juegos.html" class="btn-regresar">⬅️ Regresar a Juegos</a>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const scoreDisplay = document.getElementById("scoreDisplay");
+    const gameOverScreen = document.getElementById("gameOverScreen");
+    const btnRestart = document.getElementById("btnRestart");
+    const musica = document.getElementById("musicaJuego");
+
+    let frames = 0;
+    let score = 0;
+    let gameState = "START"; // START, PLAYING, GAMEOVER
+
+    // Variables del corazón (jugador)
+    const heart = {
+      x: 50,
+      y: 150,
+      radius: 12,
+      velocity: 0,
+      gravity: 0.25,
+      jump: -4.5,
+      draw() {
+        ctx.font = "24px Arial";
+        ctx.fillText("💖", this.x - 12, this.y + 8);
+      },
+      update() {
+        this.velocity += this.gravity;
+        this.y += this.velocity;
+        
+        // Colisión con el suelo o el techo
+        if (this.y + this.radius >= canvas.height || this.y - this.radius <= 0) {
+          gameState = "GAMEOVER";
+        }
+      },
+      flap() {
+        this.velocity = this.jump;
+      },
+      reset() {
+        this.y = 150;
+        this.velocity = 0;
+      }
+    };
+
+    // Tuberías (Obstáculos)
+    const pipes = {
+      items: [],
+      width: 40,
+      gap: 130, // Espacio para pasar
+      dx: 2, // Velocidad a la que se mueven
+      draw() {
+        for (let i = 0; i < this.items.length; i++) {
+          let p = this.items[i];
+          
+          ctx.fillStyle = "#330033"; // Color del pilar
+          ctx.strokeStyle = "#ff69b4"; // Borde neón
+          ctx.lineWidth = 2;
+
+          // Pilar superior
+          ctx.fillRect(p.x, 0, this.width, p.top);
+          ctx.strokeRect(p.x, 0, this.width, p.top);
+
+          // Pilar inferior
+          ctx.fillRect(p.x, p.bottom, this.width, canvas.height - p.bottom);
+          ctx.strokeRect(p.x, p.bottom, this.width, canvas.height - p.bottom);
+        }
+      },
+      update() {
+        // Generar nueva tubería cada 90 frames
+        if (frames % 90 === 0) {
+          let topHeight = Math.max(30, Math.random() * (canvas.height - this.gap - 60));
+          this.items.push({
+            x: canvas.width,
+            top: topHeight,
+            bottom: topHeight + this.gap,
+            passed: false
+          });
+        }
+
+        for (let i = 0; i < this.items.length; i++) {
+          let p = this.items[i];
+          p.x -= this.dx;
+
+          // Detección de colisión
+          if (
+            heart.x + heart.radius > p.x && 
+            heart.x - heart.radius < p.x + this.width &&
+            (heart.y - heart.radius < p.top || heart.y + heart.radius > p.bottom)
+          ) {
+            gameState = "GAMEOVER";
+          }
+
+          // Aumentar puntuación
+          if (p.x + this.width < heart.x && !p.passed) {
+            score++;
+            p.passed = true;
+            scoreDisplay.innerText = score;
+          }
+
+          // Eliminar tuberías que ya pasaron
+          if (p.x + this.width < 0) {
+            this.items.shift();
+            i--;
+          }
+        }
+      },
+      reset() {
+        this.items = [];
+      }
+    };
+
+    function drawBackground() {
+      ctx.fillStyle = "#111";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function gameLoop() {
+      if (gameState === "GAMEOVER") {
+        gameOverScreen.style.display = "flex";
+        document.getElementById("finalScore").innerText = "Puntuación: " + score;
+        return; // Detiene el bucle
+      }
+
+      drawBackground();
+      
+      if (gameState === "PLAYING") {
+        pipes.update();
+        heart.update();
+      }
+      
+      pipes.draw();
+      heart.draw();
+
+      if (gameState === "START") {
+        ctx.fillStyle = "white";
+        ctx.font = "16px Courier New";
+        ctx.textAlign = "center";
+        ctx.fillText("Toca para volar", canvas.width/2, canvas.height/2 + 30);
+        ctx.textAlign = "left"; // reset
+      }
+
+      frames++;
+      requestAnimationFrame(gameLoop);
+    }
+
+    function handleInput() {
+      if (musica.paused) musica.play();
+
+      if (gameState === "START") {
+        gameState = "PLAYING";
+      }
+      if (gameState === "PLAYING") {
+        heart.flap();
+      }
+    }
+
+    // Controles
+    document.addEventListener("mousedown", (e) => {
+      // Evitar que el clic en botones dispare el salto
+      if(e.target.tagName !== "BUTTON" && e.target.tagName !== "A") {
+        handleInput();
+      }
+    });
+    
+    document.addEventListener("touchstart", (e) => {
+      if(e.target.tagName !== "BUTTON" && e.target.tagName !== "A") {
+        e.preventDefault();
+        handleInput();
+      }
+    }, {passive: false});
+
+    btnRestart.addEventListener("click", () => {
+      gameState = "START";
+      gameOverScreen.style.display = "none";
+      heart.reset();
+      pipes.reset();
+      score = 0;
+      frames = 0;
+      scoreDisplay.innerText = score;
+      gameLoop();
+    });
+
+    // Iniciar renderizado
+    gameLoop();
+  </script>
+</body>
+</html>
