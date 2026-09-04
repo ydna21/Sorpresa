@@ -11,7 +11,7 @@
     font-family: 'Courier New', monospace; color: white;
   }
   h2 { color: #ff69b4; text-shadow: 0 0 10px #ff69b4; margin-bottom: 10px; text-align: center;}
-  p { margin-top: 0; color: #ddd; font-size: 0.9rem; text-align: center; }
+  p { margin-top: 0; color: #ddd; font-size: 0.9rem; text-align: center; padding: 0 10px; }
   
   .game-board {
     display: grid; grid-template-columns: repeat(4, 70px); gap: 10px;
@@ -46,14 +46,33 @@
     text-decoration: none; transition: 0.3s; margin-top: 10px;
   }
   .btn-regresar:hover { background: #555; }
+
+  /* Estilos para la carta sorpresa */
+  #cartaModal {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); z-index: 50; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center; padding: 20px;
+    box-sizing: border-box;
+  }
+  .carta-contenido {
+    background: white; color: #333; padding: 30px 20px; border-radius: 20px;
+    box-shadow: 0 0 30px #ff69b4; max-width: 90%; width: 400px;
+  }
+  .carta-contenido h2 { color: #ff69b4; text-shadow: none; font-size: 1.6rem; margin-top: 0; }
+  .carta-contenido p { font-size: 1.1rem; color: #444; line-height: 1.5; font-weight: bold; margin-bottom: 25px; }
+  .btn-cerrar-carta {
+    padding: 12px 25px; font-size: 1.1rem; background: #ff69b4; font-family: 'Courier New', monospace;
+    color: white; border: none; border-radius: 12px; cursor: pointer;
+    box-shadow: 0 0 15px rgba(255,105,180,0.5); font-weight: bold; transition: 0.3s;
+  }
+  .btn-cerrar-carta:hover { transform: scale(1.05); }
 </style>
 </head>
 <body>
 
   <h2>🎴 Memoria de Amor 🎴</h2>
-  <p>Toca una carta para empezar y activar la música 🎵</p>
+  <p>Toca una carta para empezar y activar la música 🎵<br>¡Completalo para abrir tu sorpresa!</p>
   
-  <!-- Audio apuntando a la carpeta principal -->
   <audio id="musicaJuego" loop>
     <source src="../musica.mp3" type="audio/mpeg">
   </audio>
@@ -61,6 +80,18 @@
   <div class="game-board" id="board"></div>
   
   <a href="../juegos.html" class="btn-regresar">⬅️ Regresar a Juegos</a>
+
+  <!-- Modal de la Carta -->
+  <div id="cartaModal">
+    <div class="carta-contenido">
+      <h2>💌 Para ti, mi amor 💖</h2>
+      <p>
+        Cada vez que encuentro un par en este juego, me doy cuenta de que el mejor par que he encontrado en la vida somos tú y yo. <br><br>
+        Gracias por llenar mis días de luz y mi corazón de amor. Te amo infinitamente. ✨
+      </p>
+      <button id="cerrarCarta" class="btn-cerrar-carta">Guardar en el corazón ❤️</button>
+    </div>
+  </div>
 
   <script>
     const emojis = ['💖', '💌', '🌹', '✨', '🍓', '🎀'];
@@ -72,8 +103,10 @@
 
     const board = document.getElementById('board');
     const musica = document.getElementById('musicaJuego');
+    const cartaModal = document.getElementById('cartaModal');
+    const btnCerrarCarta = document.getElementById('cerrarCarta');
 
-    // Reproducir música al primer clic en cualquier parte de la pantalla
+    // Reproducir música al primer clic o toque
     document.body.addEventListener('click', () => {
       if (musica.paused) musica.play();
     }, { once: true });
@@ -85,7 +118,7 @@
     // Mezclar cartas
     cardsArray.sort(() => 0.5 - Math.random());
 
-    // Crear cartas en el HTML
+    // Crear cartas
     cardsArray.forEach(emoji => {
       const card = document.createElement('div');
       card.classList.add('card');
@@ -121,8 +154,11 @@
       if (isMatch) {
         disableCards();
         paresEncontrados++;
+        // Cuando se encuentran todos los pares, muestra la carta
         if(paresEncontrados === emojis.length) {
-          setTimeout(() => alert("🎉 ¡Qué buena memoria mi amor! Eres increíble 💖"), 500);
+          setTimeout(() => {
+            cartaModal.style.display = 'flex';
+          }, 800);
         }
       } else {
         unflipCards();
@@ -148,6 +184,11 @@
       [hasFlippedCard, lockBoard] = [false, false];
       [firstCard, secondCard] = [null, null];
     }
+
+    // Funcionalidad para cerrar la carta
+    btnCerrarCarta.addEventListener('click', () => {
+      cartaModal.style.display = 'none';
+    });
   </script>
 </body>
 </html>
