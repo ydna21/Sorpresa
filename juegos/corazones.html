@@ -10,27 +10,35 @@
     align-items: center; justify-content: center; height: 100vh;
     font-family: 'Courier New', monospace; color: white; overflow: hidden;
   }
-  h2 { color: #ff69b4; text-shadow: 0 0 10px #ff69b4; margin: 10px 0; z-index: 10;}
+  h2 { color: #ff69b4; text-shadow: 0 0 10px #ff69b4; margin: 10px 0; z-index: 10; text-align: center;}
+  p { margin-top: 0; margin-bottom: 5px; color: #ddd; font-size: 0.85rem; text-align: center;}
   
   #gameCanvas {
     background: #111; border: 2px solid #ff69b4; border-radius: 10px;
     box-shadow: 0 0 20px rgba(255,105,180,0.4); max-width: 90%;
   }
 
-  #scoreBoard { font-size: 1.2rem; margin-bottom: 10px; color: #fff; z-index: 10;}
+  #scoreBoard { font-size: 1.1rem; margin-bottom: 10px; color: #fff; z-index: 10;}
   
   .btn-regresar {
     margin-top: 15px; padding: 10px 20px; font-size: 1rem; background: #333;
     color: white; border: none; border-radius: 10px; cursor: pointer;
-    text-decoration: none; z-index: 10;
+    text-decoration: none; z-index: 10; transition: 0.3s;
   }
+  .btn-regresar:hover { background: #555; }
 </style>
 </head>
 <body>
 
   <h2>💖 Atrapa mi Amor 💖</h2>
+  <p>Toca la pantalla o mueve el mouse para empezar 🎵</p>
   <div id="scoreBoard">Corazones atrapados: 0 / 20</div>
   
+  <!-- Audio apuntando a la carpeta principal -->
+  <audio id="musicaJuego" loop>
+    <source src="../musica.mp3" type="audio/mpeg">
+  </audio>
+
   <canvas id="gameCanvas" width="300" height="400"></canvas>
   
   <a href="../juegos.html" class="btn-regresar">⬅️ Regresar a Juegos</a>
@@ -39,10 +47,19 @@
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     const scoreBoard = document.getElementById("scoreBoard");
+    const musica = document.getElementById("musicaJuego");
 
     let score = 0;
     const meta = 20;
     let gameOver = false;
+    let juegoIniciado = false;
+
+    // Reproducir música al interactuar
+    function iniciarMusica() {
+      if (musica.paused) {
+        musica.play();
+      }
+    }
 
     // Jugador (Cesta)
     const player = {
@@ -74,6 +91,8 @@
     }
 
     function updateHearts() {
+      if (!juegoIniciado) return; // No caen corazones hasta que mueva el mouse/dedo
+
       if (Math.random() < 0.03) { // Probabilidad de generar un corazón
         hearts.push({
           x: Math.random() * (canvas.width - 20),
@@ -119,6 +138,9 @@
 
     // Controles táctiles y de mouse
     function movePlayer(clientX) {
+      iniciarMusica(); // Inicia la música al mover
+      juegoIniciado = true; // Inicia la caída de corazones
+
       const rect = canvas.getBoundingClientRect();
       let root = document.documentElement;
       let mouseX = clientX - rect.left - root.scrollLeft;
