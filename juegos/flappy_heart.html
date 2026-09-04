@@ -103,9 +103,6 @@
         ctx.font = "24px Arial";
         ctx.fillText("🐦", this.x - 12, this.y + 8);
       },
-      update() {
-        this.velocity += this.gravity;
-        this.y += this.velocity;
         
         // Colisión con el suelo o el techo
         if (this.y + this.radius >= canvas.height || this.y - this.radius <= 0) {
