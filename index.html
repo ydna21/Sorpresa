@@ -101,7 +101,7 @@
     </ul>
     <div>
       <button id="btnRegresarRecuerdos">⬅️ Regresar</button>
-      <button id="btnRompecabezas">🧩 Rompecabezas</button>
+      <button id="btnJuegos">🎮 Más Juegos</button>
       <button id="btnJuegoHilo" style="background:#ff0000; box-shadow:0 0 15px #ff0000;">🧵 El Hilo Rojo</button>
     </div>
     <div style="margin-top: 10px;">
@@ -109,16 +109,6 @@
       <button id="btnNivelEspecial" style="display:none; background:#ff1493; box-shadow:0 0 25px #ff1493;">🎁 NIVEL ESPECIAL 🎂</button>
     </div>
   </div>
-</div>
-
-<div id="puzzleScreen" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
-  background:black;z-index:30;flex-direction:column;align-items:center;justify-content:center;">
-  <canvas id="puzzleCanvas" width="300" height="300"
-    style="border:4px solid #ff69b4;border-radius:10px;box-shadow:0 0 20px #ff69b4; max-width: 90%;"></canvas>
-  
-  <button id="btnRegresarPuzzle" style="margin-top:20px;padding:12px 25px;
-    font-size:1.2rem;background:#ff69b4;color:white;border:none;border-radius:12px;
-    cursor:pointer;box-shadow:0 0 15px #ff69b4;">⬅️ Regresar</button>
 </div>
 
   <div id="hiloGameScreen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:35; flex-direction:column; align-items:center; justify-content:center;">
@@ -175,7 +165,6 @@ let idAnimacionFotos = null;
 
 /* --- FUNCIÓN PARA GUARDAR LA ELECCIÓN --- */
 function elegirDispositivo(tipo) {
-  // Guarda 'celular' o 'pc' en el navegador
   localStorage.setItem('dispositivoElegido', tipo);
   iniciarSorpresa();
 }
@@ -290,11 +279,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnRegresarRecuerdos=document.getElementById("btnRegresarRecuerdos");
   const btnRegresarFotos=document.getElementById("btnRegresarFotos");
   
-  const btnPuzzle = document.getElementById("btnRompecabezas");
+  const btnJuegos = document.getElementById("btnJuegos");
   const btnCarta = document.getElementById("btnCarta");
   const btnNivelEspecial = document.getElementById("btnNivelEspecial"); 
 
-  const puzzleScreen = document.getElementById("puzzleScreen");
   const cartaModal = document.getElementById("cartaModal");
 
   const hoy = new Date();
@@ -335,15 +323,9 @@ document.addEventListener("DOMContentLoaded", () => {
     regresarPantalla();
   });
 
-  btnPuzzle.addEventListener("click", () => {
-    document.getElementById('recuerdosScreen').style.display = 'none';
-    puzzleScreen.style.display = 'flex';
-    iniciarPuzzle();
-  });
-
-  document.getElementById("btnRegresarPuzzle").addEventListener("click", () => {
-    puzzleScreen.style.display = 'none';
-    document.getElementById('recuerdosScreen').style.display = 'flex';
+  // ESTA ES LA REDIRECCIÓN A LA PÁGINA DE JUEGOS
+  btnJuegos.addEventListener("click", () => {
+    window.location.href = "juegos.html";
   });
 
   btnCarta.addEventListener("click", () => {
@@ -468,129 +450,6 @@ document.getElementById('cerrarFoto').addEventListener('click',()=>{
   document.getElementById('fotoGrandeOverlay').style.display='none';
 });
 
-function iniciarPuzzle(){
-  const canvas = document.getElementById("puzzleCanvas");
-  const ctx = canvas.getContext("2d");
-  const size = 300;
-  const rows = 3, cols = 3;
-  const pieceSize = size / rows;
-  const img = new Image();
-  img.src = "puzzle.jpg"; 
-
-  let board = []; 
-  let emptyIndex = 8; 
-
-  img.onload = function(){
-    board = [];
-    for(let i=0; i<rows*cols; i++) board.push(i);
-    shuffleBoard();
-    drawPuzzle();
-  };
-
-  function shuffleBoard() {
-    for (let i = 0; i < 100; i++) {
-      const neighbors = getNeighbors(emptyIndex);
-      const randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
-      swap(emptyIndex, randomNeighbor);
-      emptyIndex = randomNeighbor;
-    }
-  }
-
-  function getNeighbors(idx) {
-    const r = Math.floor(idx / cols);
-    const c = idx % cols;
-    const neighbors = [];
-    if (r > 0) neighbors.push(idx - cols); 
-    if (r < rows - 1) neighbors.push(idx + cols); 
-    if (c > 0) neighbors.push(idx - 1); 
-    if (c < cols - 1) neighbors.push(idx + 1); 
-    return neighbors;
-  }
-
-  function drawPuzzle(){
-    ctx.clearRect(0, 0, size, size);
-    board.forEach((pieceOriginalIndex, currentPosIndex) => {
-      if (pieceOriginalIndex === rows * cols - 1) return;
-      const drawRow = Math.floor(currentPosIndex / cols);
-      const drawCol = currentPosIndex % cols;
-      const imgRow = Math.floor(pieceOriginalIndex / cols);
-      const imgCol = pieceOriginalIndex % cols;
-      const imgSize = Math.min(img.width, img.height);
-      const sx = (img.width - imgSize) / 2;
-      const sy = (img.height - imgSize) / 2;
-      ctx.drawImage(
-        img,
-        sx + imgCol * (imgSize/cols), sy + imgRow * (imgSize/rows), (imgSize/cols), (imgSize/rows),
-        drawCol * pieceSize, drawRow * pieceSize, pieceSize, pieceSize
-      );
-      ctx.strokeStyle = "#ff69b4";
-      ctx.strokeRect(drawCol * pieceSize, drawRow * pieceSize, pieceSize, pieceSize);
-    });
-  }
-
-  function handleClick(x, y) {
-    const col = Math.floor(x / pieceSize);
-    const row = Math.floor(y / pieceSize);
-    const clickedIndex = row * cols + col;
-    const neighbors = getNeighbors(emptyIndex);
-    if (neighbors.includes(clickedIndex)) {
-      swap(emptyIndex, clickedIndex);
-      emptyIndex = clickedIndex;
-      drawPuzzle();
-      checkWin();
-    }
-  }
-
-  function swap(i, j) {
-    [board[i], board[j]] = [board[j], board[i]];
-  }
-
-  // AQUI ESTÁ LA ÚNICA MODIFICACIÓN
-  function checkWin() {
-    const isWin = board.every((val, index) => val === index);
-    if (isWin) {
-      setTimeout(() => {
-        alert("🎉 ¡Felicidades mi amor! Completaste el rompecabezas 💖");
-        
-        // Crear dinámicamente el botón para ir al bosque
-        const puzzleScreenDiv = document.getElementById("puzzleScreen");
-        
-        // Verificamos que el botón no exista ya para no duplicarlo
-        if (!document.getElementById("btnIrAlBosque")) {
-          const btnBosque = document.createElement("button");
-          btnBosque.id = "btnIrAlBosque";
-          btnBosque.innerText = "✨ Ir al Bosque Encantado ✨";
-          btnBosque.style.marginTop = "20px";
-          btnBosque.style.padding = "15px 30px";
-          btnBosque.style.fontSize = "1.3rem";
-          btnBosque.style.background = "#adff2f"; // Verde neón
-          btnBosque.style.color = "#050b14";
-          btnBosque.style.border = "none";
-          btnBosque.style.borderRadius = "15px";
-          btnBosque.style.cursor = "pointer";
-          btnBosque.style.fontWeight = "bold";
-          btnBosque.style.boxShadow = "0 0 20px #adff2f";
-          
-          btnBosque.onclick = function() {
-            window.location.href = "bosque.html";
-          };
-          
-          // Insertamos el botón justo antes del botón de regresar
-          const btnRegresar = document.getElementById("btnRegresarPuzzle");
-          puzzleScreenDiv.insertBefore(btnBosque, btnRegresar);
-        }
-      }, 200);
-    }
-  }
-
-  canvas.onmousedown = (e) => { handleClick(e.offsetX, e.offsetY); };
-  canvas.ontouchstart = (e) => {
-    e.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    handleClick(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top);
-  };
-}
-
 function checkFechasEspeciales(mostrarTexto = true){
   const hoy=new Date();
   const d=hoy.getDate();
@@ -661,7 +520,6 @@ function lanzarConfeti(mensaje, mostrarTexto){
   }
   draw();
 }
-
 
   /* --- LÓGICA DEL JUEGO DEL HILO ROJO --- */
 const btnJuegoHilo = document.getElementById("btnJuegoHilo");
