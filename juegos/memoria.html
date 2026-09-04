@@ -11,7 +11,7 @@
     font-family: 'Courier New', monospace; color: white;
   }
   h2 { color: #ff69b4; text-shadow: 0 0 10px #ff69b4; margin-bottom: 10px; text-align: center;}
-  p { margin-top: 0; color: #ddd; font-size: 0.9rem; }
+  p { margin-top: 0; color: #ddd; font-size: 0.9rem; text-align: center; }
   
   .game-board {
     display: grid; grid-template-columns: repeat(4, 70px); gap: 10px;
@@ -43,7 +43,7 @@
   .btn-regresar {
     padding: 12px 25px; font-size: 1.1rem; background: #333;
     color: white; border: none; border-radius: 12px; cursor: pointer;
-    text-decoration: none; transition: 0.3s;
+    text-decoration: none; transition: 0.3s; margin-top: 10px;
   }
   .btn-regresar:hover { background: #555; }
 </style>
@@ -51,8 +51,13 @@
 <body>
 
   <h2>🎴 Memoria de Amor 🎴</h2>
-  <p>Encuentra los pares para descubrir un mensaje</p>
+  <p>Toca una carta para empezar y activar la música 🎵</p>
   
+  <!-- Audio apuntando a la carpeta principal -->
+  <audio id="musicaJuego" loop>
+    <source src="../musica.mp3" type="audio/mpeg">
+  </audio>
+
   <div class="game-board" id="board"></div>
   
   <a href="../juegos.html" class="btn-regresar">⬅️ Regresar a Juegos</a>
@@ -66,6 +71,16 @@
     let paresEncontrados = 0;
 
     const board = document.getElementById('board');
+    const musica = document.getElementById('musicaJuego');
+
+    // Reproducir música al primer clic en cualquier parte de la pantalla
+    document.body.addEventListener('click', () => {
+      if (musica.paused) musica.play();
+    }, { once: true });
+
+    document.body.addEventListener('touchstart', () => {
+      if (musica.paused) musica.play();
+    }, { once: true });
 
     // Mezclar cartas
     cardsArray.sort(() => 0.5 - Math.random());
