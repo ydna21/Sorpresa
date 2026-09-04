@@ -10,7 +10,8 @@
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     min-height: 100vh; color: white; text-align: center;
   }
-  h1 { color: #ff69b4; text-shadow: 0 0 15px #ff69b4; margin-bottom: 40px; }
+  h1 { color: #ff69b4; text-shadow: 0 0 15px #ff69b4; margin-bottom: 5px; }
+  p { color: #ddd; font-size: 0.9rem; margin-bottom: 30px; margin-top: 0; }
   
   .games-container { 
     display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; 
@@ -46,23 +47,29 @@
 <body>
 
   <h1>🎮 Nuestra Sala de Juegos 🎮</h1>
+  <p>Toca cualquier lugar de la pantalla para escuchar nuestra canción 🎵</p>
+
+  <!-- Audio apuntando directamente al archivo en la misma carpeta -->
+  <audio id="musicaMenu" loop>
+    <source src="musica.mp3" type="audio/mpeg">
+  </audio>
   
   <div class="games-container">
-    <!-- Juego 1: Rompecabezas (Ya lo tenemos) -->
+    <!-- Juego 1: Rompecabezas -->
     <a href="juegos/rompecabezas.html" class="game-card">
       <div class="game-icon">🧩</div>
       <div class="game-title">Rompecabezas</div>
       <div class="game-desc">Arma nuestra foto especial</div>
     </a>
     
-    <!-- Juego 2: Memoria (Próximamente) -->
+    <!-- Juego 2: Memoria -->
     <a href="juegos/memoria.html" class="game-card">
       <div class="game-icon">🎴</div>
       <div class="game-title">Memoria de Amor</div>
-      <div class="game-desc">Encuentra los pares de nuestras fotos</div>
+      <div class="game-desc">Encuentra los pares ocultos</div>
     </a>
 
-    <!-- Juego 3: Atrapa Corazones (Próximamente) -->
+    <!-- Juego 3: Atrapa Corazones -->
     <a href="juegos/corazones.html" class="game-card">
       <div class="game-icon">💖</div>
       <div class="game-title">Atrapa Corazones</div>
@@ -72,5 +79,18 @@
   
   <a href="index.html" class="btn-regresar">⬅️ Regresar al Inicio</a>
 
+  <script>
+    const musica = document.getElementById('musicaMenu');
+
+    // Reproducir música al primer clic en la pantalla
+    document.body.addEventListener('click', () => {
+      if (musica.paused) musica.play();
+    }, { once: true });
+
+    // Reproducir música al tocar la pantalla (para celulares)
+    document.body.addEventListener('touchstart', () => {
+      if (musica.paused) musica.play();
+    }, { once: true });
+  </script>
 </body>
 </html>
