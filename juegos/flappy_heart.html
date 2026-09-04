@@ -100,9 +100,22 @@
       gravity: 0.25,
       jump: -4.5,
       draw() {
+        ctx.save(); // Guarda el estado normal del canvas
+        ctx.translate(this.x, this.y); // Mueve el origen de dibujo al centro exacto del jugador
+        ctx.scale(-1, 1); // Hace el efecto espejo para que mire a la derecha
+        
         ctx.font = "24px Arial";
-        ctx.fillText("🐦", this.x - 12, this.y + 8);
+        ctx.textAlign = "center";    // Asegura que el emoji no se mueva a un lado
+        ctx.textBaseline = "middle"; // Asegura que el emoji no se mueva arriba/abajo
+        
+        // Se dibuja en (0,0) porque ya movimos el origen al centro del jugador
+        ctx.fillText("🐦", 0, 0); 
+        
+        ctx.restore(); // Regresa el canvas a la normalidad para el resto del juego
       },
+      update() {
+        this.velocity += this.gravity;
+        this.y += this.velocity;
         
         // Colisión con el suelo o el techo
         if (this.y + this.radius >= canvas.height || this.y - this.radius <= 0) {
