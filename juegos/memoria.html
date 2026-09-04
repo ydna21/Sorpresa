@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Feliz Día de la Fisioterapeuta, mi amor!</title>
+    <style>
+        /* ================= ESTILOS ORIGINALES ================= */
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #a7ffeb 0%, #e1f5fe 50%, #fff9c4 100%);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            overflow: hidden;
+            color: #2c3e50;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 50px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            animation: cardAppear 1s ease-out;
+            position: relative;
+            z-index: 10;
+        }
+
+        @keyframes cardAppear {
+            from { transform: scale(0.8) translateY(50px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .main-icon {
+            font-size: 80px;
+            background: linear-gradient(45deg, #00acc1, #ffee58);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 20px;
+            display: inline-block;
+            animation: floatIcon 3s ease-in-out infinite;
+        }
+
+        @keyframes floatIcon {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        h1 {
+            font-size: 2.8em;
+            margin: 0 0 15px;
+            background: linear-gradient(45deg, #00838f, #f9a825);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 700;
+        }
+
+        h2 {
+            font-size: 1.5em;
+            color: #0097a7;
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+
+        p.dedicatory {
+            font-size: 1.15em;
+            line-height: 1.6;
+            margin-bottom: 35px;
+            color: #455a64;
+        }
+
+        .btn-gold {
+            background: linear-gradient(45deg, #f9a825, #fdd835);
+            color: #fff;
+            border: none;
+            padding: 15px 35px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: 600;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(249, 168, 37, 0.4);
+            transition: all 0.3s ease;
+            outline: none;
+            position: relative;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .btn-gold:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 12px 25px rgba(249, 168, 37, 0.6);
+        }
+
+        .btn-gold:active {
+            transform: translateY(1px);
+        }
+
+        .bottom-icons {
+            margin-top: 40px;
+            font-size: 2em;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            color: #00acc1;
+            opacity: 0.8;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: floatParticles linear infinite;
+        }
+
+        @keyframes floatParticles {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+        }
+
+        .click-ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 215, 0, 0.7);
+            transform: scale(0);
+            animation: rippleEffect 0.6s linear;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes rippleEffect {
+            to { transform: scale(4); opacity: 0; }
+        }
+
+        @media (max-width: 600px) {
+            .glass-card { padding: 30px; }
+            h1 { font-size: 2em; }
+            h2 { font-size: 1.2em; }
+            .main-icon { font-size: 60px; }
+        }
+
+        /* ================= NUEVOS ESTILOS PARA LA SORPRESA ================= */
+        
+        #mainCard {
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        #surpriseCard {
+            display: none; /* Oculto al inicio */
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+            position: absolute; /* Para superponerse exactamente en el centro */
+            padding: 40px 20px;
+            overflow: hidden;
+        }
+
+        /* Slider de la sorpresa */
+        .slider-container {
+            display: flex;
+            width: 100%;
+            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .slide {
+            min-width: 100%;
+            box-sizing: border-box;
+            padding: 0 20px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding: 0 30px;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #00acc1;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .nav-btn:hover { transform: scale(1.2); }
+        .nav-btn:disabled { color: #ccc; cursor: not-allowed; }
+
+        .dots { display: flex; gap: 8px; }
+        .dot {
+            width: 10px; height: 10px;
+            background: rgba(0, 172, 193, 0.3);
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+        .dot.active { background: #00acc1; }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- ================= TARJETA PRINCIPAL (TU DISEÑO) ================= -->
+    <div class="glass-card" id="mainCard">
+        <div class="main-icon">🧎‍♀️✨</div>
+        <h1>¡Feliz Día!</h1>
+        <h2>A mi terapeuta favorita y el amor de mi vida:</h2>
+        <p class="dedicatory">
+            Gracias por tu dedicación, paciencia y por poner tu corazón en cada tratamiento. Tu labor restaura movimiento, alivia el dolor y devuelve la alegría a tantas personas. Tu amor es mi mejor terapia.
+        </p>
+        <button class="btn-gold" id="magicButton">Enviar Bienestar & Amor</button>
+        
+        <div class="bottom-icons">
+            <span>🦴</span>
+            <span>💖</span>
+            <span>👐</span>
+        </div>
+    </div>
+
+    <!-- ================= TARJETA SORPRESA (OCULTA) ================= -->
+    <div class="glass-card" id="surpriseCard">
+        <div class="slider-container" id="slider">
+            <div class="slide">
+                <div class="main-icon" style="font-size: 65px;">🧎‍♀️💙</div>
+                <h1 style="font-size: 2.2em;">Admiración Total</h1>
+                <p class="dedicatory" style="margin-bottom: 10px;">Me enamora verte tan apasionada por tu carrera. Tienes el don de sanar con tus manos y hacer el bien.</p>
+            </div>
+            <div class="slide">
+                <div class="main-icon" style="font-size: 65px;">🩺💪</div>
+                <h1 style="font-size: 2.2em;">Dedicación</h1>
+                <p class="dedicatory" style="margin-bottom: 10px;">Sé lo mucho que te esfuerzas cada día. Tu vocación inspira y el mundo es mejor porque tú estás en él.</p>
+            </div>
+            <div class="slide">
+                <div class="main-icon" style="font-size: 65px;">💙💍</div>
+                <h1 style="font-size: 2.2em;">Eres mi Vida</h1>
+                <p class="dedicatory" style="margin-bottom: 10px;">Eres la mejor fisioterapeuta del universo y la dueña absoluta de mi corazón. ¡Te amo muchísimo!</p>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="nav-btn" id="prevBtn" onclick="moveSlide(-1)">❮</button>
+            <div class="dots" id="dotsContainer">
+                <div class="dot active"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+            <button class="nav-btn" id="nextBtn" onclick="moveSlide(1)">❯</button>
+        </div>
+    </div>
+
+    <script>
+        // ================= CONFIGURACIÓN ORIGINAL =================
+        const numParticles = 30;
+        const body = document.body;
+        const magicButton = document.getElementById('magicButton');
+        const mainCard = document.getElementById('mainCard');
+        const surpriseCard = document.getElementById('surpriseCard');
+        
+        // Variable para contar los clics
+        let clickCount = 0;
+
+        function createParticles() {
+            for (let i = 0; i < numParticles; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                const size = Math.random() * 15 + 5 + 'px';
+                particle.style.width = size;
+                particle.style.height = size;
+                particle.style.left = Math.random() * 100 + 'vw';
+                particle.style.animationDuration = Math.random() * 10 + 5 + 's';
+                particle.style.animationDelay = Math.random() * 5 + 's';
+                body.appendChild(particle);
+            }
+        }
+
+        function createMagicEffect(e) {
+            // Aumentamos el contador de clics
+            clickCount++;
+
+            // Mensajes sutiles para animarla a seguir clickeando
+            if(clickCount === 5) magicButton.innerText = "¡Sigue enviando amor! 💙";
+            if(clickCount === 12) magicButton.innerText = "¡Falta poco...! ✨";
+            if(clickCount === 18) magicButton.innerText = "¡Sigue haciendo magia! 😍";
+
+            // ¡Al llegar a 20 detonamos la sorpresa!
+            if(clickCount === 20) {
+                magicButton.innerText = "¡MAGIA! 🪄";
+                detonarSorpresa();
+            }
+
+            // 1. Efecto de onda (ripple) original
+            const rect = magicButton.getBoundingClientRect();
+            const ripple = document.createElement('span');
+            const diameter = Math.max(rect.width, rect.height);
+            const radius = diameter / 2;
+
+            ripple.style.width = ripple.style.height = `${diameter}px`;
+            ripple.style.left = `${e.clientX - rect.left - radius}px`;
+            ripple.style.top = `${e.clientY - rect.top - radius}px`;
+            ripple.classList.add('click-ripple');
+
+            const oldRipple = magicButton.getElementsByClassName('click-ripple')[0];
+            if (oldRipple) oldRipple.remove();
+
+            magicButton.appendChild(ripple);
+
+            // 2. Explosión de iconos temáticos original
+            for (let i = 0; i < 20; i++) {
+                createFloatingIcon(e.clientX, e.clientY);
+            }
+        }
+
+        // Función original modificada levemente para permitir corazones azules especiales
+        function createFloatingIcon(x, y, customIcons = null) {
+            const defaultIcons = ['💖', '👐', '✨', '🤍', '💪', '🌸'];
+            const icons = customIcons ? customIcons : defaultIcons;
+            
+            const icon = document.createElement('div');
+            icon.innerHTML = icons[Math.floor(Math.random() * icons.length)];
+            icon.style.position = 'absolute';
+            icon.style.left = x + 'px';
+            icon.style.top = y + 'px';
+            icon.style.fontSize = Math.random() * 20 + 15 + 'px';
+            icon.style.pointerEvents = 'none';
+            icon.style.zIndex = '100';
+            icon.style.transition = 'all 2s ease-out';
+            
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = Math.random() * 100 + 50;
+            const destX = x + Math.cos(angle) * velocity;
+            const destY = y + Math.sin(angle) * velocity - 200; 
+
+            body.appendChild(icon);
+
+            requestAnimationFrame(() => {
+                icon.style.transform = `translate(${destX - x}px, ${destY - y}px) scale(1.5) rotate(${Math.random() * 360}deg)`;
+                icon.style.opacity = '0';
+            });
+
+            setTimeout(() => { icon.remove(); }, 2000);
+        }
+
+        // ================= FUNCIÓN QUE CAMBIA TODO AL CLIC 20 =================
+        function detonarSorpresa() {
+            // Lluvia masiva de corazones azules representativos de su carrera
+            for (let i = 0; i < 100; i++) {
+                setTimeout(() => {
+                    const randomX = Math.random() * window.innerWidth;
+                    const randomY = window.innerHeight + 100;
+                    createFloatingIcon(randomX, randomY, ['💙', '🩵', '🩺', '✨', '🤍']);
+                }, i * 20); // Van saliendo en cascada
+            }
+
+            // Ocultar tarjeta principal
+            mainCard.style.opacity = '0';
+            mainCard.style.transform = 'scale(0.8)';
+            
+            setTimeout(() => {
+                mainCard.style.display = 'none';
+                
+                // Mostrar la nueva tarjeta sorpresa
+                surpriseCard.style.display = 'block';
+                
+                // Forzar reflujo para que se aplique la transición
+                void surpriseCard.offsetWidth; 
+                
+                surpriseCard.style.opacity = '1';
+                surpriseCard.style.transform = 'scale(1)';
+            }, 800);
+        }
+
+        // ================= LÓGICA DEL CARRUSEL DE LA SORPRESA =================
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const slider = document.getElementById('slider');
+        const dots = document.querySelectorAll('.dot');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        function updateSlider() {
+            slider.style.transform = `translateX(-${currentSlide * 100}%)`;
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentSlide);
+            });
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.disabled = currentSlide === slides.length - 1;
+        }
+
+        function moveSlide(direction) {
+            currentSlide += direction;
+            if (currentSlide < 0) currentSlide = 0;
+            if (currentSlide >= slides.length) currentSlide = slides.length - 1;
+            updateSlider();
+        }
+
+        // Deslizar con el dedo en celular (Swipe)
+        let touchStartX = 0;
+        let touchEndX = 0;
+        
+        surpriseCard.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        surpriseCard.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            if (touchEndX < touchStartX - 50 && currentSlide < slides.length - 1) moveSlide(1);
+            if (touchEndX > touchStartX + 50 && currentSlide > 0) moveSlide(-1);
+        });
+
+        // Inicializaciones
+        createParticles();
+        magicButton.addEventListener('click', createMagicEffect);
+        updateSlider();
+
+    </script>
+</body>
+</html>
