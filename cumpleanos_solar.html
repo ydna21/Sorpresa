@@ -132,6 +132,7 @@
   <p>Cada recuerdo a tu lado es una estrella que ilumina mi vida. Quería hacer algo verdaderamente especial para demostrarte que mi mundo entero gira a tu alrededor.</p>
   <p>Que este nuevo año te traiga tanta felicidad como la que tú me das todos los días. Te amo infinitamente.</p>
   <p class="firma">- Andy</p>
+  <button id="cerrarCartaFinal" style="margin-top:20px; padding:10px 25px; background:#ff69b4; color:white; border:none; border-radius:12px; cursor:pointer; font-size:1.1rem; box-shadow:0 0 15px #ff1493; font-family:'Courier New', monospace; font-weight:bold;">Cerrar Carta</button>
 </div>
 
 <div id="contenedorBotones">
@@ -174,6 +175,11 @@ let composer, bloomPass;
 const sfxFirework = document.getElementById('sfxFirework');
 
 document.getElementById('btnRepetirViaje').addEventListener('click', () => window.location.reload());
+
+document.getElementById('cerrarCartaFinal').addEventListener('click', () => {
+    document.getElementById('cartaFinal').style.opacity = '0';
+    setTimeout(() => { document.getElementById('cartaFinal').style.display = 'none'; }, 500);
+});
 
 document.getElementById('btnEmpezarUniverso').addEventListener('click', function() {
     const audio = document.getElementById('musica2');
@@ -219,7 +225,7 @@ if (esCelular) {
     const parrafo = document.getElementById('parrafoCumple');
     titulo.style.fontSize = "1.4rem";      
     titulo.style.marginBottom = "5px";
-    parrafo.style.fontSize = "0.95rem";     
+    parrafo.style.fontSize = "0.95rem";      
     parrafo.style.maxWidth = "90%";
     parrafo.style.padding = "0 15px";
 
@@ -470,7 +476,20 @@ function triggerSunExplosion() {
     const teAmoParticles = new THREE.Points(geometry, material.clone()); teAmoParticles.material.map = teAmoTexture;
     systemRotationGroup.add(heartParticles); systemRotationGroup.add(teAmoParticles); 
     const startTime = Date.now();
-    activeExplosions.push({ geometry, material: heartParticles.material, teAmoMaterial: teAmoParticles.material, positions: geometry.getAttribute('position').array, velocities, totalExplosionParticles, heartMesh: heartParticles, teAmoMesh: teAmoParticles, startTime, lifeSpan: 4000 });
+    activeExplosions.push({ 
+        geometry, 
+        material: heartParticles.material, 
+        teAmoMaterial: teAmoParticles.material, 
+        heartTex: heartTexture, 
+        teAmoTex: teAmoTexture,
+        positions: geometry.getAttribute('position').array, 
+        velocities, 
+        totalExplosionParticles, 
+        heartMesh: heartParticles, 
+        teAmoMesh: teAmoParticles, 
+        startTime, 
+        lifeSpan: 4000 
+    });
 }
 
 function createGlowShapeTexture(char) {
@@ -601,22 +620,22 @@ function iniciarEventoFinal() {
 
 function onWorldClick(e) {
   raycaster.setFromCamera(mouse, camera);
+  
   if (raycaster.intersectObject(sun).length > 0) {
       triggerSunExplosion();
       return; 
   }
-  if (!esCelular) {
-      const intersectPlanetas = raycaster.intersectObjects(detailedPlanets.map(p => p.mesh));
-      if (intersectPlanetas.length > 0) {
-          const mensajeSecreto = intersectPlanetas[0].object.userData.mensaje;
-          mostrarMensajeEspecial(mensajeSecreto);
+  
+  const intersectPlanetas = raycaster.intersectObjects(detailedPlanets.map(p => p.mesh));
+  if (intersectPlanetas.length > 0) {
+      const mensajeSecreto = intersectPlanetas[0].object.userData.mensaje;
+      mostrarMensajeEspecial(mensajeSecreto);
+      
+      if (!planetasLeidos.has(mensajeSecreto)) {
+          planetasLeidos.add(mensajeSecreto);
           
-          if (!planetasLeidos.has(mensajeSecreto)) {
-              planetasLeidos.add(mensajeSecreto);
-              
-              if (planetasLeidos.size === frasesPlanetas.length && faseEvento === 0) {
-                  setTimeout(iniciarEventoFinal, 4000); 
-              }
+          if (planetasLeidos.size === frasesPlanetas.length && faseEvento === 0) {
+              setTimeout(iniciarEventoFinal, 4000); 
           }
       }
   }
@@ -626,7 +645,7 @@ function onWorldTouch(e) {
   if (e.touches.length > 0) {
     mouse.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
-    onWorldClick(); 
+    onWorldClick(e); 
   }
 }
 
@@ -739,7 +758,13 @@ function animate() {
       const exp = activeExplosions[i];
       const elapsed = currentTime - exp.startTime;
       if (elapsed > exp.lifeSpan) {
-          systemRotationGroup.remove(exp.heartMesh); systemRotationGroup.remove(exp.teAmoMesh); exp.geometry.dispose(); exp.material.dispose(); exp.teAmoMaterial.dispose();
+          systemRotationGroup.remove(exp.heartMesh); 
+          systemRotationGroup.remove(exp.teAmoMesh); 
+          exp.geometry.dispose(); 
+          exp.material.dispose(); 
+          exp.teAmoMaterial.dispose();
+          exp.heartTex.dispose();
+          exp.teAmoTex.dispose();
           activeExplosions.splice(i, 1);
           continue;
       }
@@ -814,7 +839,6 @@ function animate() {
           }
           grupoConstelacion.geometry.attributes.position.needsUpdate = true;
 
-          // SE AÑADIÓ 10 SEGUNDOS MÁS DE RETRASO (Ahora espera 18 segundos en total)
           if (tiempoEventoFinal > 18) {
               faseEvento = 3;
               crearEstrellaGigante();
