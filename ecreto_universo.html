@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>El Núcleo de Nuestro Universo ✨</title>
+<style>
+  body { margin: 0; background: #000; overflow: hidden; font-family: 'Courier New', monospace; color: white; }
+  
+  #canvasContainer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+  
+  #ui-layer {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 10; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; pointer-events: none;
+  }
+
+  /* Pantalla de Entrada Secreta */
+  #intro-screen {
+    background: rgba(0, 0, 0, 0.9);
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 20; transition: opacity 2s ease;
+  }
+
+  .glitch {
+    font-size: 2rem; font-weight: bold; color: #fff;
+    text-shadow: 0 0 10px #ff1493, 0 0 20px #8a2be2;
+    text-align: center; padding: 20px;
+    animation: pulsate 2s infinite alternate;
+  }
+
+  @keyframes pulsate {
+    0% { transform: scale(1); opacity: 0.8; text-shadow: 0 0 10px #ff1493; }
+    100% { transform: scale(1.05); opacity: 1; text-shadow: 0 0 30px #ff69b4, 0 0 40px #8a2be2; }
+  }
+
+  #btnAdentrarse {
+    margin-top: 30px; padding: 15px 40px; font-size: 1.2rem;
+    background: transparent; color: white; border: 2px solid #ff1493;
+    border-radius: 50px; cursor: pointer; pointer-events: auto;
+    box-shadow: 0 0 15px #ff1493 inset, 0 0 20px #ff1493;
+    transition: all 0.5s ease; text-transform: uppercase; letter-spacing: 2px;
+  }
+  #btnAdentrarse:hover { background: #ff1493; box-shadow: 0 0 40px #ff1493; transform: scale(1.1); }
+
+  /* Texto Revelación */
+  #mensaje-secreto {
+    position: absolute; bottom: 15%; width: 90%; max-width: 700px;
+    text-align: center; font-size: 1.3rem; line-height: 1.6;
+    color: #ffb6c1; text-shadow: 0 0 15px #ff1493;
+    opacity: 0; transition: opacity 3s ease;
+  }
+
+  .btn-volver {
+    position: absolute; bottom: 30px; padding: 10px 25px;
+    background: rgba(255, 20, 147, 0.2); border: 1px solid #ff69b4;
+    color: white; border-radius: 20px; font-family: inherit;
+    cursor: pointer; pointer-events: auto; opacity: 0; transition: opacity 2s ease;
+  }
+  .btn-volver:hover { background: #ff1493; }
+
+</style>
+</head>
+<body>
+
+<!-- Audio para este nivel (puedes poner algo muy épico o romántico) -->
+<audio id="musicaSecreta" loop>
+  <source src="musica_secreta.mp3" type="audio/mpeg">
+</audio>
+
+<div id="canvasContainer"></div>
+
+<div id="ui-layer">
+  <div id="mensaje-secreto"></div>
+  <button class="btn-volver" id="btnVolver" onclick="window.history.back()">🌌 Volver a nuestro mundo</button>
+</div>
+
+<div id="intro-screen">
+  <div class="glitch">Has descubierto un rincón oculto...</div>
+  <p style="color: #ccc; text-align: center; max-width: 80%;">
+    Si estás viendo esto, es porque llegaste hasta el final del hilo,<br>o volaste más alto que nadie.
+  </p>
+  <button id="btnAdentrarse">Revelar el Secreto</button>
+</div>
+
+<!-- Scripts de Three.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+
+<script>
+// --- CONFIGURACIÓN INICIAL ---
+const esCelular = window.innerWidth < 768;
+let scene, camera, renderer, composer, bloomPass, controls;
+let particleSystem, particleGeometry;
+let currentPositions, targetPositions;
+let isMorphing = false;
+let morphProgress = 0;
+const numParticles = esCelular ? 6000 : 12000;
+
+// Variables de animación
+let clock = new THREE.Clock();
+let heartGroup = new THREE.Group();
+
+const textosSecretos = [
+  "Aquí, en el centro absoluto de todo...",
+  "Donde el tiempo se detiene...",
+  "Cada estrella es un momento a tu lado.",
+  "Este es el núcleo de mi universo.",
+  "Tú eres mi destino final. ❤️"
+];
+
+init();
+animate();
+
+function init() {
+  const container = document.getElementById('canvasContainer');
+  
+  scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x000000, 0.0005);
+
+  camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 10000);
+  // Empezamos muy lejos para el efecto de "viaje a la velocidad de la luz"
+  camera.position.set(0, 0, 3000); 
+
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.appendChild(renderer.domElement);
+
+  // Post-procesado (Glow Mágico)
+  const renderScene = new THREE.RenderPass(scene, camera);
+  bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 2.5, 0.5, 0.1);
+  
+  composer = new THREE.EffectComposer(renderer);
+  composer.addPass(renderScene);
+  composer.addPass(bloomPass);
+
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+  controls.enableZoom = false; // Desactivado hasta que termine la intro
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 1.0;
+
+  crearSistemaParticulas();
+  
+  scene.add(heartGroup);
+
+  window.addEventListener('resize', onWindowResize);
+}
+
+// --- GENERADOR DE TEXTURA PARA ESTRELLAS BRILLANTES ---
+function createStarTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 64; canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  
+  const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+  gradient.addColorStop(0.2, 'rgba(255, 105, 180, 0.8)');
+  gradient.addColorStop(0.5, 'rgba(138, 43, 226, 0.2)');
+  gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 64, 64);
+  return new THREE.CanvasTexture(canvas);
+}
+
+// --- LÓGICA DE PARTÍCULAS (DE NEBULOSA A CORAZÓN) ---
+function crearSistemaParticulas() {
+  particleGeometry = new THREE.BufferGeometry();
+  
+  currentPositions = new Float32Array(numParticles * 3);
+  targetPositions = new Float32Array(numParticles * 3);
+  const colors = new Float32Array(numParticles * 3);
+  
+  const colorBase = new THREE.Color(0xff1493); // Rosa fuerte
+  const colorAlt = new THREE.Color(0x8a2be2);  // Morado profundo
+  const colorCore = new THREE.Color(0xffd700); // Dorado en el centro
+
+  for (let i = 0; i < numParticles; i++) {
+    const i3 = i * 3;
+    
+    // 1. POSICIÓN INICIAL (Esfera gigante caótica / Nebulosa)
+    const radioInicial = 4000 + Math.random() * 2000;
+    const thetaInicial = Math.random() * Math.PI * 2;
+    const phiInicial = Math.acos(Math.random() * 2 - 1);
+    
+    currentPositions[i3] = radioInicial * Math.sin(phiInicial) * Math.cos(thetaInicial);
+    currentPositions[i3 + 1] = radioInicial * Math.sin(phiInicial) * Math.sin(thetaInicial);
+    currentPositions[i3 + 2] = radioInicial * Math.cos(phiInicial);
+
+    // 2. POSICIÓN FINAL (Fórmula Matemática de Corazón 3D)
+    // t de 0 a 2PI (contorno)
+    const t = Math.random() * Math.PI * 2; 
+    
+    // Ecuación paramétrica de corazón
+    const x = 16 * Math.pow(Math.sin(t), 3);
+    const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+    
+    const escalaCorazon = esCelular ? 6 : 10;
+    
+    // Damos volumen (Z) basado en el centro para que sea "gordito" y no plano
+    const distAlCentro = Math.sqrt(x*x + y*y);
+    const factorVolumen = Math.max(0, 1 - (distAlCentro / 16));
+    const z = (Math.random() - 0.5) * 80 * factorVolumen;
+    
+    // Dispersión aleatoria para que parezca nebulosa
+    const dispersion = (Math.random() - 0.5) * 15;
+
+    targetPositions[i3] = (x * escalaCorazon) + dispersion;
+    targetPositions[i3 + 1] = (y * escalaCorazon) + dispersion;
+    targetPositions[i3 + 2] = z + dispersion;
+
+    // 3. COLORES (Mezcla mágica)
+    let mixedColor = colorBase.clone();
+    if (Math.random() > 0.6) mixedColor = colorAlt.clone();
+    if (distAlCentro < 5 && Math.random() > 0.8) mixedColor = colorCore.clone(); // Núcleo dorado
+
+    colors[i3] = mixedColor.r;
+    colors[i3 + 1] = mixedColor.g;
+    colors[i3 + 2] = mixedColor.b;
+  }
+
+  particleGeometry.setAttribute('position', new THREE.BufferAttribute(currentPositions, 3));
+  particleGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+  const material = new THREE.PointsMaterial({
+    size: esCelular ? 4 : 6,
+    map: createStarTexture(),
+    transparent: true,
+    opacity: 0.9,
+    vertexColors: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  particleSystem = new THREE.Points(particleGeometry, material);
+  heartGroup.add(particleSystem);
+}
+
+// --- CONTROL DE LA EXPERIENCIA ---
+document.getElementById('btnAdentrarse').addEventListener('click', () => {
+  document.getElementById('musicaSecreta').play();
+  document.getElementById('intro-screen').style.opacity = '0';
+  setTimeout(() => { document.getElementById('intro-screen').style.display = 'none'; }, 2000);
+
+  // Iniciar hiperespacio
+  iniciarWarp();
+});
+
+function iniciarWarp() {
+  // Acercamos la cámara rápidamente al centro
+  let warpInterval = setInterval(() => {
+    camera.position.z -= (camera.position.z - 400) * 0.05;
+    if (camera.position.z <= 410) {
+      clearInterval(warpInterval);
+      controls.enableZoom = true;
+      controls.minDistance = 200;
+      controls.maxDistance = 800;
+      
+      // Comenzar a formar el corazón
+      isMorphing = true;
+      escribirMensajePoetico();
+    }
+  }, 16);
+}
+
+function escribirMensajePoetico() {
+  const divMensaje = document.getElementById('mensaje-secreto');
+  divMensaje.style.opacity = '1';
+  let index = 0;
+  
+  function siguienteLinea() {
+    if (index >= textosSecretos.length) {
+      setTimeout(() => {
+        document.getElementById('btnVolver').style.opacity = '1';
+      }, 2000);
+      return;
+    }
+    
+    divMensaje.style.opacity = '0';
+    
+    setTimeout(() => {
+      divMensaje.innerText = textosSecretos[index];
+      divMensaje.style.opacity = '1';
+      index++;
+      setTimeout(siguienteLinea, 4500); // 4.5s por línea
+    }, 1000);
+  }
+  
+  siguienteLinea();
+}
+
+// --- BUCLE DE RENDERIZADO ---
+function animate() {
+  requestAnimationFrame(animate);
+  const time = clock.getElapsedTime();
+
+  // Morphing: Mover partículas a su posición de corazón
+  if (isMorphing && morphProgress < 1) {
+    morphProgress += 0.005; // Velocidad de transformación
+    const easeProgress = 1 - Math.pow(1 - morphProgress, 3); // ease-out cubic
+    
+    const posiciones = particleGeometry.attributes.position.array;
+    for (let i = 0; i < numParticles * 3; i++) {
+      posiciones[i] = currentPositions[i] + (targetPositions[i] - currentPositions[i]) * easeProgress;
+    }
+    particleGeometry.attributes.position.needsUpdate = true;
+  }
+
+  // Latido del Corazón (Una vez que se formó)
+  if (morphProgress > 0.8) {
+    // Matemática para simular un latido: picos rápidos y descanso
+    const heartbeat = Math.sin(time * 3) * Math.cos(time * 1.5);
+    const escala = 1 + (heartbeat > 0.5 ? (heartbeat - 0.5) * 0.15 : 0);
+    heartGroup.scale.set(escala, escala, escala);
+    
+    // Variar la intensidad del brillo (Bloom) con el latido
+    bloomPass.strength = 2.0 + (heartbeat > 0.5 ? heartbeat : 0);
+  }
+
+  controls.update();
+  composer.render();
+}
+
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
+}
+</script>
+</body>
+</html>
