@@ -26,9 +26,9 @@
 
   #scoreDisplay {
     position: absolute; top: 10px; left: 0; width: 100%;
-    text-align: center; font-size: 2rem; font-weight: bold;
-    color: white; text-shadow: 2px 2px 4px #000, 0 0 10px #ff69b4;
-    pointer-events: none; z-index: 5;
+    text-align: center; font-size: 2.5rem; font-weight: bold;
+    color: white; text-shadow: 2px 2px 4px #000, 0 0 15px #ff69b4;
+    pointer-events: none; z-index: 5; transition: transform 0.1s;
   }
 
   #gameOverScreen {
@@ -100,18 +100,22 @@
       gravity: 0.25,
       jump: -4.5,
       draw() {
-        ctx.save(); // Guarda el estado normal del canvas
-        ctx.translate(this.x, this.y); // Mueve el origen de dibujo al centro exacto del jugador
-        ctx.scale(-1, 1); // Hace el efecto espejo para que mire a la derecha
+        ctx.save(); 
+        ctx.translate(this.x, this.y); 
         
-        ctx.font = "24px Arial";
-        ctx.textAlign = "center";    // Asegura que el emoji no se mueva a un lado
-        ctx.textBaseline = "middle"; // Asegura que el emoji no se mueva arriba/abajo
+        // MEJORA: Rotación basada en la velocidad (como el verdadero Flappy Bird)
+        // Si sube se inclina arriba, si baja se inclina abajo. Max 45 grados.
+        let rotation = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, (this.velocity * 0.1)));
+        ctx.rotate(rotation);
         
-        // Se dibuja en (0,0) porque ya movimos el origen al centro del jugador
+        ctx.scale(-1, 1); // Espejo para que mire a la derecha
+        
+        ctx.font = "26px Arial";
+        ctx.textAlign = "center";    
+        ctx.textBaseline = "middle"; 
         ctx.fillText("🐦", 0, 0); 
         
-        ctx.restore(); // Regresa el canvas a la normalidad para el resto del juego
+        ctx.restore(); 
       },
       update() {
         this.velocity += this.gravity;
@@ -136,13 +140,13 @@
       items: [],
       width: 40,
       gap: 130, // Espacio para pasar
-      dx: 2, // Velocidad a la que se mueven
+      dx: 2.2,  // Ligeramente más rápido para que sea más fluido
       draw() {
         for (let i = 0; i < this.items.length; i++) {
           let p = this.items[i];
           
-          ctx.fillStyle = "#330033"; // Color del pilar
-          ctx.strokeStyle = "#ff69b4"; // Borde neón
+          ctx.fillStyle = "#330033"; 
+          ctx.strokeStyle = "#ff69b4"; 
           ctx.lineWidth = 2;
 
           // Pilar superior
@@ -155,8 +159,7 @@
         }
       },
       update() {
-        // Generar nueva tubería cada 90 frames
-        if (frames % 90 === 0) {
+        if (frames % 80 === 0) {
           let topHeight = Math.max(30, Math.random() * (canvas.height - this.gap - 60));
           this.items.push({
             x: canvas.width,
@@ -170,11 +173,11 @@
           let p = this.items[i];
           p.x -= this.dx;
 
-          // Detección de colisión
+          // Detección de colisión adaptada
           if (
-            heart.x + heart.radius > p.x && 
-            heart.x - heart.radius < p.x + this.width &&
-            (heart.y - heart.radius < p.top || heart.y + heart.radius > p.bottom)
+            heart.x + heart.radius - 2 > p.x && 
+            heart.x - heart.radius + 2 < p.x + this.width &&
+            (heart.y - heart.radius + 2 < p.top || heart.y + heart.radius - 2 > p.bottom)
           ) {
             gameState = "GAMEOVER";
           }
@@ -184,9 +187,18 @@
             score++;
             p.passed = true;
             scoreDisplay.innerText = score;
+            
+            // Animación de latido en el score
+            scoreDisplay.style.transform = "scale(1.3)";
+            setTimeout(() => { scoreDisplay.style.transform = "scale(1)"; }, 100);
+
+            // CORRECCIÓN: AQUÍ ES DONDE DEBE IR LA VALIDACIÓN DEL SECRETO
+            if (score >= 1) {
+                // Redirige al nivel secreto (Asegúrate de que la ruta sea correcta)
+                window.location.href = "../secreto_universo.html"; 
+            }
           }
 
-          // Eliminar tuberías que ya pasaron
           if (p.x + this.width < 0) {
             this.items.shift();
             i--;
@@ -201,13 +213,20 @@
     function drawBackground() {
       ctx.fillStyle = "#111";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Estrellitas de fondo
+      ctx.fillStyle = "rgba(255, 105, 180, 0.3)";
+      for(let i=0; i<5; i++) {
+         let starX = ((frames * 0.5) + i * 100) % canvas.width;
+         ctx.fillRect(canvas.width - starX, (i * 80) % canvas.height, 2, 2);
+      }
     }
 
     function gameLoop() {
       if (gameState === "GAMEOVER") {
         gameOverScreen.style.display = "flex";
         document.getElementById("finalScore").innerText = "Puntuación: " + score;
-        return; // Detiene el bucle
+        return; 
       }
 
       drawBackground();
@@ -224,8 +243,8 @@
         ctx.fillStyle = "white";
         ctx.font = "16px Courier New";
         ctx.textAlign = "center";
-        ctx.fillText("Toca para volar", canvas.width/2, canvas.height/2 + 30);
-        ctx.textAlign = "left"; // reset
+        ctx.fillText("Toca para volar", canvas.width/2, canvas.height/2 + 40);
+        ctx.textAlign = "left"; 
       }
 
       frames++;
@@ -243,13 +262,7 @@
       }
     }
 
-    // DESBLOQUEAR SECRETO 50 PUNTOS
-if (score === 1) {
-    window.location.href = "secreto_universo.html";
-}
-    // Controles
     document.addEventListener("mousedown", (e) => {
-      // Evitar que el clic en botones dispare el salto
       if(e.target.tagName !== "BUTTON" && e.target.tagName !== "A") {
         handleInput();
       }
@@ -273,7 +286,6 @@ if (score === 1) {
       gameLoop();
     });
 
-    // Iniciar renderizado
     gameLoop();
   </script>
 </body>
