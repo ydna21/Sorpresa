@@ -145,7 +145,7 @@ window.addEventListener('click', () => {
 // Escucha constantemente el tiempo de la canción
 audio.addEventListener('timeupdate', () => {
     // 5 minutos y 26 segundos = (5 * 60) + 26 = 326 segundos
-    if (audio.currentTime >= 10 && btnSecreto.style.display === 'none') {
+    if (audio.currentTime >= 2 && btnSecreto.style.display === 'none') {
         btnSecreto.style.display = 'inline-block';
         
         // Cambia el texto para avisar que algo pasó
