@@ -96,6 +96,7 @@ let targetX, targetY;
 let stars = [];
 let mediaObjects = [];
 let frame = 0;
+let relojIniciado = false; // Nueva variable de control
 
 function init() {
   width = window.innerWidth;
@@ -132,28 +133,33 @@ function shuffle(array) {
   }
 }
 
-window.addEventListener('click', () => {
+// --- NUEVA LÓGICA DE INICIO Y TEMPORIZADOR EXACTO ---
+function iniciarExperiencia() {
     if (audio.paused) {
         audio.play().then(() => {
             statusTxt.innerText = "GUIANDO EL DESTINO 🎶";
             statusTxt.style.color = "#ff4444";
-        });
+            
+            // Si el reloj no ha iniciado, lo disparamos aquí
+            if (!relojIniciado) {
+                relojIniciado = true;
+                
+                // 326000 milisegundos = 5 minutos y 26 segundos
+                setTimeout(() => {
+                    btnSecreto.style.display = 'inline-block';
+                    
+                    statusTxt.innerText = "¡UN PORTAL SE HA ABIERTO EN EL TIEMPO! ✨";
+                    statusTxt.style.color = "#00ffff";
+                    statusTxt.style.textShadow = "0 0 10px #00ffff";
+                }, 326000); 
+            }
+        }).catch(err => console.log("Esperando interacción..."));
     }
-});
+}
 
-// --- LÓGICA DEL TEMPORIZADOR SECRETO ---
-// Escucha constantemente el tiempo de la canción
-audio.addEventListener('timeupdate', () => {
-    // 5 minutos y 26 segundos = (5 * 60) + 26 = 326 segundos
-    if (audio.currentTime >= 2 && btnSecreto.style.display === 'none') {
-        btnSecreto.style.display = 'inline-block';
-        
-        // Cambia el texto para avisar que algo pasó
-        statusTxt.innerText = "¡UN PORTAL SE HA ABIERTO EN EL TIEMPO! ✨";
-        statusTxt.style.color = "#00ffff";
-        statusTxt.style.textShadow = "0 0 10px #00ffff";
-    }
-});
+// Detectamos el clic o el toque (para celulares) para arrancar la música y el reloj a la vez
+window.addEventListener('click', iniciarExperiencia);
+window.addEventListener('touchstart', iniciarExperiencia, {passive: true});
 
 function spawnMedia() {
   if (recuerdosDisponibles.length === 0) {
