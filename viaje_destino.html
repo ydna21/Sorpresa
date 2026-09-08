@@ -35,13 +35,27 @@
     border: 2px solid #ff0000; border-radius: 50px; cursor: pointer; 
     text-decoration: none; font-weight: bold; margin: 0 10px;
     box-shadow: 0 0 20px rgba(255, 0, 0, 0.4); transition: 0.3s;
+    display: inline-block;
   }
   .btn:hover { background: #ff0000; transform: scale(1.1); }
+
+  /* ESTILOS PARA EL BOTÓN SECRETO */
+  #btnSecreto {
+    display: none; /* Oculto por defecto */
+    border-color: #ff1493; 
+    box-shadow: 0 0 30px #ff1493; 
+    animation: latidoSecreto 1s infinite alternate;
+  }
+  @keyframes latidoSecreto {
+    0% { transform: scale(1); box-shadow: 0 0 20px #ff1493; }
+    100% { transform: scale(1.15); box-shadow: 0 0 40px #00ffff, 0 0 20px #ff1493 inset; }
+  }
 
   #musicStatus {
     position: fixed; top: 20px; left: 20px; z-index: 100;
     color: rgba(255, 255, 255, 0.5); font-size: 0.7rem;
     letter-spacing: 1px; text-transform: uppercase;
+    transition: color 1s ease;
   }
 </style>
 </head>
@@ -59,6 +73,8 @@
 <div id="controles">
   <a href="hilo_rojo.html" class="btn">🧵 Volver</a>
   <a href="index.html" class="btn" style="border-color: #555;">🏠 Inicio</a>
+  <!-- BOTÓN SECRETO -->
+  <a href="secreto_universo.html" class="btn" id="btnSecreto">🌌 PORTAL SECRETO</a>
 </div>
 
 <script>
@@ -67,6 +83,7 @@ const ctx = canvas.getContext('2d');
 const contenedor = document.getElementById('contenedorMedia');
 const audio = document.getElementById('musicaRojo');
 const statusTxt = document.getElementById('musicStatus');
+const btnSecreto = document.getElementById('btnSecreto');
 
 const misRecuerdosOriginales = [];
 for (let i = 1; i <= 40; i++) { misRecuerdosOriginales.push({ type: 'img', src: `fotos/foto${i}.jpg` }); }
@@ -74,7 +91,6 @@ for (let j = 1; j <= 10; j++) { misRecuerdosOriginales.push({ type: 'video', src
 
 let recuerdosDisponibles = [...misRecuerdosOriginales];
 let width, height;
-// Posiciones para el seguimiento del cursor
 let centerX, centerY;
 let targetX, targetY;
 let stars = [];
@@ -84,7 +100,6 @@ let frame = 0;
 function init() {
   width = window.innerWidth;
   height = window.innerHeight;
-  // Inicializamos el centro en la mitad de la pantalla
   centerX = width / 2;
   centerY = height / 2;
   targetX = centerX;
@@ -100,7 +115,6 @@ function init() {
   shuffle(recuerdosDisponibles);
 }
 
-// Seguimiento del ratón o toque
 window.addEventListener('mousemove', (e) => {
     targetX = e.clientX;
     targetY = e.clientY;
@@ -124,6 +138,20 @@ window.addEventListener('click', () => {
             statusTxt.innerText = "GUIANDO EL DESTINO 🎶";
             statusTxt.style.color = "#ff4444";
         });
+    }
+});
+
+// --- LÓGICA DEL TEMPORIZADOR SECRETO ---
+// Escucha constantemente el tiempo de la canción
+audio.addEventListener('timeupdate', () => {
+    // 5 minutos y 26 segundos = (5 * 60) + 26 = 326 segundos
+    if (audio.currentTime >= 326 && btnSecreto.style.display === 'none') {
+        btnSecreto.style.display = 'inline-block';
+        
+        // Cambia el texto para avisar que algo pasó
+        statusTxt.innerText = "¡UN PORTAL SE HA ABIERTO EN EL TIEMPO! ✨";
+        statusTxt.style.color = "#00ffff";
+        statusTxt.style.textShadow = "0 0 10px #00ffff";
     }
 });
 
@@ -158,14 +186,12 @@ function spawnMedia() {
 }
 
 function update() {
-  // Suavizado del movimiento del centro (Ease-out)
   centerX += (targetX - centerX) * 0.05;
   centerY += (targetY - centerY) * 0.05;
 
   ctx.fillStyle = 'black';
   ctx.fillRect(0, 0, width, height);
 
-  // ESTRELLAS
   ctx.fillStyle = "white";
   stars.forEach(s => {
     s.z -= 15;
@@ -177,7 +203,6 @@ function update() {
     ctx.fillRect(sx, sy, f*2.5, f*2.5);
   });
 
-  // EL HILO SIGUE EL CURSOR
   ctx.globalAlpha = 1;
   ctx.strokeStyle = '#ff0000';
   ctx.lineWidth = 4;
@@ -187,7 +212,6 @@ function update() {
   
   for(let i=10; i<2000; i+=40) {
     let f = 400 / i;
-    // La "wave" se suma a la posición del centro
     let waveX = Math.sin(Date.now() * 0.003 + i * 0.008) * 80;
     let waveY = Math.cos(Date.now() * 0.002 + i * 0.012) * 50;
     let hx = waveX * f + centerX;
@@ -198,7 +222,6 @@ function update() {
   ctx.stroke();
   ctx.shadowBlur = 0;
 
-  // RECUERDOS SIGUEN EL CURSOR
   mediaObjects.forEach((m, index) => {
     m.z -= 12; 
     
