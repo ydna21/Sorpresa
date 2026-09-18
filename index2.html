@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gracias por todo, mi amor... 💔✨</title>
+<style>
+  body { margin: 0; background: #000; overflow: hidden; font-family: 'Courier New', monospace; color: white; }
+  
+  #canvasContainer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+  
+  #ui-layer {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 10; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; pointer-events: none;
+  }
+
+  #intro-screen {
+    background: rgba(0, 0, 0, 0.95);
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 20; transition: opacity 2s ease;
+  }
+
+  .glitch {
+    font-size: 2.2rem; font-weight: bold; color: #fff;
+    text-shadow: 0 0 10px #4169e1, 0 0 20px #8a2be2;
+    text-align: center; padding: 20px;
+    animation: pulsate 2s infinite alternate;
+  }
+
+  @keyframes pulsate {
+    0% { transform: scale(1); opacity: 0.8; text-shadow: 0 0 10px #4169e1; }
+    100% { transform: scale(1.05); opacity: 1; text-shadow: 0 0 30px #1e90ff, 0 0 40px #8a2be2; }
+  }
+
+  #btnAdentrarse {
+    margin-top: 30px; padding: 15px 40px; font-size: 1.2rem;
+    background: transparent; color: white; border: 2px solid #4169e1;
+    border-radius: 50px; cursor: pointer; pointer-events: auto;
+    box-shadow: 0 0 15px #4169e1 inset, 0 0 20px #4169e1;
+    transition: all 0.5s ease; text-transform: uppercase; letter-spacing: 2px;
+  }
+  #btnAdentrarse:hover { background: #4169e1; box-shadow: 0 0 40px #4169e1; transform: scale(1.1); }
+
+  #mensaje-secreto {
+    position: absolute; bottom: 15%; width: 90%; max-width: 700px;
+    text-align: center; font-size: 1.5rem; line-height: 1.6;
+    color: #fff; text-shadow: 0 0 15px #4169e1, 0 0 30px #8a2be2;
+    opacity: 0; transition: opacity 2s ease; font-weight: bold;
+  }
+
+  #flash-screen {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: #111; z-index: 15; opacity: 0; pointer-events: none;
+  }
+
+  /* MODAL DE CONSTELACIONES */
+  #modal-constelacion {
+    position: absolute; top: 20%; background: rgba(5, 0, 15, 0.9);
+    border: 2px solid #4169e1; padding: 20px 40px; border-radius: 15px;
+    box-shadow: 0 0 30px #4169e1; color: #fff; text-align: center;
+    font-size: 1.3rem; z-index: 12; display: none; opacity: 0; transition: opacity 0.5s;
+  }
+
+  /* TEXTO FINAL DEL AGUJERO NEGRO */
+  #texto-final-absoluto {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 90%; max-width: 800px; text-align: center;
+    font-size: 1.8rem; line-height: 1.6; font-weight: bold;
+    color: #fff; text-shadow: 0 0 20px #4169e1, 0 0 40px #fff;
+    z-index: 30; display: none; opacity: 0; transition: opacity 4s ease;
+  }
+
+  .btn-volver {
+    margin-top: 40px; padding: 12px 30px;
+    background: rgba(65, 105, 225, 0.2); border: 2px solid #4169e1;
+    color: white; border-radius: 25px; font-family: inherit; font-size: 1.1rem;
+    cursor: pointer; pointer-events: auto; transition: transform 0.3s;
+    box-shadow: 0 0 20px rgba(65,105,225,0.5); font-weight: bold;
+  }
+  .btn-volver:hover { background: #4169e1; transform: scale(1.1); box-shadow: 0 0 40px #4169e1; }
+</style>
+</head>
+<body>
+
+<audio id="musicaSecreta" loop crossorigin="anonymous">
+  <source src="videos/musicasecreto.mp3" type="audio/mpeg">
+</audio>
+
+<div id="canvasContainer"></div>
+<div id="flash-screen"></div>
+
+<div id="ui-layer">
+  <div id="mensaje-secreto"></div>
+  <div id="modal-constelacion">Mensaje estelar</div>
+</div>
+
+<div id="texto-final-absoluto">
+  Gracias por haber sido mi universo entero.<br>Aunque nuestros caminos se separen, te amaré en silencio por siempre. 💔✨<br>
+  <button class="btn-volver" onclick="window.history.back()">Guardar en el Corazón</button>
+</div>
+
+<div id="intro-screen">
+  <div class="glitch">Un último recuerdo entre las estrellas...</div>
+  <p style="color: #aaa; text-align: center; max-width: 80%; font-size:1.1rem; line-height: 1.5;">
+    Toca el botón para escuchar la melodía de nuestra despedida.<br>Gracias por todo lo bonito.
+  </p>
+  <button id="btnAdentrarse">Reproducir Recuerdos</button>
+</div>
+
+<!-- Scripts de Three.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+
+<script>
+const esCelular = window.innerWidth < 768;
+let scene, camera, renderer, composer, bloomPass, controls;
+let audioCtx, analyser, dataArray;
+
+let particleSystem, particleGeometry;
+let currentPositions, heartPositions, explosionVelocities, galaxyPositions, colorsArray;
+let warpLinesSystem; 
+let shockwaveMesh; 
+let interactiveStars = []; 
+
+let timeoutFade;
+let timeoutOcultar;
+let estrellaActiva = null;
+
+const numParticles = esCelular ? 6000 : 12000;
+const numWarpLines = esCelular ? 200 : 500;
+
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+let animState = 'IDLE'; 
+let morphProgress = 0;
+let clock = new THREE.Clock();
+let timeElapsed = 0;
+
+let mainGroup = new THREE.Group();
+mainGroup.frustumCulled = false;
+
+// Frases tristes y de agradecimiento profundo
+const textosSecretos = [
+  "Duele tanto mirar atrás y ver lo que fuimos...",
+  "Pero a pesar de todo, no me arrepiento de ni un solo segundo a tu lado.",
+  "Gracias por enseñarme lo que es amar de verdad...",
+  "Por cada risa, por cada abrazo y por hacerme inmensamente feliz.",
+  "Hoy nuestros caminos se separan bajo el mismo cielo...",
+  "Llevo tus recuerdos grabados como estrellas en el alma.",
+  "Fuiste lo más bonito que me pasó en la vida.",
+  "Gracias por todo mi amor... te dejo volar. 💔"
+];
+
+const mensajesConstelaciones = [
+  "Gracias por regalarme tus mejores sonrisas 💫",
+  "Fuiste mi hogar durante un tiempo maravilloso",
+  "Nunca olvidaré todo lo que vivimos juntos",
+  "Gracias por hacerme tan feliz",
+  "Te amaré siempre, aunque sea en la distancia",
+  "Dejas una huella imborrable en mi corazón",
+  "Gracias por cada detalle y cada momento",
+  "Nuestro amor fue real y hermoso",
+  "Es difícil decir adiós a lo que tanto quise",
+  "Gracias por todo lo nuestro, hasta siempre..."
+];
+
+init();
+animate();
+
+function init() {
+  const container = document.getElementById('canvasContainer');
+  scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x000000, 0.0003);
+
+  camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 15000);
+  camera.position.set(0, 0, 4000); 
+
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.appendChild(renderer.domElement);
+
+  const renderScene = new THREE.RenderPass(scene, camera);
+  bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.8, 0.4, 0.2);
+  composer = new THREE.EffectComposer(renderer);
+  composer.addPass(renderScene);
+  composer.addPass(bloomPass);
+
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+  controls.enableZoom = false; 
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 1.0;
+  controls.maxPolarAngle = Math.PI / 1.5; 
+
+  prepararMatematicas();
+  crearSistemaParticulas();
+  crearLluviaWarp();
+  crearOndaExpansiva();
+  
+  scene.add(mainGroup);
+
+  window.addEventListener('resize', onWindowResize);
+  window.addEventListener('click', onStarClick);
+  window.addEventListener('touchstart', (e) => {
+    if(e.touches.length > 0) {
+      mouse.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
+      onStarClick(e);
+    }
+  }, {passive: false});
+}
+
+function createStarTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 64; canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+  gradient.addColorStop(0.2, 'rgba(65, 105, 225, 0.8)'); // Tonalidad azul nostálgica
+  gradient.addColorStop(0.5, 'rgba(138, 43, 226, 0.2)');
+  gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 64, 64);
+  return new THREE.CanvasTexture(canvas);
+}
+
+function crearOndaExpansiva() {
+  const ringGeo = new THREE.RingGeometry(1, 15, 64);
+  const ringMat = new THREE.MeshBasicMaterial({
+    color: 0x4169e1, transparent: true, opacity: 0,
+    side: THREE.DoubleSide, blending: THREE.AdditiveBlending
+  });
+  shockwaveMesh = new THREE.Mesh(ringGeo, ringMat);
+  scene.add(shockwaveMesh);
+}
+
+function prepararMatematicas() {
+  currentPositions = new Float32Array(numParticles * 3);
+  heartPositions = new Float32Array(numParticles * 3);
+  explosionVelocities = new Float32Array(numParticles * 3);
+  galaxyPositions = new Float32Array(numParticles * 3);
+  colorsArray = new Float32Array(numParticles * 3);
+
+  const colorBase = new THREE.Color(0x4169e1); // Azul melancólico
+  const colorAlt = new THREE.Color(0x8a2be2);  // Violeta
+  const colorCore = new THREE.Color(0xffffff); // Blanco triste
+
+  for (let i = 0; i < numParticles; i++) {
+    const i3 = i * 3;
+    
+    const radioInicial = 4000 + Math.random() * 2000;
+    const thetaInicial = Math.random() * Math.PI * 2;
+    const phiInicial = Math.acos(Math.random() * 2 - 1);
+    currentPositions[i3] = radioInicial * Math.sin(phiInicial) * Math.cos(thetaInicial);
+    currentPositions[i3 + 1] = radioInicial * Math.sin(phiInicial) * Math.sin(thetaInicial);
+    currentPositions[i3 + 2] = radioInicial * Math.cos(phiInicial);
+
+    const t = Math.random() * Math.PI * 2; 
+    let xH = 16 * Math.pow(Math.sin(t), 3);
+    let yH = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+    const escalaH = esCelular ? 6 : 10;
+    const distAlCentro = Math.sqrt(xH*xH + yH*yH);
+    const factorVolumen = Math.max(0, 1 - (distAlCentro / 16));
+    const zH = (Math.random() - 0.5) * 80 * factorVolumen;
+    const dispersion = (Math.random() - 0.5) * 15;
+    
+    heartPositions[i3] = (xH * escalaH) + dispersion;
+    heartPositions[i3 + 1] = (yH * escalaH) + dispersion;
+    heartPositions[i3 + 2] = zH + dispersion;
+
+    const vel = new THREE.Vector3(heartPositions[i3], heartPositions[i3+1], heartPositions[i3+2]).normalize();
+    const speed = 40 + Math.random() * 100;
+    explosionVelocities[i3] = vel.x * speed;
+    explosionVelocities[i3+1] = vel.y * speed;
+    explosionVelocities[i3+2] = vel.z * speed + (Math.random() - 0.5)*30; 
+
+    const brazos = 4;
+    const armOffset = (i % brazos) * ((Math.PI * 2) / brazos);
+    const radioG = Math.random() * 1000; 
+    const angleG = (radioG * 0.015) + armOffset; 
+    const dispersionG = (1000 - radioG) * 0.1 * (Math.random() - 0.5); 
+    const alturaG = (Math.random() - 0.5) * 80 * (1 - (radioG/1000)); 
+
+    galaxyPositions[i3] = Math.cos(angleG) * radioG + dispersionG;
+    galaxyPositions[i3 + 1] = alturaG;
+    galaxyPositions[i3 + 2] = Math.sin(angleG) * radioG + dispersionG;
+
+    let c = colorBase.clone();
+    if (Math.random() > 0.5) c = colorAlt.clone();
+    if (radioG < 150 || distAlCentro < 5) c = colorCore.clone(); 
+    colorsArray[i3] = c.r;
+    colorsArray[i3 + 1] = c.g;
+    colorsArray[i3 + 2] = c.b;
+  }
+}
+
+function crearSistemaParticulas() {
+  particleGeometry = new THREE.BufferGeometry();
+  particleGeometry.setAttribute('position', new THREE.BufferAttribute(currentPositions, 3));
+  particleGeometry.setAttribute('color', new THREE.BufferAttribute(colorsArray, 3));
+
+  const material = new THREE.PointsMaterial({
+    size: esCelular ? 6 : 8,
+    map: createStarTexture(),
+    transparent: true, opacity: 0.8, vertexColors: true,
+    blending: THREE.AdditiveBlending, depthWrite: false
+  });
+
+  particleSystem = new THREE.Points(particleGeometry, material);
+  particleSystem.frustumCulled = false;
+  mainGroup.add(particleSystem);
+}
+
+function crearLluviaWarp() {
+  const lineGeo = new THREE.BufferGeometry();
+  const linePos = new Float32Array(numWarpLines * 6); 
+  
+  for(let i=0; i<numWarpLines; i++){
+    const x = (Math.random() - 0.5) * 4000;
+    const y = (Math.random() - 0.5) * 4000;
+    const z = Math.random() * 4000 - 2000;
+    linePos[i*6] = x; linePos[i*6+1] = y; linePos[i*6+2] = z;
+    linePos[i*6+3] = x; linePos[i*6+4] = y; linePos[i*6+5] = z + 100; 
+  }
+  
+  lineGeo.setAttribute('position', new THREE.BufferAttribute(linePos, 3));
+  const lineMat = new THREE.LineBasicMaterial({
+    color: 0x4169e1, transparent: true, opacity: 0, blending: THREE.AdditiveBlending
+  });
+  
+  warpLinesSystem = new THREE.LineSegments(lineGeo, lineMat);
+  warpLinesSystem.frustumCulled = false;
+  scene.add(warpLinesSystem);
+}
+
+function generarEstrellasInteractivas() {
+  for (let i = 0; i < 10; i++) {
+    const tex = createStarTexture();
+    const mat = new THREE.SpriteMaterial({ map: tex, color: 0x4169e1, transparent: true, blending: THREE.AdditiveBlending });
+    const sprite = new THREE.Sprite(mat);
+    sprite.scale.set(100, 100, 1);
+    
+    const angle = Math.random() * Math.PI * 2;
+    const radio = 300 + Math.random() * 600;
+    sprite.position.set(Math.cos(angle)*radio, (Math.random()-0.5)*100, Math.sin(angle)*radio);
+    
+    sprite.userData = { mensaje: mensajesConstelaciones[i] };
+    interactiveStars.push(sprite);
+    mainGroup.add(sprite);
+  }
+}
+
+document.getElementById('btnAdentrarse').addEventListener('click', () => {
+  if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(e => console.log(e));
+  }
+
+  const audioEl = document.getElementById('musicaSecreta');
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioCtx.createAnalyser();
+    const source = audioCtx.createMediaElementSource(audioEl);
+    source.connect(analyser);
+    analyser.connect(audioCtx.destination);
+    analyser.fftSize = 256;
+    dataArray = new Uint8Array(analyser.frequencyBinCount);
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  audioEl.play();
+
+  document.getElementById('intro-screen').style.opacity = '0';
+  setTimeout(() => { document.getElementById('intro-screen').style.display = 'none'; }, 2000);
+  
+  animState = 'WARP_IN';
+  iniciarWarp();
+});
+
+window.addEventListener('mousemove', (e) => {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+});
+
+function onStarClick(e) {
+  if(animState !== 'GALAXY') return;
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(interactiveStars);
+  
+  if (intersects.length > 0) {
+    const estrellaTocada = intersects[0].object;
+    const msg = estrellaTocada.userData.mensaje;
+    const modal = document.getElementById('modal-constelacion');
+
+    if (timeoutFade) clearTimeout(timeoutFade);
+    if (timeoutOcultar) clearTimeout(timeoutOcultar);
+
+    if (estrellaActiva && estrellaActiva !== estrellaTocada) {
+      estrellaActiva.scale.set(100, 100, 1);
+    }
+    estrellaActiva = estrellaTocada;
+
+    modal.innerText = msg;
+    modal.style.display = 'block';
+    setTimeout(()=> modal.style.opacity = '1', 10);
+    
+    estrellaTocada.scale.set(200, 200, 1);
+    
+    timeoutFade = setTimeout(() => { 
+      modal.style.opacity = '0'; 
+      timeoutOcultar = setTimeout(() => {
+          modal.style.display = 'none';
+      }, 500);
+      estrellaTocada.scale.set(100, 100, 1);
+      estrellaActiva = null;
+    }, 4000); 
+  }
+}
+
+function iniciarWarp() {
+  let warpInterval = setInterval(() => {
+    camera.position.z -= (camera.position.z - 400) * 0.05;
+    if (camera.position.z <= 410) {
+      clearInterval(warpInterval);
+      controls.enableZoom = true;
+      controls.minDistance = 200;
+      controls.maxDistance = 2000;
+      animState = 'MORPH_HEART';
+      escribirMensajePoetico();
+    }
+  }, 16);
+}
+
+function escribirMensajePoetico() {
+  const divMensaje = document.getElementById('mensaje-secreto');
+  divMensaje.style.opacity = '1';
+  let index = 0;
+  
+  function siguienteLinea() {
+    if (index >= textosSecretos.length) {
+      setTimeout(() => {
+        divMensaje.style.opacity = '0';
+        desatarSupernova(); 
+      }, 3000);
+      return;
+    }
+    divMensaje.style.opacity = '0';
+    setTimeout(() => {
+      divMensaje.innerText = textosSecretos[index];
+      divMensaje.style.opacity = '1';
+      index++;
+      setTimeout(siguienteLinea, 4500);
+    }, 1000);
+  }
+  siguienteLinea();
+}
+
+function desatarSupernova() {
+  animState = 'PRE_EXPLOSION';
+  controls.autoRotateSpeed = 15.0; 
+  
+  setTimeout(() => {
+    animState = 'EXPLOSION';
+    shockwaveMesh.material.opacity = 1; 
+    
+    const flash = document.getElementById('flash-screen');
+    flash.style.opacity = '1'; 
+    setTimeout(() => { flash.style.opacity = '0'; flash.style.transition = 'opacity 2.5s'; }, 100);
+    
+    setTimeout(() => {
+      animState = 'GALAXY';
+      controls.autoRotateSpeed = 1.5; 
+      warpLinesSystem.material.opacity = 0.3; 
+      generarEstrellasInteractivas(); 
+    }, 2000); 
+  }, 2500); 
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  const delta = clock.getDelta();
+  timeElapsed += delta;
+
+  let avgBass = 0;
+  if (analyser && dataArray) {
+    analyser.getByteFrequencyData(dataArray);
+    let sum = 0;
+    for(let i = 0; i < 20; i++) sum += dataArray[i];
+    avgBass = sum / 20; 
+  }
+
+  const posiciones = particleGeometry.attributes.position.array;
+
+  switch(animState) {
+    case 'MORPH_HEART':
+      if (morphProgress < 1) {
+        morphProgress += delta * 0.055; 
+        const ease = 1 - Math.pow(1 - morphProgress, 3);
+        for (let i = 0; i < numParticles * 3; i++) {
+          posiciones[i] = currentPositions[i] + (heartPositions[i] - currentPositions[i]) * ease;
+        }
+        particleGeometry.attributes.position.needsUpdate = true;
+      }
+      // Latido triste y pausado
+      const beat = 1 + Math.sin(timeElapsed * 3) * 0.04 * (1 + avgBass * 0.01);
+      mainGroup.scale.set(beat, beat, beat);
+      break;
+
+    case 'PRE_EXPLOSION':
+      const rapidBeat = 1 + Math.sin(timeElapsed * 15) * 0.08;
+      mainGroup.scale.set(rapidBeat, rapidBeat, rapidBeat);
+      break;
+
+    case 'EXPLOSION':
+      for (let i = 0; i < numParticles; i++) {
+        const i3 = i * 3;
+        posiciones[i3] += explosionVelocities[i3] * delta;
+        posiciones[i3 + 1] += explosionVelocities[i3 + 1] * delta;
+        posiciones[i3 + 2] += explosionVelocities[i3 + 2] * delta;
+      }
+      particleGeometry.attributes.position.needsUpdate = true;
+      mainGroup.scale.set(1, 1, 1);
+      
+      shockwaveMesh.scale.addScalar(delta * 800);
+      shockwaveMesh.material.opacity -= delta * 0.8;
+      break;
+
+    case 'GALAXY':
+      for (let i = 0; i < numParticles; i++) {
+        const i3 = i * 3;
+        posiciones[i3] = THREE.MathUtils.lerp(posiciones[i3], galaxyPositions[i3], 0.02);
+        posiciones[i3+1] = THREE.MathUtils.lerp(posiciones[i3+1], galaxyPositions[i3+1], 0.02);
+        posiciones[i3+2] = THREE.MathUtils.lerp(posiciones[i3+2], galaxyPositions[i3+2], 0.02);
+      }
+      particleGeometry.attributes.position.needsUpdate = true;
+      
+      mainGroup.rotation.y += delta * 0.08;
+      
+      if(timeElapsed > 12 && document.getElementById('texto-final-absoluto').style.display !== 'block') {
+        const finalDiv = document.getElementById('texto-final-absoluto');
+        finalDiv.style.display = 'block';
+        setTimeout(() => finalDiv.style.opacity = '1', 50);
+      }
+      break;
+  }
+
+  controls.update();
+  composer.render();
+}
+
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
+}
+</script>
+</body>
+</html>
