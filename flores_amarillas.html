@@ -22,7 +22,7 @@
   #btnIniciar {
     background: transparent;
     border: none;
-    color: #ffdb58; /* Amarillo dorado */
+    color: #ffdb58; 
     font-size: 1.5rem;
     font-family: 'Courier New', monospace;
     cursor: pointer;
@@ -61,8 +61,18 @@
     margin: 0; font-family: 'Georgia', serif; font-style: italic;
   }
 
+  /* Indicador secreto */
+  #mensajeInteractivo {
+    position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+    font-size: 1.2rem; color: #ffdb58; text-shadow: 0 0 10px #ff8c00;
+    pointer-events: none; opacity: 0; transition: opacity 1s ease;
+    animation: latidoEntrada 2s infinite;
+    z-index: 10;
+  }
+
   @media (max-width: 768px) {
     h1 { font-size: 1.5rem; padding: 0 10px;}
+    #mensajeInteractivo { font-size: 1rem; }
   }
 </style>
 </head>
@@ -85,6 +95,8 @@
   <h1 id="tituloPrincipal">Feliz Día de las Flores Amarillas 🌻💛</h1>
 </div>
 
+<div id="mensajeInteractivo">¡Toca el corazón de luz! ✨</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
@@ -97,29 +109,37 @@
 <script>
 const esCelular = window.innerWidth < 768;
 let scene, camera, renderer, controls, composer;
-let systemRotationGroup;
+let systemRotationGroup, heartPoints, hitboxCorazon;
 let girasoles = [];
 let textosFlotantes = [];
+let fotosFlotantes = [];
+let explosionesActivas = [];
 
-// Frases estilo TikTok para el día de las flores amarillas
+let clicsCorazon = 0;
+let fotosMostradas = false;
+const textureLoader = new THREE.TextureLoader();
+
+// MUCHAS frases para un universo gigante
 const frases = [
-    "Un ramo de gracias por estar ahí ✨",
-    "Eres mi sol de siempre 💛",
-    "Contigo la vida es mejor 🌻",
-    "No siempre necesitas un jardín para florecer",
-    "Tú iluminas mis días oscuros",
-    "Gracias por quererme siempre",
-    "Mi lugar favorito es contigo",
-    "Un amor bonito y sincero",
-    "Que siempre florezca nuestra alegría",
-    "Para ti, con todo mi corazón 💛"
+    "Un ramo de gracias por estar ahí ✨", "Eres mi sol de siempre 💛", "Contigo la vida es mejor 🌻",
+    "No siempre necesitas un jardín para florecer", "Tú iluminas mis días oscuros", "Gracias por quererme siempre",
+    "Mi lugar favorito es contigo", "Un amor bonito y sincero", "Que siempre florezca nuestra alegría",
+    "Para ti, con todo mi corazón 💛", "Eres mi universo entero", "A tu lado todo es dorado",
+    "Mi estrella más brillante ✨", "Mi mundo gira a tu alrededor", "Eres el amarillo de mi vida 🌻",
+    "Juntos brillamos más", "Un millón de girasoles para ti", "Tu sonrisa es mi luz", "Por siempre tú y yo",
+    "Cada día a tu lado es magia", "Haces mi vida hermosa", "Eres mi flor favorita", "Mi corazón te elige siempre",
+    "Eres mi lugar seguro", "Contigo hasta el infinito 🚀", "Un amor de otra galaxia", "Tus abrazos son mi sol",
+    "Gracias por existir", "Tu y yo contra el universo", "Mi felicidad lleva tu nombre",
+    "Eres mi coincidencia favorita", "Brillas más que las estrellas", "Te amo hoy y siempre 💛",
+    "Eres magia pura", "Nunca dejes de florecer", "Mi mejor casualidad", "Siempre te voy a cuidar",
+    "Eres mi poesía favorita", "Contigo todo tiene sentido", "El universo nos unió"
 ];
 
-// Iniciar Experiencia
-document.getElementById('btnIniciar').addEventListener('click', function() {
-    const audio = document.getElementById('musicaFondo');
-    audio.play();
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
 
+document.getElementById('btnIniciar').addEventListener('click', function() {
+    document.getElementById('musicaFondo').play();
     const pantalla = document.getElementById('pantallaEntrada');
     pantalla.style.opacity = '0';
     
@@ -132,19 +152,17 @@ document.getElementById('btnIniciar').addEventListener('click', function() {
 
 function init() {
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x050300); // Fondo oscuro muy cálido
-    scene.fog = new THREE.FogExp2(0x050300, 0.00015);
+    scene.background = new THREE.Color(0x050300);
+    scene.fog = new THREE.FogExp2(0x050300, 0.0001); // Neblina más suave para ver lejos
 
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 30000);
-    // Posición inicial (muy lejos, para el efecto de entrada)
-    camera.position.set(0, 500, 8000);
+    camera.position.set(0, 500, 9000);
 
     renderer = new THREE.WebGLRenderer({ antialias: !esCelular });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     document.getElementById('threeCanvas').appendChild(renderer.domElement);
 
-    // Efecto de brillo (Bloom) dorado
     const renderScene = new THREE.RenderPass(scene, camera);
     const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 2.0, 0.5, 0.3);
     composer = new THREE.EffectComposer(renderer);
@@ -154,7 +172,7 @@ function init() {
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.enabled = false; // Se activa después del viaje inicial
+    controls.enabled = false;
 
     systemRotationGroup = new THREE.Group();
     scene.add(systemRotationGroup);
@@ -164,9 +182,10 @@ function init() {
     crearGirasolesYTextos();
 
     window.addEventListener('resize', onWindowResize);
+    window.addEventListener('click', onInteractuar);
+    window.addEventListener('touchstart', onInteractuar, { passive: false });
 }
 
-// Crea el corazón brillante en el centro
 function crearCorazonCentral() {
     const geometry = new THREE.BufferGeometry();
     const positions = [];
@@ -175,20 +194,14 @@ function crearCorazonCentral() {
     const colorNaranja = new THREE.Color(0xff8c00);
 
     for (let i = 0; i < 2000; i++) {
-        // Fórmula matemática para un corazón en 3D (aproximación usando cilindro/esfera deformada)
         const t = Math.random() * Math.PI * 2;
-        const u = Math.random() * Math.PI;
-        
-        // Ecuación paramétrica del corazón
         const x = 16 * Math.pow(Math.sin(t), 3);
         const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
         const z = (Math.random() - 0.5) * 10;
 
-        // Escalar
         const scale = 15;
         positions.push(x * scale, y * scale, z * scale);
 
-        // Mezclar colores amarillo y naranja
         const mixedColor = colorDorado.clone().lerp(colorNaranja, Math.random());
         colors.push(mixedColor.r, mixedColor.g, mixedColor.b);
     }
@@ -197,111 +210,176 @@ function crearCorazonCentral() {
     geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
 
     const material = new THREE.PointsMaterial({
-        size: esCelular ? 4 : 6,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.8,
-        blending: THREE.AdditiveBlending
+        size: esCelular ? 4 : 6, vertexColors: true, transparent: true,
+        opacity: 0.8, blending: THREE.AdditiveBlending
     });
 
-    const heart = new THREE.Points(geometry, material);
-    systemRotationGroup.add(heart);
+    heartPoints = new THREE.Points(geometry, material);
+    systemRotationGroup.add(heartPoints);
 
-    // Añadir una luz en el centro del corazón
+    // HITBOX INVISIBLE PARA EL CORAZÓN (Detectar clics fácilmente)
+    const hitboxGeom = new THREE.SphereGeometry(300, 16, 16);
+    const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
+    hitboxCorazon = new THREE.Mesh(hitboxGeom, hitboxMat);
+    systemRotationGroup.add(hitboxCorazon);
+
     const light = new THREE.PointLight(0xffdb58, 2, 2000);
     scene.add(light);
 }
 
-// Crea el fondo de estrellas y partículas amarillas
 function crearPolvoEstelarDorado() {
     const starsGeometry = new THREE.BufferGeometry();
     const starsPositions = [];
-    for (let i = 0; i < (esCelular ? 2000 : 5000); i++) {
+    for (let i = 0; i < 5000; i++) {
         starsPositions.push(
-            (Math.random() - 0.5) * 10000,
-            (Math.random() - 0.5) * 10000,
-            (Math.random() - 0.5) * 10000
+            (Math.random() - 0.5) * 15000,
+            (Math.random() - 0.5) * 15000,
+            (Math.random() - 0.5) * 15000
         );
     }
     starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsPositions, 3));
-    const starsMaterial = new THREE.PointsMaterial({ 
-        color: 0xffe87c, 
-        size: 3, 
-        transparent: true, 
-        opacity: 0.6,
-        blending: THREE.AdditiveBlending
-    });
-    const starfield = new THREE.Points(starsGeometry, starsMaterial);
-    scene.add(starfield);
+    const starsMaterial = new THREE.PointsMaterial({ color: 0xffe87c, size: 3, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending });
+    scene.add(new THREE.Points(starsGeometry, starsMaterial));
 }
 
-// Generador de texturas para girasoles y textos sin cargar imágenes externas
 function crearSpriteGirasol() {
     const canvas = document.createElement('canvas');
     canvas.width = 256; canvas.height = 256;
     const ctx = canvas.getContext('2d');
-    ctx.font = '150px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    ctx.font = '150px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('🌻', 128, 128);
-    
     const tex = new THREE.CanvasTexture(canvas);
-    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
-    return new THREE.Sprite(mat);
+    return new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
 }
 
 function crearSpriteTexto(texto) {
     const canvas = document.createElement('canvas');
-    canvas.width = 1024; canvas.height = 128;
+    canvas.width = 1200; canvas.height = 128;
     const ctx = canvas.getContext('2d');
     
-    ctx.font = 'bold 40px "Courier New"';
-    ctx.fillStyle = '#ffeedd';
+    ctx.font = 'bold 45px "Courier New"';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+    
+    // BORDE PARA HACERLO MUCHO MÁS LEGIBLE
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = 'black'; 
+    ctx.strokeText(texto, 600, 64);
+
+    // RELLENO Y BRILLO
+    ctx.fillStyle = '#ffeedd';
     ctx.shadowColor = '#ffb000';
-    ctx.shadowBlur = 15;
-    ctx.fillText(texto, 512, 64);
+    ctx.shadowBlur = 10;
+    ctx.fillText(texto, 600, 64);
     
     const tex = new THREE.CanvasTexture(canvas);
-    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, blending: THREE.AdditiveBlending });
-    const sprite = new THREE.Sprite(mat);
-    sprite.scale.set(700, 87, 1);
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, blending: THREE.AdditiveBlending }));
+    sprite.scale.set(800, 85, 1);
     return sprite;
 }
 
-// Agrega los girasoles y frases orbitando el centro
 function crearGirasolesYTextos() {
     const cantidad = frases.length;
-    
     for (let i = 0; i < cantidad; i++) {
-        // --- Crear Girasol ---
         const girasol = crearSpriteGirasol();
-        const radioCirculo = 600 + (Math.random() * 800);
-        const angulo = (i / cantidad) * Math.PI * 2;
+        // Espacio inmenso: Radios desde 600 hasta 4500
+        const radioCirculo = 600 + (Math.random() * 3900);
+        const angulo = (i / cantidad) * Math.PI * 2 + (Math.random() * 0.5);
+        const alturaAleatoria = (Math.random() - 0.5) * 1500;
         
-        girasol.position.set(Math.cos(angulo) * radioCirculo, (Math.random() - 0.5) * 400, Math.sin(angulo) * radioCirculo);
-        girasol.scale.set(120, 120, 1);
+        girasol.position.set(Math.cos(angulo) * radioCirculo, alturaAleatoria, Math.sin(angulo) * radioCirculo);
+        girasol.scale.set(150, 150, 1);
         
-        // Animación de órbita
-        girasoles.push({ mesh: girasol, angulo: angulo, radio: radioCirculo, velocidad: 0.002 + Math.random() * 0.002 });
+        girasoles.push({ mesh: girasol, angulo: angulo, radio: radioCirculo, velocidad: 0.001 + Math.random() * 0.002 });
         systemRotationGroup.add(girasol);
 
-        // --- Crear Texto Flotante cerca del girasol ---
         const texto = crearSpriteTexto(frases[i]);
-        texto.position.set(girasol.position.x, girasol.position.y - 80, girasol.position.z);
-        textosFlotantes.push({ mesh: texto, angulo: angulo, radio: radioCirculo, velocidad: 0.002 + Math.random() * 0.002, offsetY: (Math.random() - 0.5) * 100 });
+        texto.position.set(girasol.position.x, girasol.position.y - 100, girasol.position.z);
+        textosFlotantes.push({ mesh: texto, angulo: angulo, radio: radioCirculo, velocidad: 0.001 + Math.random() * 0.002, offsetY: alturaAleatoria });
         systemRotationGroup.add(texto);
     }
 }
 
-// Animación de entrada (viaje hacia el corazón)
+// LÓGICA DE CLICS E INTERACCIÓN
+function onInteractuar(event) {
+    if(!controls.enabled) return;
+
+    let clientX = event.clientX;
+    let clientY = event.clientY;
+    if (event.touches && event.touches.length > 0) {
+        clientX = event.touches[0].clientX;
+        clientY = event.touches[0].clientY;
+    }
+
+    mouse.x = (clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObject(hitboxCorazon);
+
+    if (intersects.length > 0) {
+        clicsCorazon++;
+        crearExplosionFlores();
+
+        if (clicsCorazon === 10 && !fotosMostradas) {
+            mostrarEventoFotos();
+            document.getElementById('mensajeInteractivo').style.display = 'none';
+        }
+    }
+}
+
+function crearExplosionFlores() {
+    let grupoExplosion = new THREE.Group();
+    for (let i = 0; i < 20; i++) {
+        let flor = crearSpriteGirasol();
+        flor.scale.set(40, 40, 1);
+        flor.position.set(0,0,0);
+        
+        // Disparar en todas las direcciones
+        let velocidad = new THREE.Vector3(
+            (Math.random() - 0.5) * 40,
+            (Math.random() - 0.5) * 40,
+            (Math.random() - 0.5) * 40
+        );
+        
+        flor.userData = { vel: velocidad, vida: 1.0 };
+        grupoExplosion.add(flor);
+    }
+    systemRotationGroup.add(grupoExplosion);
+    explosionesActivas.push(grupoExplosion);
+}
+
+function mostrarEventoFotos() {
+    fotosMostradas = true;
+    for (let i = 1; i <= 40; i++) {
+        // Busca en la carpeta fotos, archivos 1.jpg, 2.jpg... 40.jpg
+        textureLoader.load(`fotos/${i}.jpg`, (texture) => {
+            const material = new THREE.SpriteMaterial({ map: texture, transparent: true, opacity: 0 });
+            const sprite = new THREE.Sprite(material);
+            
+            const angulo = Math.random() * Math.PI * 2;
+            const radio = 800 + Math.random() * 2500;
+            const altura = (Math.random() - 0.5) * 2000;
+            
+            sprite.position.set(Math.cos(angulo) * radio, altura, Math.sin(angulo) * radio);
+            sprite.scale.set(300, 300, 1);
+            
+            sprite.userData = { angulo: angulo, radio: radio, velocidad: 0.003 + Math.random() * 0.005 };
+            fotosFlotantes.push(sprite);
+            systemRotationGroup.add(sprite);
+        });
+    }
+}
+
 let enViaje = false;
 let viajeProgress = 0;
 const viajeDuration = 4000;
 
 function iniciarViaje() {
     enViaje = true;
+    setTimeout(() => {
+        document.getElementById('mensajeInteractivo').style.opacity = '1';
+    }, 4500);
 }
 
 let prevTime = Date.now();
@@ -312,25 +390,28 @@ function animate() {
     const delta = (time - prevTime) / 1000;
     prevTime = time;
 
-    // Animación de la cámara (Zoom In Inicial)
+    // Latido del corazón (Pulsación)
+    if (heartPoints && hitboxCorazon) {
+        let latido = 1 + Math.sin(time * 0.004) * 0.08;
+        heartPoints.scale.set(latido, latido, latido);
+        hitboxCorazon.scale.set(latido, latido, latido);
+    }
+
     if (enViaje) {
         viajeProgress += delta * 1000;
         if (viajeProgress >= viajeDuration) {
             viajeProgress = viajeDuration;
             enViaje = false;
-            controls.enabled = true; // Activar el control del mouse
+            controls.enabled = true;
         }
         const ratio = viajeProgress / viajeDuration;
-        const easeRatio = 1 - Math.pow(1 - ratio, 3); // Ease out cubic
-        
-        camera.position.z = THREE.MathUtils.lerp(8000, 1800, easeRatio);
+        const easeRatio = 1 - Math.pow(1 - ratio, 3);
+        camera.position.z = THREE.MathUtils.lerp(9000, 2200, easeRatio);
         camera.position.y = THREE.MathUtils.lerp(500, 200, easeRatio);
     }
 
-    // Rotación del sistema completo
-    systemRotationGroup.rotation.y += delta * 0.1;
+    systemRotationGroup.rotation.y += delta * 0.05;
 
-    // Movimiento individual de girasoles y textos
     girasoles.forEach((g) => {
         g.angulo += g.velocidad;
         g.mesh.position.x = Math.cos(g.angulo) * g.radio;
@@ -341,9 +422,33 @@ function animate() {
         t.angulo += t.velocidad;
         t.mesh.position.x = Math.cos(t.angulo) * t.radio;
         t.mesh.position.z = Math.sin(t.angulo) * t.radio;
-        // Oscilación suave arriba/abajo
-        t.mesh.position.y = t.offsetY + Math.sin(time * 0.001 + t.angulo) * 30;
+        t.mesh.position.y = t.offsetY + Math.sin(time * 0.002 + t.angulo) * 40; // Oscilación
     });
+
+    fotosFlotantes.forEach((f) => {
+        f.userData.angulo += f.userData.velocidad;
+        f.position.x = Math.cos(f.userData.angulo) * f.userData.radio;
+        f.position.z = Math.sin(f.userData.angulo) * f.userData.radio;
+        if (f.material.opacity < 1) f.material.opacity += 0.01; // Aparecen suavemente
+    });
+
+    // Animar explosiones
+    for (let i = explosionesActivas.length - 1; i >= 0; i--) {
+        let grupo = explosionesActivas[i];
+        let vivas = false;
+        grupo.children.forEach(flor => {
+            flor.position.add(flor.userData.vel);
+            flor.userData.vida -= 0.02;
+            if (flor.userData.vida > 0) {
+                flor.material.opacity = flor.userData.vida;
+                vivas = true;
+            }
+        });
+        if (!vivas) {
+            systemRotationGroup.remove(grupo);
+            explosionesActivas.splice(i, 1);
+        }
+    }
 
     if (controls.enabled) controls.update();
     composer.render();
