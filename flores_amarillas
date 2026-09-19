@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feliz Día de las Flores Amarillas 🌻</title>
+<style>
+  body { 
+    margin: 0; background: black; overflow: hidden; 
+    font-family: 'Courier New', monospace; color: white; 
+  }
+  
+  /* PANTALLA DE INICIO (ESTILO TIKTOK) */
+  #pantallaEntrada {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle at center, #1a1000 0%, #000000 100%);
+    z-index: 999; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    transition: opacity 2s ease;
+  }
+
+  #btnIniciar {
+    background: transparent;
+    border: none;
+    color: #ffdb58; /* Amarillo dorado */
+    font-size: 1.5rem;
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    animation: latidoEntrada 2s infinite;
+    text-shadow: 0 0 15px rgba(255, 219, 88, 0.8);
+  }
+
+  .icono-flor {
+    font-size: 3rem;
+    filter: drop-shadow(0 0 20px #ffdb58);
+  }
+
+  @keyframes latidoEntrada {
+    0% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.1); opacity: 1; text-shadow: 0 0 30px #ffdb58; }
+    100% { transform: scale(1); opacity: 0.8; }
+  }
+
+  #threeCanvas { display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+  
+  /* TEXTO CENTRAL EN EL VIAJE */
+  #mainContent {
+    position: absolute; top: 50px; left: 0; width: 100%;
+    z-index: 2; display: flex; flex-direction: column;
+    align-items: center; text-align: center; pointer-events: none;
+    opacity: 0; transition: opacity 3s ease;
+  }
+  
+  h1 { 
+    font-size: 2.5rem; color: #fff; 
+    text-shadow: 0 0 20px #ffdb58, 0 0 40px #d4af37; 
+    margin: 0; font-family: 'Georgia', serif; font-style: italic;
+  }
+
+  @media (max-width: 768px) {
+    h1 { font-size: 1.5rem; padding: 0 10px;}
+  }
+</style>
+</head>
+<body>
+
+<audio id="musicaFondo" loop crossorigin="anonymous">
+  <source src="videos/musicafloresamarillas.mp3" type="audio/mpeg">
+</audio>
+
+<div id="pantallaEntrada">
+  <button id="btnIniciar">
+    Toca para iniciar
+    <span class="icono-flor">🌻</span>
+  </button>
+</div>
+
+<div id="threeCanvas"></div>
+
+<div id="mainContent">
+  <h1 id="tituloPrincipal">Feliz Día de las Flores Amarillas 🌻💛</h1>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+
+<script>
+const esCelular = window.innerWidth < 768;
+let scene, camera, renderer, controls, composer;
+let systemRotationGroup;
+let girasoles = [];
+let textosFlotantes = [];
+
+// Frases estilo TikTok para el día de las flores amarillas
+const frases = [
+    "Un ramo de gracias por estar ahí ✨",
+    "Eres mi sol de siempre 💛",
+    "Contigo la vida es mejor 🌻",
+    "No siempre necesitas un jardín para florecer",
+    "Tú iluminas mis días oscuros",
+    "Gracias por quererme siempre",
+    "Mi lugar favorito es contigo",
+    "Un amor bonito y sincero",
+    "Que siempre florezca nuestra alegría",
+    "Para ti, con todo mi corazón 💛"
+];
+
+// Iniciar Experiencia
+document.getElementById('btnIniciar').addEventListener('click', function() {
+    const audio = document.getElementById('musicaFondo');
+    audio.play();
+
+    const pantalla = document.getElementById('pantallaEntrada');
+    pantalla.style.opacity = '0';
+    
+    setTimeout(() => {
+        pantalla.style.display = 'none';
+        document.getElementById('mainContent').style.opacity = '1';
+        iniciarViaje();
+    }, 2000);
+});
+
+function init() {
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x050300); // Fondo oscuro muy cálido
+    scene.fog = new THREE.FogExp2(0x050300, 0.00015);
+
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 30000);
+    // Posición inicial (muy lejos, para el efecto de entrada)
+    camera.position.set(0, 500, 8000);
+
+    renderer = new THREE.WebGLRenderer({ antialias: !esCelular });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    document.getElementById('threeCanvas').appendChild(renderer.domElement);
+
+    // Efecto de brillo (Bloom) dorado
+    const renderScene = new THREE.RenderPass(scene, camera);
+    const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 2.0, 0.5, 0.3);
+    composer = new THREE.EffectComposer(renderer);
+    composer.addPass(renderScene);
+    composer.addPass(bloomPass);
+
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.enabled = false; // Se activa después del viaje inicial
+
+    systemRotationGroup = new THREE.Group();
+    scene.add(systemRotationGroup);
+
+    crearCorazonCentral();
+    crearPolvoEstelarDorado();
+    crearGirasolesYTextos();
+
+    window.addEventListener('resize', onWindowResize);
+}
+
+// Crea el corazón brillante en el centro
+function crearCorazonCentral() {
+    const geometry = new THREE.BufferGeometry();
+    const positions = [];
+    const colors = [];
+    const colorDorado = new THREE.Color(0xffdb58);
+    const colorNaranja = new THREE.Color(0xff8c00);
+
+    for (let i = 0; i < 2000; i++) {
+        // Fórmula matemática para un corazón en 3D (aproximación usando cilindro/esfera deformada)
+        const t = Math.random() * Math.PI * 2;
+        const u = Math.random() * Math.PI;
+        
+        // Ecuación paramétrica del corazón
+        const x = 16 * Math.pow(Math.sin(t), 3);
+        const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+        const z = (Math.random() - 0.5) * 10;
+
+        // Escalar
+        const scale = 15;
+        positions.push(x * scale, y * scale, z * scale);
+
+        // Mezclar colores amarillo y naranja
+        const mixedColor = colorDorado.clone().lerp(colorNaranja, Math.random());
+        colors.push(mixedColor.r, mixedColor.g, mixedColor.b);
+    }
+
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+    const material = new THREE.PointsMaterial({
+        size: esCelular ? 4 : 6,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.8,
+        blending: THREE.AdditiveBlending
+    });
+
+    const heart = new THREE.Points(geometry, material);
+    systemRotationGroup.add(heart);
+
+    // Añadir una luz en el centro del corazón
+    const light = new THREE.PointLight(0xffdb58, 2, 2000);
+    scene.add(light);
+}
+
+// Crea el fondo de estrellas y partículas amarillas
+function crearPolvoEstelarDorado() {
+    const starsGeometry = new THREE.BufferGeometry();
+    const starsPositions = [];
+    for (let i = 0; i < (esCelular ? 2000 : 5000); i++) {
+        starsPositions.push(
+            (Math.random() - 0.5) * 10000,
+            (Math.random() - 0.5) * 10000,
+            (Math.random() - 0.5) * 10000
+        );
+    }
+    starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsPositions, 3));
+    const starsMaterial = new THREE.PointsMaterial({ 
+        color: 0xffe87c, 
+        size: 3, 
+        transparent: true, 
+        opacity: 0.6,
+        blending: THREE.AdditiveBlending
+    });
+    const starfield = new THREE.Points(starsGeometry, starsMaterial);
+    scene.add(starfield);
+}
+
+// Generador de texturas para girasoles y textos sin cargar imágenes externas
+function crearSpriteGirasol() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256; canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    ctx.font = '150px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🌻', 128, 128);
+    
+    const tex = new THREE.CanvasTexture(canvas);
+    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+    return new THREE.Sprite(mat);
+}
+
+function crearSpriteTexto(texto) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024; canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    
+    ctx.font = 'bold 40px "Courier New"';
+    ctx.fillStyle = '#ffeedd';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = '#ffb000';
+    ctx.shadowBlur = 15;
+    ctx.fillText(texto, 512, 64);
+    
+    const tex = new THREE.CanvasTexture(canvas);
+    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, blending: THREE.AdditiveBlending });
+    const sprite = new THREE.Sprite(mat);
+    sprite.scale.set(700, 87, 1);
+    return sprite;
+}
+
+// Agrega los girasoles y frases orbitando el centro
+function crearGirasolesYTextos() {
+    const cantidad = frases.length;
+    
+    for (let i = 0; i < cantidad; i++) {
+        // --- Crear Girasol ---
+        const girasol = crearSpriteGirasol();
+        const radioCirculo = 600 + (Math.random() * 800);
+        const angulo = (i / cantidad) * Math.PI * 2;
+        
+        girasol.position.set(Math.cos(angulo) * radioCirculo, (Math.random() - 0.5) * 400, Math.sin(angulo) * radioCirculo);
+        girasol.scale.set(120, 120, 1);
+        
+        // Animación de órbita
+        girasoles.push({ mesh: girasol, angulo: angulo, radio: radioCirculo, velocidad: 0.002 + Math.random() * 0.002 });
+        systemRotationGroup.add(girasol);
+
+        // --- Crear Texto Flotante cerca del girasol ---
+        const texto = crearSpriteTexto(frases[i]);
+        texto.position.set(girasol.position.x, girasol.position.y - 80, girasol.position.z);
+        textosFlotantes.push({ mesh: texto, angulo: angulo, radio: radioCirculo, velocidad: 0.002 + Math.random() * 0.002, offsetY: (Math.random() - 0.5) * 100 });
+        systemRotationGroup.add(texto);
+    }
+}
+
+// Animación de entrada (viaje hacia el corazón)
+let enViaje = false;
+let viajeProgress = 0;
+const viajeDuration = 4000;
+
+function iniciarViaje() {
+    enViaje = true;
+}
+
+let prevTime = Date.now();
+
+function animate() {
+    requestAnimationFrame(animate);
+    const time = Date.now();
+    const delta = (time - prevTime) / 1000;
+    prevTime = time;
+
+    // Animación de la cámara (Zoom In Inicial)
+    if (enViaje) {
+        viajeProgress += delta * 1000;
+        if (viajeProgress >= viajeDuration) {
+            viajeProgress = viajeDuration;
+            enViaje = false;
+            controls.enabled = true; // Activar el control del mouse
+        }
+        const ratio = viajeProgress / viajeDuration;
+        const easeRatio = 1 - Math.pow(1 - ratio, 3); // Ease out cubic
+        
+        camera.position.z = THREE.MathUtils.lerp(8000, 1800, easeRatio);
+        camera.position.y = THREE.MathUtils.lerp(500, 200, easeRatio);
+    }
+
+    // Rotación del sistema completo
+    systemRotationGroup.rotation.y += delta * 0.1;
+
+    // Movimiento individual de girasoles y textos
+    girasoles.forEach((g) => {
+        g.angulo += g.velocidad;
+        g.mesh.position.x = Math.cos(g.angulo) * g.radio;
+        g.mesh.position.z = Math.sin(g.angulo) * g.radio;
+    });
+
+    textosFlotantes.forEach((t) => {
+        t.angulo += t.velocidad;
+        t.mesh.position.x = Math.cos(t.angulo) * t.radio;
+        t.mesh.position.z = Math.sin(t.angulo) * t.radio;
+        // Oscilación suave arriba/abajo
+        t.mesh.position.y = t.offsetY + Math.sin(time * 0.001 + t.angulo) * 30;
+    });
+
+    if (controls.enabled) controls.update();
+    composer.render();
+}
+
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    composer.setSize(window.innerWidth, window.innerHeight);
+}
+
+init();
+animate();
+</script>
+</body>
+</html>
