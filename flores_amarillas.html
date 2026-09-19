@@ -61,24 +61,26 @@
     margin: 0; font-family: 'Georgia', serif; font-style: italic;
   }
 
-  /* Indicador secreto */
-  #mensajeInteractivo {
-    position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
-    font-size: 1.2rem; color: #ffdb58; text-shadow: 0 0 10px #ff8c00;
-    pointer-events: none; opacity: 0; transition: opacity 1s ease;
-    animation: latidoEntrada 2s infinite;
-    z-index: 10;
+  /* SISTEMA DE SUBTÍTULOS (KARAOKE) */
+  #letrasContainer {
+    position: absolute; bottom: 30px; left: 0; width: 100%;
+    text-align: center; font-family: 'Georgia', serif; font-weight: bold;
+    color: white; z-index: 100; pointer-events: none;
+    text-shadow: 2px 2px 5px black, 0 0 15px #ffdb58;
+    font-size: 1.6rem;
+    opacity: 0; transition: opacity 2s ease;
+    line-height: 1.4;
   }
 
   @media (max-width: 768px) {
     h1 { font-size: 1.5rem; padding: 0 10px;}
-    #mensajeInteractivo { font-size: 1rem; }
+    #letrasContainer { font-size: 1.1rem; bottom: 20px; padding: 0 15px; width: auto; }
   }
 </style>
 </head>
 <body>
 
-<audio id="musicaFondo" loop crossorigin="anonymous">
+<audio id="musicaFondo" crossorigin="anonymous">
   <source src="videos/musicafloresamarillas.mp3" type="audio/mpeg">
 </audio>
 
@@ -95,7 +97,7 @@
   <h1 id="tituloPrincipal">Feliz Día de las Flores Amarillas 🌻💛</h1>
 </div>
 
-<div id="mensajeInteractivo">¡Toca el corazón de luz! ✨</div>
+<div id="letrasContainer"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -128,11 +130,54 @@ const frases = [
     "Mi estrella más brillante ✨", "Mi mundo gira a tu alrededor", "Eres el amarillo de mi vida 🌻",
     "Juntos brillamos más", "Un millón de girasoles para ti", "Tu sonrisa es mi luz", "Por siempre tú y yo",
     "Cada día a tu lado es magia", "Haces mi vida hermosa", "Eres mi flor favorita", "Mi corazón te elige siempre",
-    "Eres mi lugar seguro", "Contigo hasta el infinito 🚀", "Un amor de otra galaxia", "Tus abrazos son mi sol",
-    "Gracias por existir", "Tu y yo contra el universo", "Mi felicidad lleva tu nombre",
-    "Eres mi coincidencia favorita", "Brillas más que las estrellas", "Te amo hoy y siempre 💛",
-    "Eres magia pura", "Nunca dejes de florecer", "Mi mejor casualidad", "Siempre te voy a cuidar",
-    "Eres mi poesía favorita", "Contigo todo tiene sentido", "El universo nos unió"
+    "Eres mi lugar seguro", "Contigo hasta el infinito 🚀", "Un amor de otra galaxia", "Tus abrazos son mi sol"
+];
+
+// TIMESTAMPS DE LA LETRA (Sincronizado con Dandelions de Ruth B)
+const letrasSincronizadas = [
+    { t: 0, txt: "" },
+    { t: 14, txt: "Tal vez sea la manera que dices mi nombre<br><span style='font-size:0.7em; color:#ffe87c;'>Maybe it's the way you say my name</span>" },
+    { t: 19, txt: "Tal vez sea la manera que juegas tu juego<br><span style='font-size:0.7em; color:#ffe87c;'>Maybe it's the way you play your game</span>" },
+    { t: 24, txt: "Pero es tan bueno, nunca he conocido a nadie como tú<br><span style='font-size:0.7em; color:#ffe87c;'>But it's so good, I've never known anybody like you</span>" },
+    { t: 30, txt: "Pero es tan bueno, nunca he soñado con nadie como tú<br><span style='font-size:0.7em; color:#ffe87c;'>But it's so good, I've never dreamed of nobody like you</span>" },
+    { t: 36, txt: "Y he oído hablar de un amor que viene una vez en la vida<br><span style='font-size:0.7em; color:#ffe87c;'>And I've heard of a love that comes once in a lifetime</span>" },
+    { t: 41, txt: "Y estoy bastante segura de que eres ese amor mío<br><span style='font-size:0.7em; color:#ffe87c;'>And I'm pretty sure that you are that love of mine</span>" },
+    { t: 47, txt: "Porque estoy en un campo de dientes de león<br><span style='font-size:0.7em; color:#ffe87c;'>'Cause I'm in a field of dandelions</span>" },
+    { t: 52, txt: "Al soplar cada uno, deseo que seas mío, mío<br><span style='font-size:0.7em; color:#ffe87c;'>Wishing on every one that you'll be mine, mine</span>" },
+    { t: 59, txt: "Y veo la eternidad en tus ojos<br><span style='font-size:0.7em; color:#ffe87c;'>And I see forever in your eyes</span>" },
+    { t: 63, txt: "Me siento bien cuando te veo sonreír, sonreír<br><span style='font-size:0.7em; color:#ffe87c;'>I feel okay when I see you smile, smile</span>" },
+    { t: 70, txt: "Deseando al soplar dientes de león, todo el tiempo<br><span style='font-size:0.7em; color:#ffe87c;'>Wishing on dandelions all of the time</span>" },
+    { t: 76, txt: "Rezando a Dios, pidiendo que algún día seas mío<br><span style='font-size:0.7em; color:#ffe87c;'>Praying to God that one day you'll be mine</span>" },
+    { t: 81, txt: "Deseando al soplar dientes de león, todo el tiempo<br><span style='font-size:0.7em; color:#ffe87c;'>Wishing on dandelions all of the time, all of the time</span>" },
+    { t: 94, txt: "Creo que eres el único para mí<br><span style='font-size:0.7em; color:#ffe87c;'>I think that you are the one for me</span>" },
+    { t: 99, txt: "Porque se pone tan difícil respirar<br><span style='font-size:0.7em; color:#ffe87c;'>'Cause it gets so hard to breathe</span>" },
+    { t: 102, txt: "Cuando me estás mirando<br><span style='font-size:0.7em; color:#ffe87c;'>When you're looking at me</span>" },
+    { t: 105, txt: "Nunca me había sentido tan viva y libre<br><span style='font-size:0.7em; color:#ffe87c;'>I've never felt so alive and free</span>" },
+    { t: 111, txt: "Cuando me estás mirando<br><span style='font-size:0.7em; color:#ffe87c;'>When you're looking at me</span>" },
+    { t: 114, txt: "Nunca me había sentido tan feliz<br><span style='font-size:0.7em; color:#ffe87c;'>I've never felt so happy</span>" },
+    { t: 116, txt: "Y he oído hablar de un amor que viene una vez en la vida<br><span style='font-size:0.7em; color:#ffe87c;'>And I've heard of a love that comes once in a lifetime</span>" },
+    { t: 122, txt: "Y estoy bastante segura de que eres ese amor mío<br><span style='font-size:0.7em; color:#ffe87c;'>And I'm pretty sure that you are that love of mine</span>" },
+    { t: 128, txt: "Porque estoy en un campo de dientes de león<br><span style='font-size:0.7em; color:#ffe87c;'>'Cause I'm in a field of dandelions</span>" },
+    { t: 132, txt: "Al soplar cada uno, deseo que seas mío, mío<br><span style='font-size:0.7em; color:#ffe87c;'>Wishing on every one that you'll be mine, mine</span>" },
+    { t: 139, txt: "Y veo la eternidad en tus ojos<br><span style='font-size:0.7em; color:#ffe87c;'>And I see forever in your eyes</span>" },
+    { t: 144, txt: "Me siento bien cuando te veo sonreír, sonreír<br><span style='font-size:0.7em; color:#ffe87c;'>I feel okay when I see you smile, smile</span>" },
+    { t: 151, txt: "Deseando al soplar dientes de león, todo el tiempo<br><span style='font-size:0.7em; color:#ffe87c;'>Wishing on dandelions all of the time</span>" },
+    { t: 156, txt: "Rezando a Dios, pidiendo que algún día seas mío<br><span style='font-size:0.7em; color:#ffe87c;'>Praying to God that one day you'll be mine</span>" },
+    { t: 161, txt: "Deseando al soplar dientes de león, todo el tiempo<br><span style='font-size:0.7em; color:#ffe87c;'>Wishing on dandelions all of the time, all of the time</span>" },
+    { t: 174, txt: "Diente de león, en el viento te vas<br><span style='font-size:0.7em; color:#ffe87c;'>Dandelion, into the wind you go</span>" },
+    { t: 179, txt: "¿No le avisarás a mi amor?<br><span style='font-size:0.7em; color:#ffe87c;'>Won't you let my darling know?</span>" },
+    { t: 185, txt: "Diente de león, en el viento te vas<br><span style='font-size:0.7em; color:#ffe87c;'>Dandelion, into the wind you go</span>" },
+    { t: 191, txt: "No le avisarás a mi amor que<br><span style='font-size:0.7em; color:#ffe87c;'>Won't you let my darling know that</span>" },
+    { t: 197, txt: "Estoy en un campo de dientes de león<br><span style='font-size:0.7em; color:#ffe87c;'>I'm in a field of dandelions</span>" },
+    { t: 201, txt: "Al soplar cada uno, deseo que seas mío, mío<br><span style='font-size:0.7em; color:#ffe87c;'>Wishing on every one that you'll be mine, mine</span>" },
+    { t: 208, txt: "Y veo la eternidad en tus ojos<br><span style='font-size:0.7em; color:#ffe87c;'>And I see forever in your eyes</span>" },
+    { t: 213, txt: "Me siento bien cuando te veo sonreír, sonreír<br><span style='font-size:0.7em; color:#ffe87c;'>I feel okay when I see you smile, smile</span>" },
+    { t: 220, txt: "Deseando al soplar dientes de león, todo el tiempo<br><span style='font-size:0.7em; color:#ffe87c;'>Wishing on dandelions all of the time</span>" },
+    { t: 225, txt: "Rezando a Dios, pidiendo que algún día seas mío<br><span style='font-size:0.7em; color:#ffe87c;'>Praying to God that one day you'll be mine</span>" },
+    { t: 231, txt: "Deseando al soplar dientes de león, todo el tiempo<br><span style='font-size:0.7em; color:#ffe87c;'>Wishing on dandelions all of the time, all of the time</span>" },
+    { t: 243, txt: "Estoy en un campo de dientes de león<br><span style='font-size:0.7em; color:#ffe87c;'>I'm in a field of dandelions</span>" },
+    { t: 249, txt: "Deseando al soplar cada uno que seas mío, mío<br><span style='font-size:0.7em; color:#ffe87c;'>Wishing on every one that you'll be mine, mine</span>" },
+    { t: 260, txt: "🌻💛✨" }
 ];
 
 const raycaster = new THREE.Raycaster();
@@ -146,6 +191,7 @@ document.getElementById('btnIniciar').addEventListener('click', function() {
     setTimeout(() => {
         pantalla.style.display = 'none';
         document.getElementById('mainContent').style.opacity = '1';
+        document.getElementById('letrasContainer').style.opacity = '1';
         iniciarViaje();
     }, 2000);
 });
@@ -153,7 +199,7 @@ document.getElementById('btnIniciar').addEventListener('click', function() {
 function init() {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x050300);
-    scene.fog = new THREE.FogExp2(0x050300, 0.0001); // Neblina más suave para ver lejos
+    scene.fog = new THREE.FogExp2(0x050300, 0.0001); 
 
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 30000);
     camera.position.set(0, 500, 9000);
@@ -217,8 +263,7 @@ function crearCorazonCentral() {
     heartPoints = new THREE.Points(geometry, material);
     systemRotationGroup.add(heartPoints);
 
-    // HITBOX INVISIBLE PARA EL CORAZÓN (Detectar clics fácilmente)
-    const hitboxGeom = new THREE.SphereGeometry(300, 16, 16);
+    const hitboxGeom = new THREE.SphereGeometry(400, 16, 16);
     const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
     hitboxCorazon = new THREE.Mesh(hitboxGeom, hitboxMat);
     systemRotationGroup.add(hitboxCorazon);
@@ -256,20 +301,13 @@ function crearSpriteTexto(texto) {
     const canvas = document.createElement('canvas');
     canvas.width = 1200; canvas.height = 128;
     const ctx = canvas.getContext('2d');
-    
     ctx.font = 'bold 45px "Courier New"';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     
-    // BORDE PARA HACERLO MUCHO MÁS LEGIBLE
-    ctx.lineWidth = 8;
-    ctx.strokeStyle = 'black'; 
+    ctx.lineWidth = 8; ctx.strokeStyle = 'black'; 
     ctx.strokeText(texto, 600, 64);
 
-    // RELLENO Y BRILLO
-    ctx.fillStyle = '#ffeedd';
-    ctx.shadowColor = '#ffb000';
-    ctx.shadowBlur = 10;
+    ctx.fillStyle = '#ffeedd'; ctx.shadowColor = '#ffb000'; ctx.shadowBlur = 10;
     ctx.fillText(texto, 600, 64);
     
     const tex = new THREE.CanvasTexture(canvas);
@@ -282,7 +320,6 @@ function crearGirasolesYTextos() {
     const cantidad = frases.length;
     for (let i = 0; i < cantidad; i++) {
         const girasol = crearSpriteGirasol();
-        // Espacio inmenso: Radios desde 600 hasta 4500
         const radioCirculo = 600 + (Math.random() * 3900);
         const angulo = (i / cantidad) * Math.PI * 2 + (Math.random() * 0.5);
         const alturaAleatoria = (Math.random() - 0.5) * 1500;
@@ -300,17 +337,12 @@ function crearGirasolesYTextos() {
     }
 }
 
-// LÓGICA DE CLICS E INTERACCIÓN
 function onInteractuar(event) {
     if(!controls.enabled) return;
-
-    let clientX = event.clientX;
-    let clientY = event.clientY;
+    let clientX = event.clientX; let clientY = event.clientY;
     if (event.touches && event.touches.length > 0) {
-        clientX = event.touches[0].clientX;
-        clientY = event.touches[0].clientY;
+        clientX = event.touches[0].clientX; clientY = event.touches[0].clientY;
     }
-
     mouse.x = (clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(clientY / window.innerHeight) * 2 + 1;
 
@@ -323,23 +355,25 @@ function onInteractuar(event) {
 
         if (clicsCorazon === 10 && !fotosMostradas) {
             mostrarEventoFotos();
-            document.getElementById('mensajeInteractivo').style.display = 'none';
         }
     }
 }
 
+// ¡EXPLOSIÓN DE GIRASOLES MUCHO MÁS GRANDE Y MASIVA!
 function crearExplosionFlores() {
     let grupoExplosion = new THREE.Group();
-    for (let i = 0; i < 20; i++) {
+    // Aumentamos a 80 flores por clic para que sea un estallido real
+    for (let i = 0; i < 80; i++) {
         let flor = crearSpriteGirasol();
-        flor.scale.set(40, 40, 1);
+        let escalaFlor = 30 + Math.random() * 50; 
+        flor.scale.set(escalaFlor, escalaFlor, 1);
         flor.position.set(0,0,0);
         
-        // Disparar en todas las direcciones
+        // Aumentamos la fuerza de la explosión (se expanden mucho más lejos)
         let velocidad = new THREE.Vector3(
-            (Math.random() - 0.5) * 40,
-            (Math.random() - 0.5) * 40,
-            (Math.random() - 0.5) * 40
+            (Math.random() - 0.5) * 120,
+            (Math.random() - 0.5) * 120,
+            (Math.random() - 0.5) * 120
         );
         
         flor.userData = { vel: velocidad, vida: 1.0 };
@@ -349,25 +383,48 @@ function crearExplosionFlores() {
     explosionesActivas.push(grupoExplosion);
 }
 
+// ARREGLO DE FOTOS: Aparecerán más cerca y de forma 100% visible
 function mostrarEventoFotos() {
     fotosMostradas = true;
     for (let i = 1; i <= 40; i++) {
-        // Busca en la carpeta fotos, archivos 1.jpg, 2.jpg... 40.jpg
         textureLoader.load(`fotos/${i}.jpg`, (texture) => {
             const material = new THREE.SpriteMaterial({ map: texture, transparent: true, opacity: 0 });
             const sprite = new THREE.Sprite(material);
             
             const angulo = Math.random() * Math.PI * 2;
-            const radio = 800 + Math.random() * 2500;
-            const altura = (Math.random() - 0.5) * 2000;
+            // Las colocamos a un radio mucho más corto para que se vean al instante
+            const radio = 350 + Math.random() * 800; 
+            const altura = (Math.random() - 0.5) * 800;
             
             sprite.position.set(Math.cos(angulo) * radio, altura, Math.sin(angulo) * radio);
-            sprite.scale.set(300, 300, 1);
+            sprite.scale.set(220, 220, 1); // Tamaño grande para distinguirlas
             
-            sprite.userData = { angulo: angulo, radio: radio, velocidad: 0.003 + Math.random() * 0.005 };
+            sprite.userData = { angulo: angulo, radio: radio, velocidad: 0.002 + Math.random() * 0.004, opacityTarget: 0 };
             fotosFlotantes.push(sprite);
             systemRotationGroup.add(sprite);
         });
+    }
+}
+
+// ACTUALIZAR KARAOKE (LETRAS) SEGÚN EL AUDIO
+function actualizarLetras() {
+    const audioEl = document.getElementById('musicaFondo');
+    const divLetras = document.getElementById('letrasContainer');
+    if (!audioEl || !divLetras) return;
+
+    const tiempo = audioEl.currentTime;
+    let textoActual = "";
+
+    for (let i = 0; i < letrasSincronizadas.length; i++) {
+        if (tiempo >= letrasSincronizadas[i].t) {
+            textoActual = letrasSincronizadas[i].txt;
+        } else {
+            break;
+        }
+    }
+
+    if (divLetras.innerHTML !== textoActual) {
+        divLetras.innerHTML = textoActual;
     }
 }
 
@@ -377,9 +434,6 @@ const viajeDuration = 4000;
 
 function iniciarViaje() {
     enViaje = true;
-    setTimeout(() => {
-        document.getElementById('mensajeInteractivo').style.opacity = '1';
-    }, 4500);
 }
 
 let prevTime = Date.now();
@@ -390,7 +444,8 @@ function animate() {
     const delta = (time - prevTime) / 1000;
     prevTime = time;
 
-    // Latido del corazón (Pulsación)
+    actualizarLetras(); // Chequear en qué segundo va la música
+
     if (heartPoints && hitboxCorazon) {
         let latido = 1 + Math.sin(time * 0.004) * 0.08;
         heartPoints.scale.set(latido, latido, latido);
@@ -422,23 +477,28 @@ function animate() {
         t.angulo += t.velocidad;
         t.mesh.position.x = Math.cos(t.angulo) * t.radio;
         t.mesh.position.z = Math.sin(t.angulo) * t.radio;
-        t.mesh.position.y = t.offsetY + Math.sin(time * 0.002 + t.angulo) * 40; // Oscilación
+        t.mesh.position.y = t.offsetY + Math.sin(time * 0.002 + t.angulo) * 40; 
     });
 
+    // FOTOS: Rotando y apareciendo de manera forzada (opacity)
     fotosFlotantes.forEach((f) => {
         f.userData.angulo += f.userData.velocidad;
         f.position.x = Math.cos(f.userData.angulo) * f.userData.radio;
         f.position.z = Math.sin(f.userData.angulo) * f.userData.radio;
-        if (f.material.opacity < 1) f.material.opacity += 0.01; // Aparecen suavemente
+        
+        // Hacemos que aparezcan suavemente cuando cargan
+        if (f.userData.opacityTarget < 1) {
+            f.userData.opacityTarget += 0.01;
+            f.material.opacity = f.userData.opacityTarget;
+        }
     });
 
-    // Animar explosiones
     for (let i = explosionesActivas.length - 1; i >= 0; i--) {
         let grupo = explosionesActivas[i];
         let vivas = false;
         grupo.children.forEach(flor => {
             flor.position.add(flor.userData.vel);
-            flor.userData.vida -= 0.02;
+            flor.userData.vida -= 0.015; // Que duren un poquito más en pantalla
             if (flor.userData.vida > 0) {
                 flor.material.opacity = flor.userData.vida;
                 vivas = true;
