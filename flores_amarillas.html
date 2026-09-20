@@ -204,7 +204,8 @@ function init() {
     document.getElementById('threeCanvas').appendChild(renderer.domElement);
 
     const renderScene = new THREE.RenderPass(scene, camera);
-    const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 2.0, 0.5, 0.3);
+    // Reducimos la fuerza del bloom a 1.2 y subimos el umbral a 0.7 para que las fotos no brillen tanto
+    const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.5, 0.7);
     composer = new THREE.EffectComposer(renderer);
     composer.addPass(renderScene);
     composer.addPass(bloomPass);
@@ -399,10 +400,18 @@ function crearExplosionFlores() {
 // ARREGLO DE RUTAS DE FOTOS (foto1.jpg, foto2.jpg...)
 function mostrarEventoFotos() {
     fotosMostradas = true;
-    for (let i = 1; i <= 40; i++) {
-        // AQUÍ BUSCARÁ: fotos/foto1.jpg
+    let i = 1;
+    
+    // Un temporizador que se ejecuta cada 300ms
+    const intervaloFotos = setInterval(() => {
+        if (i > 40) {
+            clearInterval(intervaloFotos);
+            return;
+        }
+        
         textureLoader.load(`fotos/foto${i}.jpg`, (texture) => {
-            const material = new THREE.SpriteMaterial({ map: texture, transparent: true, opacity: 0 });
+            // color: 0xcccccc oscurece un poco la foto base para que el brillo no la queme
+            const material = new THREE.SpriteMaterial({ map: texture, transparent: true, opacity: 0, color: 0xcccccc });
             const sprite = new THREE.Sprite(material);
             
             const angulo = Math.random() * Math.PI * 2;
@@ -410,13 +419,21 @@ function mostrarEventoFotos() {
             const altura = (Math.random() - 0.5) * 800;
             
             sprite.position.set(Math.cos(angulo) * radio, altura, Math.sin(angulo) * radio);
-            sprite.scale.set(220, 220, 1); 
+            sprite.scale.set(0, 0, 1); // Empieza en tamaño 0 para el efecto florecer
             
-            sprite.userData = { angulo: angulo, radio: radio, velocidad: 0.002 + Math.random() * 0.004, opacityTarget: 0 };
+            sprite.userData = { 
+                angulo: angulo, 
+                radio: radio, 
+                velocidad: 0.002 + Math.random() * 0.004, 
+                opacityTarget: 1,
+                scaleTarget: 220 // Tamaño final
+            };
             fotosFlotantes.push(sprite);
             systemRotationGroup.add(sprite);
         });
-    }
+        
+        i++;
+    }, 300); // 300 milisegundos de separación entre cada foto
 }
 
 function actualizarLetras() {
@@ -497,9 +514,15 @@ function animate() {
         f.position.x = Math.cos(f.userData.angulo) * f.userData.radio;
         f.position.z = Math.sin(f.userData.angulo) * f.userData.radio;
         
-        if (f.userData.opacityTarget < 1) {
-            f.userData.opacityTarget += 0.01;
-            f.material.opacity = f.userData.opacityTarget;
+        // Efecto de aparición (opacidad)
+        if (f.material.opacity < f.userData.opacityTarget) {
+            f.material.opacity += 0.02; 
+        }
+        
+        // Efecto florecer (escala creciendo suavemente)
+        if (f.scale.x < f.userData.scaleTarget) {
+            const nuevaEscala = f.scale.x + (f.userData.scaleTarget - f.scale.x) * 0.05;
+            f.scale.set(nuevaEscala, nuevaEscala, 1);
         }
     });
 
