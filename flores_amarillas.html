@@ -56,9 +56,21 @@
     font-size: 1.6rem; opacity: 0; transition: opacity 2s ease; line-height: 1.4;
   }
 
+  /* NUEVO: ESTILO PARA EL TEXTO FINAL */
+  #textoFinal {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 90%; max-width: 800px;
+    text-align: center; font-family: 'Georgia', serif; font-style: italic;
+    color: white; z-index: 200; pointer-events: none;
+    text-shadow: 3px 3px 10px black, 0 0 25px #ffdb58, 0 0 40px #d4af37;
+    font-size: 2.2rem; line-height: 1.5;
+    opacity: 0; transition: opacity 4s ease; display: none;
+  }
+
   @media (max-width: 768px) {
     h1 { font-size: 1.5rem; padding: 0 10px;}
     #letrasContainer { font-size: 1.1rem; bottom: 20px; padding: 0 15px; width: auto; }
+    #textoFinal { font-size: 1.3rem; }
   }
 </style>
 </head>
@@ -83,6 +95,15 @@
 
 <div id="letrasContainer"></div>
 
+<!-- NUEVO: CONTENEDOR DEL TEXTO FINAL -->
+<div id="textoFinal">
+  En este Día de las Flores Amarillas, 🌻<br><br>
+  y recordando con mucha ternura el hermoso<br>
+  momento en que llegó nuestro Booby 🐶💛,<br><br>
+  te entrego este detalle hecho para ti<br>
+  con todo mi amor. ✨
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
@@ -105,6 +126,10 @@ let clicsCorazon = 0;
 let fotosMostradas = false;
 const textureLoader = new THREE.TextureLoader();
 
+// NUEVAS VARIABLES PARA EL FINAL
+let etapaFinal = false;
+let florGigante = null;
+
 const frases = [
     "Un ramo de gracias por estar ahí ✨", "Eres mi sol de siempre 💛", "Contigo la vida es mejor 🌻",
     "No siempre necesitas un jardín para florecer", "Tú iluminas mis días oscuros", "Gracias por quererme siempre",
@@ -116,7 +141,6 @@ const frases = [
     "Eres mi lugar seguro", "Contigo hasta el infinito 🚀", "Un amor de otra galaxia", "Tus abrazos son mi sol"
 ];
 
-// Si la canción arranca antes o después, modifica el número de la "t:"
 const letrasSincronizadas = [
     { t: 0, txt: "" },
     { t: 12, txt: "Tal vez sea la forma en que dices mi nombre<br><span style='font-size:0.7em; color:#ffe87c;'>Maybe it's the way you say my name</span>" },
@@ -150,13 +174,11 @@ const letrasSincronizadas = [
     { t: 123, txt: "Porque estoy en un campo de dientes de león<br><span style='font-size:0.7em; color:#ffe87c;'>'Cause I'm in a field of dandelions</span>" },
     { t: 126, txt: "Deseando en cada uno de ellos que seas mío, mío<br><span style='font-size:0.7em; color:#ffe87c;'>Wishing on every one that you'll be mine, mine</span>" },
     { t: 135, txt: "Y veo en tus ojos la eternidad<br><span style='font-size:0.7em; color:#ffe87c;'>And I see forever in your eyes</span>" },
-    
     { t: 138, txt: "Me siento bien cuando te veo sonreír<br><span style='font-size:0.7em; color:#ffe87c;'>I feel okay when I see you smile</span>" },
     { t: 144, txt: "sonreír<br><span style='font-size:0.7em; color:#ffe87c;'>smile</span>" },
     { t: 146, txt: "Pidiendo deseos en dientes de león todo el tiempo<br><span style='font-size:0.7em; color:#ffe87c;'>Wishing on dandelions all of the time</span>" },
     { t: 150, txt: "Rezando a Dios para que un día seas mío<br><span style='font-size:0.7em; color:#ffe87c;'>Praying to God that one day you'll be mine</span>" },
     { t: 156, txt: "Todo el tiempo<br><span style='font-size:0.7em; color:#ffe87c;'>All of the time</span>" },
-  
     { t: 159, txt: "" },
     { t: 160, txt: "Diente de león, hacia el viento vas<br><span style='font-size:0.7em; color:#ffe87c;'>Dandelion, into the wind you go</span>" },
     { t: 166, txt: "¿No dejarás que mi cariño sepa?<br><span style='font-size:0.7em; color:#ffe87c;'>Won't you let my darling know?</span>" },
@@ -171,7 +193,8 @@ const letrasSincronizadas = [
     { t: 210, txt: "Todo el tiempo<br><span style='font-size:0.7em; color:#ffe87c;'>All of the time</span>" },
     { t: 215, txt: "Estoy en un campo de dientes de león<br><span style='font-size:0.7em; color:#ffe87c;'>I'm in a field of dandelions</span>" },
     { t: 220, txt: "Deseando al soplar cada uno que seas mío, mío<br><span style='font-size:0.7em; color:#ffe87c;'>Wishing on every one that you'll be mine, mine</span>" },
-    { t: 225, txt: "🌻💛✨" }
+    { t: 225, txt: "🌻💛✨" },
+    { t: 226, txt: "" } // Se limpia el texto justo antes del final mágico
 ];
   
 const raycaster = new THREE.Raycaster();
@@ -204,7 +227,6 @@ function init() {
     document.getElementById('threeCanvas').appendChild(renderer.domElement);
 
     const renderScene = new THREE.RenderPass(scene, camera);
-    // Reducimos la fuerza del bloom a 1.2 y subimos el umbral a 0.7 para que las fotos no brillen tanto
     const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.5, 0.7);
     composer = new THREE.EffectComposer(renderer);
     composer.addPass(renderScene);
@@ -214,8 +236,6 @@ function init() {
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.enabled = false;
-    
-    // LÍMITE DE CÁMARA PARA NO PERDERSE
     controls.minDistance = 500; 
     controls.maxDistance = 14000; 
 
@@ -316,7 +336,6 @@ function crearSpriteTexto(texto) {
 }
 
 function crearGirasolesYTextos() {
-    // AÑADIMOS MUCHOS MÁS GIRASOLES FLOTANDO DE FONDO
     for (let i = 0; i < 150; i++) {
         const girasolFondo = crearSpriteGirasol();
         const radioF = 1000 + (Math.random() * 8000);
@@ -352,7 +371,7 @@ function crearGirasolesYTextos() {
 }
 
 function onInteractuar(event) {
-    if(!controls.enabled) return;
+    if(!controls.enabled || etapaFinal) return;
     let clientX = event.clientX; let clientY = event.clientY;
     if (event.touches && event.touches.length > 0) {
         clientX = event.touches[0].clientX; clientY = event.touches[0].clientY;
@@ -373,17 +392,14 @@ function onInteractuar(event) {
     }
 }
 
-// ¡EXPLOSIÓN DE GIRASOLES COLOSAL!
 function crearExplosionFlores() {
     let grupoExplosion = new THREE.Group();
-    // Subimos a 200 flores saliendo disparadas
     for (let i = 0; i < 200; i++) {
         let flor = crearSpriteGirasol();
         let escalaFlor = 20 + Math.random() * 70; 
         flor.scale.set(escalaFlor, escalaFlor, 1);
         flor.position.set(0,0,0);
         
-        // Mucha más velocidad y distancia de expansión
         let velocidad = new THREE.Vector3(
             (Math.random() - 0.5) * 200,
             (Math.random() - 0.5) * 200,
@@ -397,12 +413,10 @@ function crearExplosionFlores() {
     explosionesActivas.push(grupoExplosion);
 }
 
-// ARREGLO DE RUTAS DE FOTOS (foto1.jpg, foto2.jpg...)
 function mostrarEventoFotos() {
     fotosMostradas = true;
     let i = 1;
     
-    // Un temporizador que se ejecuta cada 300ms
     const intervaloFotos = setInterval(() => {
         if (i > 40) {
             clearInterval(intervaloFotos);
@@ -410,7 +424,6 @@ function mostrarEventoFotos() {
         }
         
         textureLoader.load(`fotos/foto${i}.jpg`, (texture) => {
-            // color: 0xcccccc oscurece un poco la foto base para que el brillo no la queme
             const material = new THREE.SpriteMaterial({ map: texture, transparent: true, opacity: 0, color: 0xcccccc });
             const sprite = new THREE.Sprite(material);
             
@@ -419,21 +432,35 @@ function mostrarEventoFotos() {
             const altura = (Math.random() - 0.5) * 800;
             
             sprite.position.set(Math.cos(angulo) * radio, altura, Math.sin(angulo) * radio);
-            sprite.scale.set(0, 0, 1); // Empieza en tamaño 0 para el efecto florecer
+            sprite.scale.set(0, 0, 1); 
             
             sprite.userData = { 
-                angulo: angulo, 
-                radio: radio, 
-                velocidad: 0.002 + Math.random() * 0.004, 
-                opacityTarget: 1,
-                scaleTarget: 220 // Tamaño final
+                angulo: angulo, radio: radio, velocidad: 0.002 + Math.random() * 0.004, 
+                opacityTarget: 1, scaleTarget: 220 
             };
             fotosFlotantes.push(sprite);
             systemRotationGroup.add(sprite);
         });
-        
         i++;
-    }, 300); // 300 milisegundos de separación entre cada foto
+    }, 300); 
+}
+
+// NUEVA FUNCIÓN: Inicia la secuencia mágica del final
+function iniciarFinalMagico() {
+    etapaFinal = true;
+    
+    // Desaparecemos los textos normales
+    document.getElementById('mainContent').style.opacity = '0';
+    document.getElementById('letrasContainer').style.opacity = '0';
+    
+    // Preparamos la flor gigante
+    florGigante = crearSpriteGirasol();
+    florGigante.scale.set(0, 0, 1);
+    scene.add(florGigante); // Se añade directamente a la escena para que no gire loca
+    
+    // Mostramos el contenedor final (aún invisible por opacity)
+    const tf = document.getElementById('textoFinal');
+    tf.style.display = 'block';
 }
 
 function actualizarLetras() {
@@ -442,8 +469,13 @@ function actualizarLetras() {
     if (!audioEl || !divLetras) return;
 
     const tiempo = audioEl.currentTime;
-    let textoActual = "";
 
+    // A los 3 minutos y 46 segundos (226s) iniciamos el efecto final
+    if (tiempo >= 226 && !etapaFinal) {
+        iniciarFinalMagico();
+    }
+
+    let textoActual = "";
     for (let i = 0; i < letrasSincronizadas.length; i++) {
         if (tiempo >= letrasSincronizadas[i].t) {
             textoActual = letrasSincronizadas[i].txt;
@@ -452,7 +484,7 @@ function actualizarLetras() {
         }
     }
 
-    if (divLetras.innerHTML !== textoActual) {
+    if (!etapaFinal && divLetras.innerHTML !== textoActual) {
         divLetras.innerHTML = textoActual;
     }
 }
@@ -475,10 +507,61 @@ function animate() {
 
     actualizarLetras(); 
 
-    if (heartPoints && hitboxCorazon) {
-        let latido = 1 + Math.sin(time * 0.004) * 0.08;
-        heartPoints.scale.set(latido, latido, latido);
-        hitboxCorazon.scale.set(latido, latido, latido);
+    if (etapaFinal) {
+        // --- ANIMACIÓN DEL FINAL ÉPICO ---
+        
+        // 1. Todo el sistema gira a muchísima velocidad
+        systemRotationGroup.rotation.y += delta * 4;
+        
+        // 2. Todo se encoge hacia el centro (es absorbido)
+        systemRotationGroup.scale.lerp(new THREE.Vector3(0, 0, 0), 0.015);
+        
+        // 3. Cuando ya casi se absorbió todo, nace la flor gigante
+        if (systemRotationGroup.scale.x < 0.2 && florGigante) {
+            florGigante.scale.lerp(new THREE.Vector3(4000, 4000, 1), 0.02);
+            
+            // 4. Cuando la flor es lo suficientemente grande, revelamos el mensaje
+            if (florGigante.scale.x > 1500) {
+                document.getElementById('textoFinal').style.opacity = '1';
+            }
+        }
+
+    } else {
+        // --- ANIMACIÓN NORMAL ---
+        systemRotationGroup.rotation.y += delta * 0.05;
+
+        if (heartPoints && hitboxCorazon) {
+            let latido = 1 + Math.sin(time * 0.004) * 0.08;
+            heartPoints.scale.set(latido, latido, latido);
+            hitboxCorazon.scale.set(latido, latido, latido);
+        }
+
+        girasoles.forEach((g) => {
+            g.angulo += g.velocidad;
+            g.mesh.position.x = Math.cos(g.angulo) * g.radio;
+            g.mesh.position.z = Math.sin(g.angulo) * g.radio;
+        });
+
+        textosFlotantes.forEach((t) => {
+            t.angulo += t.velocidad;
+            t.mesh.position.x = Math.cos(t.angulo) * t.radio;
+            t.mesh.position.z = Math.sin(t.angulo) * t.radio;
+            t.mesh.position.y = t.offsetY + Math.sin(time * 0.002 + t.angulo) * 40; 
+        });
+
+        fotosFlotantes.forEach((f) => {
+            f.userData.angulo += f.userData.velocidad;
+            f.position.x = Math.cos(f.userData.angulo) * f.userData.radio;
+            f.position.z = Math.sin(f.userData.angulo) * f.userData.radio;
+            
+            if (f.material.opacity < f.userData.opacityTarget) {
+                f.material.opacity += 0.02; 
+            }
+            if (f.scale.x < f.userData.scaleTarget) {
+                const nuevaEscala = f.scale.x + (f.userData.scaleTarget - f.scale.x) * 0.05;
+                f.scale.set(nuevaEscala, nuevaEscala, 1);
+            }
+        });
     }
 
     if (enViaje) {
@@ -493,38 +576,6 @@ function animate() {
         camera.position.z = THREE.MathUtils.lerp(9000, 2200, easeRatio);
         camera.position.y = THREE.MathUtils.lerp(500, 200, easeRatio);
     }
-
-    systemRotationGroup.rotation.y += delta * 0.05;
-
-    girasoles.forEach((g) => {
-        g.angulo += g.velocidad;
-        g.mesh.position.x = Math.cos(g.angulo) * g.radio;
-        g.mesh.position.z = Math.sin(g.angulo) * g.radio;
-    });
-
-    textosFlotantes.forEach((t) => {
-        t.angulo += t.velocidad;
-        t.mesh.position.x = Math.cos(t.angulo) * t.radio;
-        t.mesh.position.z = Math.sin(t.angulo) * t.radio;
-        t.mesh.position.y = t.offsetY + Math.sin(time * 0.002 + t.angulo) * 40; 
-    });
-
-    fotosFlotantes.forEach((f) => {
-        f.userData.angulo += f.userData.velocidad;
-        f.position.x = Math.cos(f.userData.angulo) * f.userData.radio;
-        f.position.z = Math.sin(f.userData.angulo) * f.userData.radio;
-        
-        // Efecto de aparición (opacidad)
-        if (f.material.opacity < f.userData.opacityTarget) {
-            f.material.opacity += 0.02; 
-        }
-        
-        // Efecto florecer (escala creciendo suavemente)
-        if (f.scale.x < f.userData.scaleTarget) {
-            const nuevaEscala = f.scale.x + (f.userData.scaleTarget - f.scale.x) * 0.05;
-            f.scale.set(nuevaEscala, nuevaEscala, 1);
-        }
-    });
 
     for (let i = explosionesActivas.length - 1; i >= 0; i--) {
         let grupo = explosionesActivas[i];
