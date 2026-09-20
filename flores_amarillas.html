@@ -56,7 +56,7 @@
     font-size: 1.6rem; opacity: 0; transition: opacity 2s ease; line-height: 1.4;
   }
 
-  /* NUEVO: ESTILO PARA EL TEXTO FINAL */
+  /* ESTILOS PARA EL TEXTO Y LAS FOTOS DE BOBBY AL FINAL */
   #textoFinal {
     position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
     width: 90%; max-width: 800px;
@@ -67,10 +67,31 @@
     opacity: 0; transition: opacity 4s ease; display: none;
   }
 
+  .fotos-bobby {
+    display: flex; justify-content: center; gap: 30px; margin-bottom: 25px;
+  }
+
+  .fotos-bobby img {
+    width: 160px; height: 160px; object-fit: cover; border-radius: 50%;
+    border: 4px solid #ffdb58; box-shadow: 0 0 25px #ffdb58;
+    animation: flotarFoto 3s ease-in-out infinite; pointer-events: auto;
+  }
+
+  /* Retrasamos la animación de la segunda foto para que no suban al mismo tiempo */
+  .fotos-bobby img:nth-child(2) {
+    animation-delay: 1.5s;
+  }
+
+  @keyframes flotarFoto {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+  }
+
   @media (max-width: 768px) {
     h1 { font-size: 1.5rem; padding: 0 10px;}
     #letrasContainer { font-size: 1.1rem; bottom: 20px; padding: 0 15px; width: auto; }
     #textoFinal { font-size: 1.3rem; }
+    .fotos-bobby img { width: 110px; height: 110px; }
   }
 </style>
 </head>
@@ -95,11 +116,15 @@
 
 <div id="letrasContainer"></div>
 
-<!-- NUEVO: CONTENEDOR DEL TEXTO FINAL -->
+<!-- CONTENEDOR DEL FINAL MÁGICO -->
 <div id="textoFinal">
+  <div class="fotos-bobby">
+    <img src="fotos/bobby/foto1.jpg" alt="Bobby 1">
+    <img src="fotos/bobby/foto2.jpg" alt="Bobby 2">
+  </div>
   En este Día de las Flores Amarillas, 🌻<br><br>
   y recordando con mucha ternura el hermoso<br>
-  momento en que llegó nuestro Booby 🐶💛,<br><br>
+  momento en que llegó nuestro Bobby 🐶💛,<br><br>
   te entrego este detalle hecho para ti<br>
   con todo mi amor. ✨
 </div>
@@ -126,9 +151,8 @@ let clicsCorazon = 0;
 let fotosMostradas = false;
 const textureLoader = new THREE.TextureLoader();
 
-// NUEVAS VARIABLES PARA EL FINAL
 let etapaFinal = false;
-let florGigante = null;
+let florParticulas = null;
 
 const frases = [
     "Un ramo de gracias por estar ahí ✨", "Eres mi sol de siempre 💛", "Contigo la vida es mejor 🌻",
@@ -194,7 +218,7 @@ const letrasSincronizadas = [
     { t: 215, txt: "Estoy en un campo de dientes de león<br><span style='font-size:0.7em; color:#ffe87c;'>I'm in a field of dandelions</span>" },
     { t: 220, txt: "Deseando al soplar cada uno que seas mío, mío<br><span style='font-size:0.7em; color:#ffe87c;'>Wishing on every one that you'll be mine, mine</span>" },
     { t: 225, txt: "🌻💛✨" },
-    { t: 226, txt: "" } // Se limpia el texto justo antes del final mágico
+    { t: 226, txt: "" } 
 ];
   
 const raycaster = new THREE.Raycaster();
@@ -413,54 +437,108 @@ function crearExplosionFlores() {
     explosionesActivas.push(grupoExplosion);
 }
 
+// CORRECCIÓN: Separamos la creación de la aparición para que sea estrictamente de 1 en 1
 function mostrarEventoFotos() {
     fotosMostradas = true;
     let i = 1;
     
+    // Aumentamos a 550ms el intervalo para que sea más espaciado y constante
     const intervaloFotos = setInterval(() => {
         if (i > 40) {
             clearInterval(intervaloFotos);
             return;
         }
         
+        // Creamos el marco vacío primero y lo insertamos de inmediato
+        const material = new THREE.SpriteMaterial({ transparent: true, opacity: 0, color: 0xcccccc });
+        const sprite = new THREE.Sprite(material);
+        
+        const angulo = Math.random() * Math.PI * 2;
+        const radio = 350 + Math.random() * 1000; 
+        const altura = (Math.random() - 0.5) * 800;
+        
+        sprite.position.set(Math.cos(angulo) * radio, altura, Math.sin(angulo) * radio);
+        sprite.scale.set(0, 0, 1); 
+        
+        sprite.userData = { 
+            angulo: angulo, radio: radio, velocidad: 0.002 + Math.random() * 0.004, 
+            opacityTarget: 1, scaleTarget: 220 
+        };
+        fotosFlotantes.push(sprite);
+        systemRotationGroup.add(sprite);
+
+        // Cargamos la foto por detrás sin que afecte el ritmo del reloj
         textureLoader.load(`fotos/foto${i}.jpg`, (texture) => {
-            const material = new THREE.SpriteMaterial({ map: texture, transparent: true, opacity: 0, color: 0xcccccc });
-            const sprite = new THREE.Sprite(material);
-            
-            const angulo = Math.random() * Math.PI * 2;
-            const radio = 350 + Math.random() * 1000; 
-            const altura = (Math.random() - 0.5) * 800;
-            
-            sprite.position.set(Math.cos(angulo) * radio, altura, Math.sin(angulo) * radio);
-            sprite.scale.set(0, 0, 1); 
-            
-            sprite.userData = { 
-                angulo: angulo, radio: radio, velocidad: 0.002 + Math.random() * 0.004, 
-                opacityTarget: 1, scaleTarget: 220 
-            };
-            fotosFlotantes.push(sprite);
-            systemRotationGroup.add(sprite);
+            sprite.material.map = texture;
+            sprite.material.needsUpdate = true;
         });
+
         i++;
-    }, 300); 
+    }, 550); 
 }
 
-// NUEVA FUNCIÓN: Inicia la secuencia mágica del final
+// NUEVA FUNCIÓN: Girasol formado por miles de partículas doradas
+function crearFlorParticulas() {
+    const geometry = new THREE.BufferGeometry();
+    const positions = [];
+    const colors = [];
+    const colorCentro = new THREE.Color(0x5c2c00); // Café oscuro para las semillas
+    const colorPetalo1 = new THREE.Color(0xffdb58); // Amarillo
+    const colorPetalo2 = new THREE.Color(0xff9900); // Naranja
+
+    for (let i = 0; i < 6000; i++) {
+        let x, y, z, colorDeseado;
+        
+        if (i < 2500) {
+            // El centro del girasol sigue la proporción áurea (espiral de Fibonacci)
+            const r = Math.sqrt(i) * 0.4;
+            const theta = i * 137.5 * (Math.PI / 180);
+            x = r * Math.cos(theta);
+            y = r * Math.sin(theta);
+            z = (Math.random() - 0.5) * 2;
+            colorDeseado = colorCentro.clone().lerp(new THREE.Color(0x3a1b00), Math.random());
+        } else {
+            // Los pétalos usando ondas
+            const theta = Math.random() * Math.PI * 2;
+            const largoBase = 18;
+            // 16 hojas que salen del centro
+            const extension = 35 * Math.pow(Math.abs(Math.sin(theta * 8)), 0.5); 
+            const r = largoBase + Math.random() * extension;
+            
+            x = r * Math.cos(theta);
+            y = r * Math.sin(theta);
+            z = (Math.random() - 0.5) * 4;
+            colorDeseado = colorPetalo1.clone().lerp(colorPetalo2, Math.random());
+        }
+
+        // Hacemos el girasol 1.5 veces más grande en su base
+        positions.push(x * 1.5, y * 1.5, z * 1.5);
+        colors.push(colorDeseado.r, colorDeseado.g, colorDeseado.b);
+    }
+
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+    const material = new THREE.PointsMaterial({
+        size: esCelular ? 3 : 5, vertexColors: true, transparent: true,
+        opacity: 0.9, blending: THREE.AdditiveBlending
+    });
+
+    return new THREE.Points(geometry, material);
+}
+
 function iniciarFinalMagico() {
     etapaFinal = true;
     
-    // Desaparecemos los textos normales
     document.getElementById('mainContent').style.opacity = '0';
     document.getElementById('letrasContainer').style.opacity = '0';
     
-    // Preparamos la flor gigante
-    florGigante = crearSpriteGirasol();
-    florGigante.scale.set(0, 0, 1);
-    scene.add(florGigante); // Se añade directamente a la escena para que no gire loca
+    // Nace el girasol de partículas mágicas
+    florParticulas = crearFlorParticulas();
+    florParticulas.scale.set(0, 0, 0); 
+    scene.add(florParticulas); 
     
-    // Mostramos el contenedor final (aún invisible por opacity)
-    const tf = document.getElementById('textoFinal');
-    tf.style.display = 'block';
+    document.getElementById('textoFinal').style.display = 'block';
 }
 
 function actualizarLetras() {
@@ -470,7 +548,6 @@ function actualizarLetras() {
 
     const tiempo = audioEl.currentTime;
 
-    // A los 3 minutos y 46 segundos (226s) iniciamos el efecto final
     if (tiempo >= 226 && !etapaFinal) {
         iniciarFinalMagico();
     }
@@ -508,26 +585,21 @@ function animate() {
     actualizarLetras(); 
 
     if (etapaFinal) {
-        // --- ANIMACIÓN DEL FINAL ÉPICO ---
-        
-        // 1. Todo el sistema gira a muchísima velocidad
         systemRotationGroup.rotation.y += delta * 4;
-        
-        // 2. Todo se encoge hacia el centro (es absorbido)
         systemRotationGroup.scale.lerp(new THREE.Vector3(0, 0, 0), 0.015);
         
-        // 3. Cuando ya casi se absorbió todo, nace la flor gigante
-        if (systemRotationGroup.scale.x < 0.2 && florGigante) {
-            florGigante.scale.lerp(new THREE.Vector3(4000, 4000, 1), 0.02);
+        if (systemRotationGroup.scale.x < 0.2 && florParticulas) {
+            // El girasol de partículas crece suavemente
+            florParticulas.scale.lerp(new THREE.Vector3(25, 25, 25), 0.02);
+            florParticulas.rotation.z += delta * 0.2; // Gira lento para dar un efecto hermoso
             
-            // 4. Cuando la flor es lo suficientemente grande, revelamos el mensaje
-            if (florGigante.scale.x > 1500) {
+            if (florParticulas.scale.x > 15) {
+                // Aparecen las fotos de Bobby y el texto
                 document.getElementById('textoFinal').style.opacity = '1';
             }
         }
 
     } else {
-        // --- ANIMACIÓN NORMAL ---
         systemRotationGroup.rotation.y += delta * 0.05;
 
         if (heartPoints && hitboxCorazon) {
