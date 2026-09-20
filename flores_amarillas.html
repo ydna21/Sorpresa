@@ -617,12 +617,12 @@ function iniciarFinalMagico() {
       const posY = esCelular ? 38 : 35; 
       const escala = esCelular ? 26 : 35;
 
-      spriteBobby1 = crearSpriteFotoBobby('./flores/foto1.jpg');
+      spriteBobby1 = crearSpriteFotoBobby('./flores/foto1.jpeg');
       spriteBobby1.position.set(-posX, posY, -100); 
       spriteBobby1.scale.set(escala, escala, 1);
       camera.add(spriteBobby1);
 
-      spriteBobby2 = crearSpriteFotoBobby('./flores/foto2.jpg');
+      spriteBobby2 = crearSpriteFotoBobby('./flores/foto2.jpeg');
       spriteBobby2.position.set(posX, posY, -100);
       spriteBobby2.scale.set(escala, escala, 1);
       camera.add(spriteBobby2);
