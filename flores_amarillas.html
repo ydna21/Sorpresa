@@ -138,9 +138,9 @@
 <!-- CONTENEDOR DEL FINAL MÁGICO -->
 <div id="textoFinal">
   <div class="fotos-bobby">
-    <!-- Corregido el enlace de la foto 1 -->
-    <img src="fotos/bobby/foto1.jpg" alt="Bobby 1">
-    <img src="fotos/bobby/foto2.jpg" alt="Bobby 2">
+    <!-- AHORA BUSCA EN LA CARPETA "flores" -->
+    <img src="flores/foto1.jpg" alt="Bobby 1">
+    <img src="flores/foto2.jpg" alt="Bobby 2">
   </div>
   En este Día de las Flores Amarillas, 🌻<br><br>
   y recordando con mucha ternura el hermoso<br>
@@ -266,39 +266,32 @@ document.getElementById('btnIniciar').addEventListener('click', function() {
 
 /* LÓGICA DE LOS BOTONES NUEVOS */
 document.getElementById('btnRepetir').addEventListener('click', () => {
-    // 1. Ocultar el texto final suavemente
     const textoFinalDiv = document.getElementById('textoFinal');
     textoFinalDiv.style.opacity = '0';
     setTimeout(() => { textoFinalDiv.style.display = 'none'; }, 1000);
 
-    // 2. Resetear variables de la etapa final
     etapaFinal = false;
     if (florParticulas) {
         scene.remove(florParticulas);
         florParticulas = null;
     }
     
-    // 3. Restaurar el tamaño de la galaxia de girasoles
     systemRotationGroup.scale.set(1, 1, 1);
     
-    // 4. Mostrar de nuevo el título y las letras
     document.getElementById('mainContent').style.opacity = '1';
     document.getElementById('letrasContainer').style.opacity = '1';
 
-    // 5. Reiniciar cámara y viaje inicial
     camera.position.set(0, 500, 9000);
     viajeProgress = 0;
     controls.enabled = false;
     iniciarViaje();
 
-    // 6. Reiniciar música
     const audio = document.getElementById('musicaFondo');
     audio.currentTime = 0;
     audio.play();
 });
 
 document.getElementById('btnRetornar').addEventListener('click', () => {
-    // Recargar la página limpia todo y devuelve a la pantalla negra
     window.location.reload(); 
 });
 
