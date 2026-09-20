@@ -67,25 +67,6 @@
     opacity: 0; transition: opacity 4s ease; display: none;
   }
 
-  .fotos-bobby {
-    display: flex; justify-content: center; gap: 30px; margin-bottom: 25px;
-  }
-
-  .fotos-bobby img {
-    width: 160px; height: 160px; object-fit: cover; border-radius: 50%;
-    border: 4px solid #ffdb58; box-shadow: 0 0 25px #ffdb58;
-    animation: flotarFoto 3s ease-in-out infinite; pointer-events: auto;
-  }
-
-  .fotos-bobby img:nth-child(2) {
-    animation-delay: 1.5s;
-  }
-
-  @keyframes flotarFoto {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-15px); }
-  }
-
   /* NUEVO: ESTILOS PARA LOS BOTONES FINALES */
   .botones-finales {
     display: flex; justify-content: center; gap: 30px; margin-top: 35px;
@@ -109,7 +90,6 @@
     h1 { font-size: 1.5rem; padding: 0 10px;}
     #letrasContainer { font-size: 1.1rem; bottom: 20px; padding: 0 15px; width: auto; }
     #textoFinal { font-size: 1.3rem; }
-    .fotos-bobby img { width: 110px; height: 110px; }
     .btn-circulo { width: 55px; height: 55px; font-size: 1.5rem; }
   }
 </style>
@@ -137,10 +117,6 @@
 
 <!-- CONTENEDOR DEL FINAL MÁGICO -->
 <div id="textoFinal">
-  <div class="fotos-bobby">
-  <img src="https://github.com/ydna21/Sorpresa/blob/719aac3e6f0b0fd4eafeb562b7600a161831c8ad/flores/foto1.jpg" alt="Bobby 1">
-  <img src="https://ydna21.github.io/Sorpresa/flores/foto2.jpg" alt="Bobby 2">
-</div>
   En este Día de las Flores Amarillas, 🌻<br><br>
   y recordando con mucha ternura el hermoso<br>
   momento en que llegó nuestro Bobby 🐶💛,<br><br>
@@ -178,6 +154,7 @@ const textureLoader = new THREE.TextureLoader();
 
 let etapaFinal = false;
 let florParticulas = null;
+let spriteBobby1, spriteBobby2; // VARIABLES FOTOS 3D
 
 const frases = [
     "Un ramo de gracias por estar ahí ✨", "Eres mi sol de siempre 💛", "Contigo la vida es mejor 🌻",
@@ -274,6 +251,10 @@ document.getElementById('btnRepetir').addEventListener('click', () => {
         scene.remove(florParticulas);
         florParticulas = null;
     }
+    
+    // OCULTAR FOTOS EN REPETICIÓN
+    if (spriteBobby1) spriteBobby1.visible = false;
+    if (spriteBobby2) spriteBobby2.visible = false;
     
     systemRotationGroup.scale.set(1, 1, 1);
     
@@ -415,6 +396,46 @@ function crearSpriteTexto(texto) {
     const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, blending: THREE.AdditiveBlending }));
     sprite.scale.set(800, 85, 1);
     return sprite;
+}
+
+function crearSpriteFotoBobby(url) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512; canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+
+  // Borde amarillo con resplandor
+  ctx.shadowColor = '#ffdb58';
+  ctx.shadowBlur = 25;
+  ctx.beginPath();
+  ctx.arc(256, 256, 220, 0, Math.PI * 2);
+  ctx.fillStyle = '#ffdb58';
+  ctx.fill();
+  ctx.shadowBlur = 0; // Quitamos la sombra para la foto
+
+  const tex = new THREE.CanvasTexture(canvas);
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
+
+  // Cargar imagen de forma asíncrona
+  const img = new Image();
+  img.crossOrigin = "Anonymous";
+  img.onload = () => {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(256, 256, 205, 0, Math.PI * 2); // Recorte circular
+    ctx.clip();
+    
+    // Centrar imagen (equivalente a object-fit: cover)
+    const size = Math.min(img.width, img.height);
+    const x = (img.width - size) / 2;
+    const y = (img.height - size) / 2;
+    ctx.drawImage(img, x, y, size, size, 51, 51, 410, 410);
+    ctx.restore();
+    
+    tex.needsUpdate = true; // Avisar a Three.js que la foto ya cargó
+  };
+  img.src = url;
+  
+  return sprite;
 }
 
 function crearGirasolesYTextos() {
@@ -587,6 +608,28 @@ function iniciarFinalMagico() {
     scene.add(florParticulas); 
     
     document.getElementById('textoFinal').style.display = 'block';
+
+    // --- NUEVO: CREAR Y UBICAR LAS FOTOS EN 3D ---
+    if(!spriteBobby1) {
+      scene.add(camera); 
+      
+      const posX = esCelular ? 16 : 28;
+      const posY = esCelular ? 38 : 35; 
+      const escala = esCelular ? 26 : 35;
+
+      spriteBobby1 = crearSpriteFotoBobby('./flores/foto1.jpg');
+      spriteBobby1.position.set(-posX, posY, -100); 
+      spriteBobby1.scale.set(escala, escala, 1);
+      camera.add(spriteBobby1);
+
+      spriteBobby2 = crearSpriteFotoBobby('./flores/foto2.jpg');
+      spriteBobby2.position.set(posX, posY, -100);
+      spriteBobby2.scale.set(escala, escala, 1);
+      camera.add(spriteBobby2);
+    } else {
+      spriteBobby1.visible = true;
+      spriteBobby2.visible = true;
+    }
 }
 
 function actualizarLetras() {
@@ -643,6 +686,14 @@ function animate() {
             if (florParticulas.scale.x > 15) {
                 document.getElementById('textoFinal').style.opacity = '1';
             }
+        }
+
+        // --- NUEVO: ANIMACIÓN DE FLOTACIÓN FOTOS 3D ---
+        if (spriteBobby1 && spriteBobby2) {
+            const timeVal = Date.now() * 0.002;
+            const basePosY = esCelular ? 38 : 35;
+            spriteBobby1.position.y = basePosY + Math.sin(timeVal) * 1.5;
+            spriteBobby2.position.y = basePosY + Math.sin(timeVal + 1.5) * 1.5;
         }
 
     } else {
