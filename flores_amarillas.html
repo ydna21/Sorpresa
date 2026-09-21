@@ -56,7 +56,6 @@
     font-size: 1.6rem; opacity: 0; transition: opacity 2s ease; line-height: 1.4;
   }
 
-  /* ESTILOS DEL FINAL - ORDENADOS CON FLEXBOX */
   #textoFinal {
     position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
     width: 90%; max-width: 800px;
@@ -70,7 +69,7 @@
 
   .fotos-bobby {
     display: flex; justify-content: center; gap: 30px; margin-bottom: 20px;
-    pointer-events: auto; /* Permite hacer click en las fotos */
+    pointer-events: auto; 
   }
 
   .fotos-bobby img {
@@ -90,7 +89,6 @@
 
   .texto-mensaje { margin-bottom: 20px; }
 
-  /* ESTILOS BOTONES FINALES */
   .botones-finales {
     display: flex; justify-content: center; gap: 30px; margin-top: 15px;
     pointer-events: auto; 
@@ -109,7 +107,6 @@
     box-shadow: 0 0 30px rgba(255, 219, 88, 0.9);
   }
 
-  /* NUEVO: ESTILOS DEL VISOR DE FOTOS (LIGHTBOX) */
   #lightbox {
     display: none; position: fixed; z-index: 9999; top: 0; left: 0;
     width: 100%; height: 100%; background-color: rgba(0,0,0,0.85);
@@ -168,7 +165,7 @@
 
 <div id="letrasContainer"></div>
 
-<!-- CONTENEDOR DEL FINAL MÁGICO REESTRUCTURADO -->
+<!-- CONTENEDOR DEL FINAL MÁGICO -->
 <div id="textoFinal">
   <div class="fotos-bobby">
     <img src="./flores/foto1.jpeg" alt="Bobby 1" class="foto-zoom">
@@ -189,7 +186,7 @@
   </div>
 </div>
 
-<!-- NUEVO: VISOR DE FOTO AMPLIA (LIGHTBOX) -->
+<!-- VISOR DE FOTO AMPLIA (LIGHTBOX) -->
 <div id="lightbox">
   <span class="cerrar-lightbox" id="btnCerrarLightbox">&times;</span>
   <img class="lightbox-content" id="imgLightbox">
@@ -219,6 +216,39 @@ const textureLoader = new THREE.TextureLoader();
 
 let etapaFinal = false;
 let florParticulas = null;
+
+// --- NUEVO: TEXTURAS COMPARTIDAS PARA OPTIMIZAR MEMORIA ---
+let texGirasol = null;
+let texRamito = null;
+
+function getTexGirasol() {
+    if (!texGirasol) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 128; canvas.height = 128;
+        const ctx = canvas.getContext('2d');
+        ctx.font = '80px Arial';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('🌻', 64, 64);
+        texGirasol = new THREE.CanvasTexture(canvas);
+    }
+    return texGirasol;
+}
+
+function getTexRamito() {
+    if (!texRamito) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 256; canvas.height = 256;
+        const ctx = canvas.getContext('2d');
+        ctx.font = '90px Arial';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        // Dibuja 3 girasoles entrelazados para hacer el ramo
+        ctx.fillText('🌻', 100, 150);
+        ctx.fillText('🌻', 156, 150);
+        ctx.fillText('🌻', 128, 100);
+        texRamito = new THREE.CanvasTexture(canvas);
+    }
+    return texRamito;
+}
 
 const frases = [
     "Un ramo de gracias por estar ahí ✨", "Eres mi sol de siempre 💛", "Contigo la vida es mejor 🌻",
@@ -349,7 +379,6 @@ fotosZoom.forEach(foto => {
 });
 
 lightbox.addEventListener('click', (e) => {
-  // Cierra si se hace clic fuera de la foto o en la X
   if(e.target !== imgLightbox || e.target === btnCerrar) {
     lightbox.style.display = 'none';
   }
@@ -450,13 +479,11 @@ function crearPolvoEstelarDorado() {
 }
 
 function crearSpriteGirasol() {
-    const canvas = document.createElement('canvas');
-    canvas.width = 256; canvas.height = 256;
-    const ctx = canvas.getContext('2d');
-    ctx.font = '150px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('🌻', 128, 128);
-    const tex = new THREE.CanvasTexture(canvas);
-    return new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
+    return new THREE.Sprite(new THREE.SpriteMaterial({ map: getTexGirasol(), transparent: true }));
+}
+
+function crearSpriteRamito() {
+    return new THREE.Sprite(new THREE.SpriteMaterial({ map: getTexRamito(), transparent: true }));
 }
 
 function crearSpriteTexto(texto) {
@@ -478,20 +505,35 @@ function crearSpriteTexto(texto) {
     return sprite;
 }
 
-
 function crearGirasolesYTextos() {
-    for (let i = 0; i < 150; i++) {
+    // --- INCREMENTO: DE 150 A 400 GIRASOLES SIMPLES ---
+    for (let i = 0; i < 400; i++) {
         const girasolFondo = crearSpriteGirasol();
-        const radioF = 1000 + (Math.random() * 8000);
+        const radioF = 1000 + (Math.random() * 9000); // Universo un poco más amplio
         const anguloF = Math.random() * Math.PI * 2;
-        const alturaF = (Math.random() - 0.5) * 5000;
+        const alturaF = (Math.random() - 0.5) * 6000;
         girasolFondo.position.set(Math.cos(anguloF) * radioF, alturaF, Math.sin(anguloF) * radioF);
         
-        const escalaF = 60 + Math.random() * 100;
+        const escalaF = 50 + Math.random() * 110;
         girasolFondo.scale.set(escalaF, escalaF, 1);
         
         girasoles.push({ mesh: girasolFondo, angulo: anguloF, radio: radioF, velocidad: 0.0005 + Math.random() * 0.002 });
         systemRotationGroup.add(girasolFondo);
+    }
+
+    // --- NUEVO: 200 RAMITOS DE GIRASOLES REPARTIDOS ---
+    for (let i = 0; i < 200; i++) {
+        const ramitoFondo = crearSpriteRamito();
+        const radioF = 1200 + (Math.random() * 8500); 
+        const anguloF = Math.random() * Math.PI * 2;
+        const alturaF = (Math.random() - 0.5) * 6000;
+        ramitoFondo.position.set(Math.cos(anguloF) * radioF, alturaF, Math.sin(anguloF) * radioF);
+        
+        const escalaF = 80 + Math.random() * 150; // Los ramitos son más grandes
+        ramitoFondo.scale.set(escalaF, escalaF, 1);
+        
+        girasoles.push({ mesh: ramitoFondo, angulo: anguloF, radio: radioF, velocidad: 0.0004 + Math.random() * 0.0015 });
+        systemRotationGroup.add(ramitoFondo);
     }
 
     const cantidad = frases.length;
@@ -536,25 +578,41 @@ function onInteractuar(event) {
     }
 }
 
+// --- OPTIMIZACIÓN: SISTEMA DE PARTÍCULAS (THREE.Points) ---
 function crearExplosionFlores() {
-    let grupoExplosion = new THREE.Group();
-    for (let i = 0; i < 200; i++) {
-        let flor = crearSpriteGirasol();
-        let escalaFlor = 20 + Math.random() * 70; 
-        flor.scale.set(escalaFlor, escalaFlor, 1);
-        flor.position.set(0,0,0);
+    const numParticulas = esCelular ? 100 : 200;
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(numParticulas * 3);
+    const velocidades = [];
+
+    for (let i = 0; i < numParticulas; i++) {
+        positions[i * 3] = 0;
+        positions[i * 3 + 1] = 0;
+        positions[i * 3 + 2] = 0;
         
-        let velocidad = new THREE.Vector3(
-            (Math.random() - 0.5) * 200,
-            (Math.random() - 0.5) * 200,
-            (Math.random() - 0.5) * 200
+        velocidades.push(
+            (Math.random() - 0.5) * 350,
+            (Math.random() - 0.5) * 350,
+            (Math.random() - 0.5) * 350
         );
-        
-        flor.userData = { vel: velocidad, vida: 1.0 };
-        grupoExplosion.add(flor);
     }
-    systemRotationGroup.add(grupoExplosion);
-    explosionesActivas.push(grupoExplosion);
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+    const material = new THREE.PointsMaterial({
+        size: esCelular ? 150 : 250, // Escala adaptada para puntos
+        map: getTexGirasol(),
+        transparent: true,
+        opacity: 1.0,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending // Efecto de explosión más brillante
+    });
+
+    const points = new THREE.Points(geometry, material);
+    points.userData = { vels: velocidades, vida: 1.0 };
+
+    systemRotationGroup.add(points);
+    explosionesActivas.push(points);
 }
 
 function mostrarEventoFotos() {
@@ -756,20 +814,28 @@ function animate() {
         camera.position.y = THREE.MathUtils.lerp(500, 200, easeRatio);
     }
 
+    // --- ANIMACIÓN OPTIMIZADA DEL SISTEMA DE PARTÍCULAS ---
     for (let i = explosionesActivas.length - 1; i >= 0; i--) {
-        let grupo = explosionesActivas[i];
-        let vivas = false;
-        grupo.children.forEach(flor => {
-            flor.position.add(flor.userData.vel);
-            flor.userData.vida -= 0.015; 
-            if (flor.userData.vida > 0) {
-                flor.material.opacity = flor.userData.vida;
-                vivas = true;
-            }
-        });
-        if (!vivas) {
-            systemRotationGroup.remove(grupo);
+        let explosion = explosionesActivas[i];
+        explosion.userData.vida -= 0.015; 
+        
+        if (explosion.userData.vida <= 0) {
+            systemRotationGroup.remove(explosion);
+            explosion.geometry.dispose();
+            explosion.material.dispose();
             explosionesActivas.splice(i, 1);
+        } else {
+            explosion.material.opacity = explosion.userData.vida;
+            
+            const positions = explosion.geometry.attributes.position.array;
+            const vels = explosion.userData.vels;
+            
+            for (let j = 0; j < positions.length / 3; j++) {
+                positions[j*3] += vels[j*3];       // X
+                positions[j*3+1] += vels[j*3+1];   // Y
+                positions[j*3+2] += vels[j*3+2];   // Z
+            }
+            explosion.geometry.attributes.position.needsUpdate = true;
         }
     }
 
