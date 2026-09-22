@@ -66,6 +66,17 @@
     z-index:101;display:none; width: 80%; max-width: 400px;
   }
 </style>
+
+<!-- Esto conecta el DNI de la app -->
+<link rel="manifest" href="manifest.json">
+
+<!-- Esto enciende el motor de fondo -->
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
+</script>
+  
 </head>
 <body>
 
