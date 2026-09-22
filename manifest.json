@@ -1,6 +1,6 @@
 {
-  "name": "Mi Proyecto",
-  "short_name": "App",
+  "name": "Sorpresa",
+  "short_name": "Sorpresa",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#000000",
