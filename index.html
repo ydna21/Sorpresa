@@ -73,12 +73,20 @@ canvas{display:block}
   -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
   font-size:1rem;white-space:nowrap;text-align:center;
 }
-#contador{top:calc(14px + env(safe-area-inset-top))}
-#tiempoTotal{
-  bottom:calc(14px + env(safe-area-inset-bottom));
-  color:var(--rosa);font-size:.95rem;white-space:pre-line;
-  border-radius:20px;max-width:92vw;line-height:1.5;
+#contador{
+  top:calc(14px + env(safe-area-inset-top));
+  max-width:calc(100vw - 128px);   /* deja libre el botón de música */
+  font-size:.9rem;overflow:hidden;text-overflow:ellipsis;
 }
+/* Tiempo total: 6 casillas ordenadas en una sola fila */
+#tiempoTotal{
+  bottom:calc(12px + env(safe-area-inset-bottom));
+  display:grid;grid-template-columns:repeat(6,1fr);gap:4px;
+  width:min(94vw,440px);padding:10px 8px;border-radius:22px;white-space:normal;
+}
+.unidad{display:flex;flex-direction:column;align-items:center;line-height:1.15}
+.unidad b{font:800 1.2rem var(--mono);color:#fff;text-shadow:0 0 10px rgba(255,105,180,.7)}
+.unidad small{font:700 .58rem var(--ui);color:var(--rosa);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
 
 /* =========================================================
    4. INICIO
@@ -117,8 +125,12 @@ canvas{display:block}
   pointer-events:none;
 }
 #pantallaPrincipal .centro .btn{pointer-events:auto}
+#pantallaPrincipal{
+  padding-top:calc(64px + env(safe-area-inset-top));
+  padding-bottom:calc(92px + env(safe-area-inset-bottom));
+}
 .foto-central{
-  width:min(46vw,200px);height:auto;border-radius:22px;
+  width:auto;height:min(34vh,300px);max-width:62vw;object-fit:cover;border-radius:22px;
   border:2px solid rgba(255,255,255,.55);
   box-shadow:0 0 30px var(--rosa),0 0 70px rgba(255,105,180,.35);
   animation:flotar 5s ease-in-out infinite;
@@ -140,6 +152,12 @@ canvas{display:block}
   transition:opacity 1s ease,transform 1s ease;
 }
 #mensajeFinal.visible{opacity:1;transform:none}
+@media (max-width:480px),(max-height:720px){
+  .te-amo{font-size:1.7rem;margin-top:12px}
+  #mensajeFinal{margin-top:14px;font-size:1rem}
+  .botones{gap:10px;margin-top:12px}
+  .btn{padding:11px 20px;font-size:.95rem}
+}
 
 /* =========================================================
    6. PANEL DE CRISTAL (recuerdos)
@@ -552,9 +570,12 @@ function actualizarContadores() {
   if (d < 0)  { d += new Date(ahora.getFullYear(), ahora.getMonth(), 0).getDate(); m--; }
   if (m < 0)  { m += 12; a--; }
 
-  $('tiempoTotal').textContent =
-    `Años: ${a} | Meses: ${m} | Días: ${d}\n` +
-    `Tiempo juntos: ${h}h ${mi}m ${s}s`;
+  const unidad = (valor, etiqueta) =>
+    `<div class="unidad"><b>${valor}</b><small>${etiqueta}</small></div>`;
+
+  $('tiempoTotal').innerHTML =
+    unidad(a, 'Años') + unidad(m, 'Meses') + unidad(d, 'Días') +
+    unidad(h, 'Horas') + unidad(mi, 'Min') + unidad(s, 'Seg');
 }
 
 /* =========================================================
