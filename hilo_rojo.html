@@ -2,77 +2,161 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>El Hilo Rojo del Destino 🧵</title>
+<meta name="theme-color" content="#000000">
+
 <style>
-  body { margin: 0; background: #050505; color: white; font-family: 'Courier New', monospace; overflow-x: hidden; }
-  
-  canvas { position: fixed; top: 0; left: 0; z-index: 1; pointer-events: none; }
+/* =========================================================
+   1. BASE
+   ========================================================= */
+:root{
+  --rojo:#ff1a1a;
+  --rojo-suave:#ffcccc;
+  --ui:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  --mono:'Courier New',monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none !important}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:#050505;color:#fff;
+  font-family:var(--mono);overflow-x:hidden;
+}
+/* Resplandor de fondo fijo */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(circle at 50% -10%,rgba(160,0,20,.35) 0%,transparent 55%),
+    radial-gradient(circle at 50% 110%,rgba(90,0,40,.35) 0%,transparent 55%);
+}
+canvas{position:fixed;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
 
-  /* Icono de sonido para forzar la activación en móviles */
-  #musicStatus {
-    position: fixed; top: 20px; right: 20px; z-index: 100;
-    background: rgba(255, 0, 0, 0.2); border: 1px solid #ff0000;
-    padding: 8px 15px; border-radius: 20px; font-size: 0.8rem;
-    cursor: pointer; color: #ffcccc; animation: fadeIn 2s;
-  }
+/* =========================================================
+   2. BARRA DE PROGRESO Y CONTROLES
+   ========================================================= */
+#progreso{
+  position:fixed;top:0;left:0;right:0;height:3px;z-index:90;
+  background:linear-gradient(90deg,#ff1a1a,#ff6b81);
+  box-shadow:0 0 12px #ff1a1a;
+  transform-origin:left;transform:scaleX(0);
+}
+#musicStatus{
+  position:fixed;z-index:100;
+  top:calc(16px + env(safe-area-inset-top));right:16px;
+  padding:8px 16px;border-radius:999px;cursor:pointer;
+  font:600 .8rem var(--mono);color:#ffd6d6;
+  background:rgba(255,0,0,.16);border:1px solid rgba(255,60,60,.8);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  animation:aparecer 2s;
+}
+#musicStatus.on{color:#7dffa0;border-color:#34d96b;background:rgba(0,255,100,.12)}
+.indicador-scroll{
+  position:fixed;left:50%;transform:translateX(-50%);z-index:3;
+  bottom:calc(26px + env(safe-area-inset-bottom));
+  padding:8px 18px;border-radius:999px;white-space:nowrap;
+  font-size:.85rem;color:var(--rojo);
+  background:rgba(0,0,0,.45);border:1px solid rgba(255,40,40,.35);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  animation:parpadeo 2s infinite;
+}
 
-  .section {
-    height: 100vh; display: flex; align-items: center;
-    justify-content: center; position: relative; z-index: 2;
-    padding: 20px; text-align: center;
-  }
+/* =========================================================
+   3. SECCIONES Y TARJETAS DE CRISTAL
+   ========================================================= */
+.section{
+  min-height:100vh;min-height:100dvh;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;z-index:2;
+  padding:calc(24px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));
+  text-align:center;
+}
+.content{
+  width:100%;max-width:600px;
+  padding:clamp(26px,6vw,44px);border-radius:30px;
+  background:linear-gradient(160deg,rgba(255,50,70,.12),rgba(0,0,0,.72));
+  border:1px solid rgba(255,60,80,.35);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  box-shadow:0 0 50px rgba(255,0,0,.15),inset 0 1px 0 rgba(255,255,255,.18);
+  opacity:0;transform:translateY(50px);
+  transition:opacity 1.2s ease,transform 1.2s ease;
+}
+.content.visible{opacity:1;transform:translateY(0)}
 
-  .content {
-    max-width: 600px; background: rgba(0, 0, 0, 0.85);
-    padding: 40px; border-radius: 30px; border: 1px solid rgba(255, 0, 0, 0.3);
-    box-shadow: 0 0 50px rgba(255, 0, 0, 0.15);
-    opacity: 0; transform: translateY(50px);
-    transition: all 1.2s ease;
-  }
+.nudo{
+  display:inline-block;margin-bottom:14px;padding:4px 14px;border-radius:999px;
+  font:700 .7rem var(--ui);letter-spacing:.14em;color:#ff8a8a;
+  background:rgba(255,0,0,.12);border:1px solid rgba(255,60,60,.4);
+}
+h2{
+  margin:0 0 18px;color:var(--rojo);
+  font-size:clamp(1.6rem,6vw,2.2rem);line-height:1.2;
+  text-shadow:0 0 16px var(--rojo);
+}
+p{margin:0;font-size:clamp(1rem,4vw,1.2rem);line-height:1.65;color:var(--rojo-suave)}
 
-  .content.visible { opacity: 1; transform: translateY(0); }
+/* =========================================================
+   4. MENÚ FINAL
+   ========================================================= */
+#menuFinal{
+  display:none;margin-top:28px;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;
+  justify-items:center;
+}
+#menuFinal.abierto{display:grid}
 
-  h2 { color: #ff0000; text-shadow: 0 0 15px #ff0000; font-size: 2.2rem; margin-bottom: 20px; }
-  p { font-size: 1.2rem; line-height: 1.6; color: #ffcccc; }
+.btn-destino{
+  --c:#ff1a1a;
+  display:flex;align-items:center;justify-content:center;
+  width:100%;max-width:320px;padding:14px 22px;
+  color:var(--c);text-decoration:none;text-align:center;
+  font:700 .95rem var(--ui);
+  background:rgba(255,255,255,.04);
+  border:1.5px solid var(--c);border-radius:50px;
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  box-shadow:0 0 14px color-mix(in srgb,var(--c) 25%,transparent);
+  cursor:pointer;
+  transition:background .3s,color .3s,box-shadow .3s,transform .3s;
+  opacity:0;animation:subir .6s ease forwards;animation-delay:calc(var(--i,0) * 80ms);
+}
+.btn-destino:hover,.btn-destino:active{
+  background:var(--c);color:#050505;transform:scale(1.04);
+  box-shadow:0 0 30px var(--c);
+}
+.btn-viaje{
+  grid-column:1/-1;max-width:340px;
+  background:var(--c);color:#fff;border-color:transparent;
+  animation:subir .6s ease forwards,pulso 2s infinite;
+  animation-delay:calc(var(--i,0) * 80ms),0s;
+}
+.btn-viaje:hover,.btn-viaje:active{color:#fff;filter:brightness(1.15)}
+.btn-volver{
+  grid-column:1/-1;max-width:200px;margin-top:10px;
+  font-size:.8rem;--c:#777;
+}
 
-  #menuFinal {
-    display: none; flex-direction: column; align-items: center; gap: 15px;
-    margin-top: 30px; animation: fadeIn 2s forwards;
-  }
+/* =========================================================
+   5. ANIMACIONES
+   ========================================================= */
+@keyframes aparecer{from{opacity:0}to{opacity:1}}
+@keyframes parpadeo{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes subir{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes pulso{0%,100%{box-shadow:0 0 10px #ff1a1a}50%{box-shadow:0 0 32px #ff4444}}
 
-  .btn-destino {
-    display: inline-block; padding: 15px 30px; background: transparent;
-    color: white; border: 2px solid #ff0000; border-radius: 50px;
-    text-decoration: none; font-weight: bold; transition: 0.4s;
-    cursor: pointer; width: 280px; text-align: center;
-  }
-
-  .btn-destino:hover { background: #ff0000; box-shadow: 0 0 30px #ff0000; transform: scale(1.05); }
-
-  .btn-viaje { background: #ff0000; border: none; animation: pulse 2s infinite; }
-
-  @keyframes pulse { 0%, 100% { box-shadow: 0 0 10px #ff0000; } 50% { box-shadow: 0 0 30px #ff4444; } }
-
-  #btnUniverso { display: none; border-color: #ff1493; }
-
-  .indicador-scroll {
-    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-    color: #ff0000; font-size: 0.9rem; z-index: 3; animation: blink 2s infinite;
-  }
-
-  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+  .content{transform:none}
+}
 </style>
-  
-  <meta name="theme-color" content="#000000">
-  
 </head>
-<body onclick="iniciarAudio()"> <audio id="musicaFondo" loop>
+<body>
+
+<audio id="musicaFondo" loop>
   <source src="videos/musicainicio.mp3" type="audio/mpeg">
 </audio>
 
-<div id="musicStatus">TAP PARA SONIDO 🎵</div>
+<div id="progreso"></div>
+<button id="musicStatus" type="button">TAP PARA SONIDO 🎵</button>
 
 <canvas id="canvasHilo"></canvas>
 
@@ -80,6 +164,7 @@
 
 <section class="section">
   <div class="content">
+    <span class="nudo">NUDO I</span>
     <h2>La Leyenda del Hilo Rojo</h2>
     <p>"Un hilo rojo invisible conecta a aquellos que están destinados a encontrarse..."</p>
   </div>
@@ -87,131 +172,253 @@
 
 <section class="section">
   <div class="content">
+    <span class="nudo">NUDO II</span>
     <h2>Nudo a nudo...</h2>
     <p>El hilo puede estirarse o enredarse, pero nunca se romperá.</p>
   </div>
 </section>
 
-  <section class="section">
+<section class="section">
   <div class="content">
-    <h2>Inrompible..</h2>
-    <p>"Asi como el hilo y nuestro destino juntos."</p>
+    <span class="nudo">NUDO III</span>
+    <h2>Irrompible..</h2>
+    <p>"Así como el hilo y nuestro destino juntos."</p>
   </div>
 </section>
 
 <section class="section">
   <div class="content">
+    <span class="nudo">NUDO IV</span>
     <h2>Tú eres mi destino ❤️</h2>
     <p>Gracias por sostener el otro extremo de mi hilo.</p>
-    
+
     <div id="menuFinal">
       <a href="viaje_destino.html" class="btn-destino btn-viaje">💫 Iniciar Viaje del Destino</a>
-      
-      <a href="bosque.html" class="btn-destino" style="border-color: #4CAF50; color: #4CAF50;">🌳 Explorar el Bosque</a>
-      
-      <a href="ciudad_noche.html" class="btn-destino" style="border-color: #ffd700; color: #ffd700;">🎆 Ver los Fuegos Artificiales</a>
-      <a href="cumpleanos_solar.html" class="btn-destino" id="btnUniverso" style="color: #ff1493;">🚀 Viajar al Universo</a>
-      <a href="dia_fisioterapia.html" class="btn-destino" style="border-color: #00ffff; color: #00BFFF;">⚕️Dia del Fisioterapeuta</a>
-      <a href="secreto_universo.html" class="btn-destino" style="border-color: #FFF8E7; color: #FFF8E7;">🌌Universo Secreto</a>
-      <a href="flores_amarillas.html" class="btn-destino" style="border-color: #ffdb58; color: #ffdb58; text-shadow: 0 0 10px rgba(255, 219, 88, 0.5);">🌻 Jardín Secreto</a>
-      <a href="index.html" class="btn-destino" style="border-color: #555; margin-top: 15px; width: 200px; font-size: 0.8rem;">⬅️ Volver al Inicio</a>
+
+      <a href="bosque.html" class="btn-destino" style="--c:#4CAF50">🌳 Explorar el Bosque</a>
+      <a href="ciudad_noche.html" class="btn-destino" style="--c:#ffd700">🎆 Ver los Fuegos Artificiales</a>
+      <a href="cumpleanos_solar.html" class="btn-destino" id="btnUniverso" style="--c:#ff1493" hidden>🚀 Viajar al Universo</a>
+      <a href="dia_fisioterapia.html" class="btn-destino" style="--c:#00BFFF">⚕️ Día del Fisioterapeuta</a>
+      <a href="secreto_universo.html" class="btn-destino" style="--c:#FFF8E7">🌌 Universo Secreto</a>
+      <a href="flores_amarillas.html" class="btn-destino" style="--c:#ffdb58">🌻 Jardín Secreto</a>
+
+      <a href="index.html" class="btn-destino btn-volver">⬅️ Volver al Inicio</a>
     </div>
   </div>
 </section>
 
 <script>
-  const musica = document.getElementById('musicaFondo');
-  const statusTxt = document.getElementById('musicStatus');
+(() => {
+'use strict';
 
-  function iniciarAudio() {
-    if (musica.paused) {
-      musica.play().then(() => {
-        statusTxt.innerText = "MUSICA: ON 🎵";
-        statusTxt.style.borderColor = "#00ff00";
-        statusTxt.style.color = "#00ff00";
-        setTimeout(() => { statusTxt.style.display = 'none'; }, 3000);
-      }).catch(e => console.log("Error de audio:", e));
-    }
+const $ = id => document.getElementById(id);
+const calmado = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const tactil  = matchMedia('(pointer: coarse)').matches;
+
+// El botón "Viajar al Universo" aparece desde el 8 de julio de 2026 (mes 6 = julio)
+const FECHA_SORPRESA = new Date(2026, 6, 8);
+
+/* =========================================================
+   1. MÚSICA
+   ========================================================= */
+const musica = $('musicaFondo');
+const btnMusica = $('musicStatus');
+let desbloqueado = false;
+
+function sonidoActivado() {
+  desbloqueado = true;
+  btnMusica.classList.add('on');
+  btnMusica.textContent = 'MÚSICA: ON 🎵';
+  setTimeout(() => { if (!musica.paused) btnMusica.textContent = '🔊'; }, 2500);
+}
+
+// Primer toque en cualquier parte: intenta activar el sonido
+function intentarAudio() {
+  if (desbloqueado || !musica.paused) return;
+  musica.play().then(sonidoActivado).catch(e => console.log('Error de audio:', e));
+}
+document.addEventListener('click', intentarAudio);
+document.addEventListener('touchend', intentarAudio, { passive: true });
+
+// El botón sirve para silenciar o volver a activar
+btnMusica.addEventListener('click', e => {
+  e.stopPropagation();
+  desbloqueado = true;
+  if (musica.paused) {
+    musica.play().then(() => { btnMusica.classList.add('on'); btnMusica.textContent = '🔊'; }).catch(() => {});
+  } else {
+    musica.pause();
+    btnMusica.classList.remove('on');
+    btnMusica.textContent = '🔇';
+  }
+});
+
+/* =========================================================
+   2. FÍSICA DEL HILO (+ brasas de fondo)
+   ========================================================= */
+const canvas = $('canvasHilo');
+const ctx = canvas.getContext('2d');
+const TOTAL = 30;
+let w = 0, h = 0;
+let puntos = [], brasas = [];
+let px = innerWidth / 2, py = innerHeight / 2, ultimoMov = -1e9;
+
+function medir() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  w = window.innerWidth;
+  h = window.innerHeight;
+  canvas.width = Math.round(w * dpr);
+  canvas.height = Math.round(h * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function iniciar() {
+  medir();
+  puntos = Array.from({ length: TOTAL }, () => ({ x: w / 2, y: h / 2 }));
+  if (!calmado) {
+    brasas = Array.from({ length: tactil ? 18 : 40 }, () => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      r: 0.8 + Math.random() * 1.8,
+      vy: 0.15 + Math.random() * 0.5,
+      vx: (Math.random() - 0.5) * 0.3,
+      a: 0.15 + Math.random() * 0.5
+    }));
+  }
+}
+
+// Al hacer scroll en el celular la barra del navegador cambia la altura:
+// solo se re-mide el lienzo, el hilo NO se reinicia.
+window.addEventListener('resize', medir);
+
+function mover(x, y) { px = x; py = y; ultimoMov = performance.now(); }
+window.addEventListener('mousemove', e => mover(e.clientX, e.clientY));
+window.addEventListener('touchstart', e => mover(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+window.addEventListener('touchmove',  e => mover(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+
+function trazarHilo() {
+  ctx.beginPath();
+  ctx.moveTo(puntos[0].x, puntos[0].y);
+  for (let i = 1; i < TOTAL - 1; i++) {
+    const a = puntos[i], b = puntos[i + 1];
+    ctx.quadraticCurveTo(a.x, a.y, (a.x + b.x) / 2, (a.y + b.y) / 2);
+  }
+  const u = puntos[TOTAL - 1];
+  ctx.lineTo(u.x, u.y);
+}
+
+function animar() {
+  ctx.clearRect(0, 0, w, h);
+  const ahora = performance.now();
+
+  // Si nadie toca la pantalla, el hilo se pasea solo (así se ve vivo en el celular)
+  let tx = px, ty = py;
+  if (!calmado && ahora - ultimoMov > 2500) {
+    tx = w / 2 + Math.sin(ahora / 1300) * w * 0.32;
+    ty = h / 2 + Math.sin(ahora / 1900) * h * 0.22 + Math.cos(ahora / 700) * 10;
   }
 
-  /* --- FISICA DEL HILO --- */
-  const canvas = document.getElementById('canvasHilo');
-  const ctx = canvas.getContext('2d');
-  let points = [];
-  const totalPoints = 30;
-
-  function initCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    points = [];
-    for (let i = 0; i < totalPoints; i++) {
-      points.push({ x: canvas.width / 2, y: canvas.height / 2 });
-    }
+  // Física: la cabeza persigue el puntero y cada punto persigue al anterior
+  puntos[0].x += (tx - puntos[0].x) * 0.15;
+  puntos[0].y += (ty - puntos[0].y) * 0.15;
+  for (let i = 1; i < TOTAL; i++) {
+    puntos[i].x += (puntos[i - 1].x - puntos[i].x) * 0.25;
+    puntos[i].y += (puntos[i - 1].y - puntos[i].y) * 0.25 + 0.8; // gravedad
   }
 
-  let mouseX = window.innerWidth / 2;
-  let mouseY = window.innerHeight / 2;
-
-  window.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY; });
-  window.addEventListener('touchstart', (e) => { 
-    mouseX = e.touches[0].clientX; 
-    mouseY = e.touches[0].clientY;
-    iniciarAudio(); 
-  });
-  window.addEventListener('touchmove', (e) => {
-    mouseX = e.touches[0].clientX;
-    mouseY = e.touches[0].clientY;
-  });
-
-  function animateHilo() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    points[0].x += (mouseX - points[0].x) * 0.15;
-    points[0].y += (mouseY - points[0].y) * 0.15;
-    for (let i = 1; i < totalPoints; i++) {
-      points[i].x += (points[i - 1].x - points[i].x) * 0.25;
-      points[i].y += (points[i - 1].y - points[i].y) * 0.25 + 0.8; 
-    }
+  // Brasas flotando
+  for (const b of brasas) {
+    b.y -= b.vy;
+    b.x += b.vx;
+    if (b.y < -5) { b.y = h + 5; b.x = Math.random() * w; }
+    ctx.fillStyle = `rgba(255,70,70,${b.a})`;
     ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].y);
-    for (let i = 1; i < totalPoints; i++) { ctx.lineTo(points[i].x, points[i].y); }
-    ctx.strokeStyle = '#ff0000';
-    ctx.lineWidth = 3;
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = 'red';
-    ctx.stroke();
-    requestAnimationFrame(animateHilo);
+    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+    ctx.fill();
   }
 
-  /* --- OBSERVER --- */
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        if (entry.target.querySelector('#menuFinal')) {
-          document.getElementById('menuFinal').style.display = 'flex';
-          document.getElementById('guia').style.display = 'none';
-          verificarCumpleanos();
-        }
-      }
-    });
-  }, { threshold: 0.3 });
-
-  document.querySelectorAll('.content').forEach(c => observer.observe(c));
-
-  function verificarCumpleanos() {
-    const hoy = new Date();
-    // Definimos el 8 de julio de 2026 (Mes 6 porque Enero es 0)
-    const fechaSorpresa = new Date(2026, 6, 8); 
-
-    // Si la fecha actual es mayor o igual a la fecha de la sorpresa, mostramos el botón
-    if (hoy >= fechaSorpresa) {
-      document.getElementById('btnUniverso').style.display = 'inline-block';
-    }
+  // Hilo: degradado de la cabeza a la cola, con brillo (sin shadowBlur, que es lento)
+  const p0 = puntos[0], pn = puntos[TOTAL - 1];
+  let trazo = '#ff2a2a';
+  if (Math.hypot(p0.x - pn.x, p0.y - pn.y) > 2) {
+    trazo = ctx.createLinearGradient(p0.x, p0.y, pn.x, pn.y);
+    trazo.addColorStop(0, '#ff4040');
+    trazo.addColorStop(1, 'rgba(255,0,0,0.18)');
   }
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = trazo;
 
-  window.addEventListener('resize', initCanvas);
-  initCanvas();
-  animateHilo();
+  ctx.globalAlpha = 0.22;          // resplandor
+  ctx.lineWidth = 10;
+  trazarHilo();
+  ctx.stroke();
+
+  ctx.globalAlpha = 1;             // núcleo
+  ctx.lineWidth = 3;
+  trazarHilo();
+  ctx.stroke();
+
+  // Punta luminosa
+  const g = ctx.createRadialGradient(p0.x, p0.y, 0, p0.x, p0.y, 16);
+  g.addColorStop(0, 'rgba(255,200,200,.95)');
+  g.addColorStop(0.3, 'rgba(255,60,60,.6)');
+  g.addColorStop(1, 'rgba(255,0,0,0)');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(p0.x, p0.y, 16, 0, Math.PI * 2);
+  ctx.fill();
+
+  requestAnimationFrame(animar);
+}
+
+/* =========================================================
+   3. APARICIÓN DE TARJETAS Y MENÚ FINAL
+   ========================================================= */
+function verificarCumpleanos() {
+  if (new Date() >= FECHA_SORPRESA) $('btnUniverso').hidden = false;
+}
+
+function abrirMenuFinal() {
+  const menu = $('menuFinal');
+  menu.classList.add('abierto');
+  [...menu.children].forEach((el, i) => el.style.setProperty('--i', i));
+  $('guia').style.display = 'none';
+  verificarCumpleanos();
+}
+
+const observer = new IntersectionObserver(entradas => {
+  entradas.forEach(entrada => {
+    if (!entrada.isIntersecting) return;
+    entrada.target.classList.add('visible');
+    observer.unobserve(entrada.target);
+    if (entrada.target.querySelector('#menuFinal')) abrirMenuFinal();
+  });
+}, { threshold: 0.2 });
+
+document.querySelectorAll('.content').forEach(c => observer.observe(c));
+
+/* =========================================================
+   4. BARRA DE PROGRESO
+   ========================================================= */
+let esperando = false;
+function actualizarProgreso() {
+  const max = document.documentElement.scrollHeight - window.innerHeight;
+  const p = max > 0 ? Math.min(1, window.scrollY / max) : 0;
+  $('progreso').style.transform = `scaleX(${p})`;
+  esperando = false;
+}
+window.addEventListener('scroll', () => {
+  if (!esperando) { esperando = true; requestAnimationFrame(actualizarProgreso); }
+}, { passive: true });
+
+/* =========================================================
+   5. ARRANQUE
+   ========================================================= */
+iniciar();
+animar();
+
+})();
 </script>
 </body>
 </html>
