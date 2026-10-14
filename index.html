@@ -78,15 +78,15 @@ canvas{display:block}
   max-width:calc(100vw - 128px);   /* deja libre el botón de música */
   font-size:.9rem;overflow:hidden;text-overflow:ellipsis;
 }
-/* Tiempo total: 6 casillas ordenadas en una sola fila */
+/* Tiempo total: dos líneas fijas; el tamaño de letra se ajusta al ancho del celular */
 #tiempoTotal{
   bottom:calc(12px + env(safe-area-inset-bottom));
-  display:grid;grid-template-columns:repeat(6,1fr);gap:4px;
-  width:min(94vw,440px);padding:10px 8px;border-radius:22px;white-space:normal;
+  color:var(--rosa);
+  font-size:clamp(.7rem,3.2vw,.95rem);
+  line-height:1.6;white-space:nowrap;
+  padding:8px 16px;border-radius:20px;max-width:96vw;
 }
-.unidad{display:flex;flex-direction:column;align-items:center;line-height:1.15}
-.unidad b{font:800 1.2rem var(--mono);color:#fff;text-shadow:0 0 10px rgba(255,105,180,.7)}
-.unidad small{font:700 .58rem var(--ui);color:var(--rosa);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+#tiempoTotal div{white-space:nowrap}
 
 /* =========================================================
    4. INICIO
@@ -570,12 +570,9 @@ function actualizarContadores() {
   if (d < 0)  { d += new Date(ahora.getFullYear(), ahora.getMonth(), 0).getDate(); m--; }
   if (m < 0)  { m += 12; a--; }
 
-  const unidad = (valor, etiqueta) =>
-    `<div class="unidad"><b>${valor}</b><small>${etiqueta}</small></div>`;
-
   $('tiempoTotal').innerHTML =
-    unidad(a, 'Años') + unidad(m, 'Meses') + unidad(d, 'Días') +
-    unidad(h, 'Horas') + unidad(mi, 'Min') + unidad(s, 'Seg');
+    `<div>Años: ${a} | Meses: ${m} | Días: ${d}</div>` +
+    `<div>Tiempo juntos: ${h}h ${mi}m ${s}s</div>`;
 }
 
 /* =========================================================
