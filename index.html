@@ -2,656 +2,977 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Sorpresa para ti</title>
-<style>
-  body{margin:0;background:black;overflow:hidden;font-family:'Courier New',monospace;}
-  /* Inicio */
-  #inicio{position:fixed;width:100%;height:100%;
-    background:linear-gradient(to top,#000,#330033);
-    display:flex;align-items:center;justify-content:center;
-    flex-direction:column;z-index:10;color:white; text-align: center; padding: 20px;}
-  
-  .botones-inicio { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
-  #inicio button{padding:15px 30px;font-size:1.2rem;
-    background:#ff69b4;color:white;border:none;border-radius:15px;
-    cursor:pointer;box-shadow:0 0 20px #ff69b4; font-weight: bold;}
-    
-  /* Contadores */
-  #contador{position:absolute;top:10px;left:50%;transform:translateX(-50%);
-    color:white;font-size:1.1rem;z-index:4;background:rgba(0,0,0,0.4);
-    padding:8px 20px;border-radius:10px;text-align:center;min-width:260px;display:none; white-space: nowrap;}
-  #tiempoTotal{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);
-    color:#ff69b4;font-size:1rem;z-index:11;background:rgba(0,0,0,0.4);
-    padding:8px 15px;border-radius:10px;text-align:center;white-space:pre-line;display:none; width: 90%; max-width: 400px;}
-  /* Pantalla principal */
-  .overlay{position:absolute;top:0;left:0;width:100%;height:100%;
-    z-index:2;display:none;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
-  .center-image{width:180px;height:auto;border-radius:10px;margin-bottom:20px;
-    box-shadow:0 0 20px #ff69b4;}
-  .center-message{color:#ff69b4;font-size:1.8rem;text-align:center;}
-  .btn{margin-top:15px;padding:10px 20px;font-size:1rem;background:#ff69b4;
-    color:white;border:none;border-radius:10px;cursor:pointer;
-    box-shadow:0 0 10px #ff69b4;pointer-events:auto;}
-  #listaRecuerdos{display:none;list-style:none;margin-top:15px;padding:0;
-    color:white;text-align:center;font-size:1.1rem;pointer-events:auto;}
-  .final-message{position:absolute;top:40%;left:50%;
-    transform:translate(-50%,-50%);font-size:1.5rem;color:white;
-    text-shadow:2px 2px 4px #000,-1px -1px 2px #ff69b4;
-    z-index:3;text-align:center;display:none; width: 90%;}
 
-  /* Pantallas */
-  #recuerdosScreen,#fotosScreen{display:none;position:fixed;top:0;left:0;width:100%;height:100%;
-    background:black;z-index:20;flex-direction:column;align-items:center;justify-content:center;}
-  #canvasRecuerdos,#canvasFotos{position:absolute;top:0;left:0;width:100%;height:100%;z-index:19;}
-  #recuerdosContent,#fotosContent{position:relative;z-index:21;text-align:center; padding: 20px;}
-  #recuerdosContent h2,#fotosContent h2{color:#ff69b4;font-size:1.8rem;margin-bottom:20px;}
-  #recuerdosContent ul{list-style:none;padding:0;margin-bottom:20px;color:white;font-size:1.1rem;}
-  #recuerdosContent button,#fotosContent button{padding:10px 20px;font-size:1.1rem;background:#ff69b4;
-    color:white;border:none;border-radius:12px;cursor:pointer;box-shadow:0 0 15px #ff69b4; margin: 8px 5px;}
-
-  /* Overlay foto grande */
-  #fotoGrandeOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;
-    background:rgba(0,0,0,0.8);z-index:50;align-items:center;justify-content:center;flex-direction:column;}
-  #fotoGrandeOverlay img{max-width:90%;max-height:80%;border-radius:15px;box-shadow:0 0 30px #ff69b4;}
-  #cerrarFoto{margin-top:20px;padding:10px 25px;font-size:1.2rem;background:#ff69b4;color:white;
-    border:none;border-radius:12px;cursor:pointer;box-shadow:0 0 15px #ff69b4;}
-
-  /* Confeti */
-  #confetiCanvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:100;}
-  #confetiMensaje{
-    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-    background:rgba(255,255,255,0.9);color:#ff69b4;font-size:1.5rem;font-weight:bold;
-    text-align:center;padding:20px 30px;border-radius:20px;box-shadow:0 0 30px #ff69b4;
-    z-index:101;display:none; width: 80%; max-width: 400px;
-  }
-</style>
-  
+<!-- PWA: color de barra, icono y manifest -->
 <meta name="theme-color" content="#000000">
 <link rel="icon" href="favicon.ico" type="image/x-icon">
-<!-- Esto conecta el DNI de la app -->
 <link rel="manifest" href="manifest.json">
 
-<!-- Esto enciende el motor de fondo -->
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
-  }
-</script>
-  
+<style>
+/* =========================================================
+   1. VARIABLES Y BASE
+   ========================================================= */
+:root{
+  --rosa:#ff69b4;
+  --rosa-fuerte:#ff2d95;
+  --magenta:#ff1493;
+  --rojo:#ff2a4d;
+  --vino:#330033;
+  --cristal-1:rgba(255,255,255,.20);
+  --cristal-2:rgba(255,255,255,.06);
+  --borde:rgba(255,255,255,.28);
+  --ui:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  --mono:'Courier New',monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none !important}
+html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:var(--mono);color:#fff}
+canvas{display:block}
+
+/* =========================================================
+   2. PANTALLAS (una activa a la vez, con fundido)
+   ========================================================= */
+.pantalla{
+  position:fixed;inset:0;z-index:10;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
+  background:#000;
+  opacity:0;visibility:hidden;
+  transition:opacity .5s ease,visibility .5s ease;
+}
+.pantalla.activa{opacity:1;visibility:visible}
+.pantalla > canvas.fondo{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+
+/* =========================================================
+   3. BOTONES DE CRISTAL
+   ========================================================= */
+.botones{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:16px}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:12px 22px;border-radius:16px;
+  font:700 1rem var(--ui);color:#fff;cursor:pointer;
+  background:linear-gradient(135deg,var(--cristal-1),var(--cristal-2));
+  border:1px solid var(--borde);
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+  box-shadow:0 8px 24px rgba(255,105,180,.25),inset 0 1px 0 rgba(255,255,255,.35);
+  transition:transform .15s ease,box-shadow .2s ease,filter .2s ease;
+}
+.btn:hover{transform:translateY(-2px);filter:brightness(1.12)}
+.btn:active{transform:scale(.97)}
+.btn-rosa{background:linear-gradient(135deg,#ff7ec2,var(--rosa-fuerte));border-color:rgba(255,255,255,.6);box-shadow:0 0 24px rgba(255,105,180,.6),inset 0 1px 0 rgba(255,255,255,.5)}
+.btn-rojo{background:linear-gradient(135deg,#ff4a68,#b30018);border-color:rgba(255,255,255,.5);box-shadow:0 0 24px rgba(255,0,40,.55),inset 0 1px 0 rgba(255,255,255,.4)}
+.btn-magenta{background:linear-gradient(135deg,var(--magenta),#c2007a);border-color:rgba(255,255,255,.55);box-shadow:0 0 28px rgba(255,20,147,.65),inset 0 1px 0 rgba(255,255,255,.4)}
+
+/* Píldoras de cristal (contadores) */
+.pildora{
+  position:absolute;left:50%;transform:translateX(-50%);z-index:3;
+  padding:8px 18px;border-radius:999px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.22);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  font-size:1rem;white-space:nowrap;text-align:center;
+}
+#contador{top:calc(14px + env(safe-area-inset-top))}
+#tiempoTotal{
+  bottom:calc(14px + env(safe-area-inset-bottom));
+  color:var(--rosa);font-size:.95rem;white-space:pre-line;
+  border-radius:20px;max-width:92vw;line-height:1.5;
+}
+
+/* =========================================================
+   4. INICIO
+   ========================================================= */
+#pantallaInicio{background:radial-gradient(circle at 50% 120%,#8a0b66 0%,var(--vino) 45%,#0a000a 100%)}
+#corazonesFondo{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.corazon-flota{
+  position:absolute;bottom:-40px;color:var(--rosa);opacity:0;
+  animation:subir linear infinite;
+}
+@keyframes subir{
+  0%{transform:translateY(0) rotate(0);opacity:0}
+  10%{opacity:.55}
+  100%{transform:translateY(-115vh) rotate(25deg);opacity:0}
+}
+.tarjeta-inicio{
+  position:relative;z-index:2;text-align:center;
+  width:min(92vw,460px);padding:34px 24px 30px;border-radius:30px;
+  background:linear-gradient(135deg,var(--cristal-1),var(--cristal-2));
+  border:1px solid var(--borde);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  box-shadow:0 20px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.4);
+}
+.tarjeta-inicio h1{
+  margin:0 0 6px;font:800 1.6rem/1.25 var(--ui);
+  text-shadow:0 0 18px rgba(255,105,180,.8);
+}
+.tarjeta-inicio p{margin:0;color:rgba(255,255,255,.7);font:500 .95rem var(--ui)}
+
+/* =========================================================
+   5. PANTALLA PRINCIPAL
+   ========================================================= */
+#pantallaPrincipal .centro{
+  position:relative;z-index:2;text-align:center;
+  display:flex;flex-direction:column;align-items:center;
+  pointer-events:none;
+}
+#pantallaPrincipal .centro .btn{pointer-events:auto}
+.foto-central{
+  width:min(46vw,200px);height:auto;border-radius:22px;
+  border:2px solid rgba(255,255,255,.55);
+  box-shadow:0 0 30px var(--rosa),0 0 70px rgba(255,105,180,.35);
+  animation:flotar 5s ease-in-out infinite;
+}
+@keyframes flotar{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.te-amo{
+  margin:18px 0 2px;font-size:2rem;font-weight:700;color:var(--rosa);
+  text-shadow:0 0 18px rgba(255,105,180,.9);
+  animation:latido 2.4s ease-in-out infinite;
+}
+@keyframes latido{
+  0%,100%{transform:scale(1)}14%{transform:scale(1.1)}28%{transform:scale(1)}42%{transform:scale(1.07)}70%{transform:scale(1)}
+}
+#mensajeFinal{
+  margin:22px 0 0;max-width:min(88vw,420px);
+  font:600 1.15rem/1.4 var(--ui);color:#fff;
+  text-shadow:2px 2px 4px #000,-1px -1px 2px var(--rosa);
+  opacity:0;transform:translateY(10px);
+  transition:opacity 1s ease,transform 1s ease;
+}
+#mensajeFinal.visible{opacity:1;transform:none}
+
+/* =========================================================
+   6. PANEL DE CRISTAL (recuerdos)
+   ========================================================= */
+.panel{
+  position:relative;z-index:2;text-align:center;
+  width:min(92vw,520px);max-height:88dvh;max-height:88vh;overflow:auto;
+  padding:26px 20px;border-radius:30px;
+  background:linear-gradient(135deg,rgba(255,255,255,.14),rgba(255,255,255,.04));
+  border:1px solid var(--borde);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  box-shadow:0 20px 60px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.35);
+}
+.panel h2{margin:0 0 16px;font:800 1.7rem var(--ui);color:var(--rosa);text-shadow:0 0 16px rgba(255,105,180,.8)}
+.linea-tiempo{list-style:none;margin:0 0 6px;padding:0;display:flex;flex-direction:column;gap:10px;text-align:left}
+.linea-tiempo li{
+  padding:12px 14px;border-radius:16px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
+  border-left:4px solid var(--rosa);
+  font:500 .98rem/1.4 var(--ui);
+}
+.linea-tiempo .fecha{display:block;font-weight:800;color:var(--rosa);font-size:.82rem;letter-spacing:.04em;text-transform:uppercase;margin-bottom:2px}
+
+/* =========================================================
+   7. FOTOS
+   ========================================================= */
+.panel-fotos{
+  position:absolute;inset:0;z-index:2;
+  display:flex;flex-direction:column;justify-content:space-between;align-items:center;
+  padding:calc(22px + env(safe-area-inset-top)) 16px calc(22px + env(safe-area-inset-bottom));
+  pointer-events:none;text-align:center;
+}
+.panel-fotos .titulo-fotos{
+  padding:8px 22px;border-radius:999px;
+  background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.2);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+}
+.panel-fotos h2{margin:0;font:800 1.5rem var(--ui);color:var(--rosa);text-shadow:0 0 14px rgba(255,105,180,.8)}
+.panel-fotos small{color:rgba(255,255,255,.7);font:500 .8rem var(--ui)}
+.panel-fotos .btn{pointer-events:auto}
+
+/* =========================================================
+   8. JUEGO DEL HILO ROJO
+   ========================================================= */
+#pantallaHilo{z-index:12;text-align:center;background:radial-gradient(circle at 50% 0,#2a0008 0%,#000 60%)}
+#pantallaHilo h2{margin:0 0 4px;font:800 1.35rem var(--ui);color:var(--rojo);text-shadow:0 0 14px var(--rojo)}
+#pantallaHilo p{margin:0 0 12px;font:500 .9rem var(--ui);color:rgba(255,255,255,.8)}
+#canvasHilo{
+  width:min(90vw,340px);height:auto;aspect-ratio:3/4;touch-action:none;
+  border:2px solid var(--rojo);border-radius:18px;background:#050505;
+  box-shadow:0 0 26px rgba(255,0,40,.6);
+}
+
+/* =========================================================
+   9. MODALES (foto grande y carta)
+   ========================================================= */
+.modal{
+  position:fixed;inset:0;z-index:50;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:20px;background:rgba(0,0,0,.82);
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  opacity:0;visibility:hidden;transition:opacity .3s ease,visibility .3s ease;
+}
+.modal.abierto{opacity:1;visibility:visible}
+#fotoGrande{max-width:92%;max-height:78vh;border-radius:18px;box-shadow:0 0 36px var(--rosa);transform:scale(.94);transition:transform .3s ease}
+.modal.abierto #fotoGrande{transform:scale(1)}
+.carta{
+  max-width:min(90vw,440px);padding:28px 22px;text-align:center;border-radius:26px;
+  background:linear-gradient(160deg,#ffffff,#ffe3f1);color:#d6247f;
+  box-shadow:0 0 44px rgba(255,105,180,.75);
+  transform:scale(.94);transition:transform .3s ease;
+}
+.modal.abierto .carta{transform:scale(1)}
+.carta h2{margin:0 0 10px;font:800 1.5rem var(--ui)}
+.carta p{margin:0;font:500 1.02rem/1.55 var(--ui)}
+
+/* =========================================================
+   10. CONFETI, MENSAJE Y MÚSICA
+   ========================================================= */
+#confetiCanvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:100}
+#confetiMensaje{
+  position:fixed;top:50%;left:50%;z-index:101;
+  width:80%;max-width:400px;padding:22px 28px;text-align:center;
+  font:800 1.5rem/1.3 var(--ui);color:var(--rosa-fuerte);
+  background:rgba(255,255,255,.92);border-radius:24px;box-shadow:0 0 40px var(--rosa);
+  transform:translate(-50%,-50%) scale(.9);opacity:0;visibility:hidden;
+  transition:opacity .4s ease,transform .4s ease,visibility .4s ease;
+}
+#confetiMensaje.visible{opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1)}
+#btnMusica{
+  position:fixed;z-index:60;
+  top:calc(10px + env(safe-area-inset-top));right:12px;
+  width:42px;height:42px;border-radius:50%;font-size:1.1rem;cursor:pointer;
+  color:#fff;background:rgba(255,255,255,.14);border:1px solid var(--borde);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+}
+
+/* Respeta a quien prefiere menos movimiento */
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important;transition-duration:.01ms !important}
+}
+</style>
 </head>
 <body>
 
-<div id="inicio">
-  <h1>🎁 Tengo algo especial para ti</h1>
-  <div class="botones-inicio">
-    <button onclick="elegirDispositivo('celular')">📱 Abrir en Celular</button>
-    <button onclick="elegirDispositivo('pc')">💻 Abrir en PC</button>
+<!-- ============ INICIO ============ -->
+<section class="pantalla activa" id="pantallaInicio">
+  <div id="corazonesFondo" aria-hidden="true"></div>
+  <div class="tarjeta-inicio">
+    <h1>🎁 Tengo algo especial para ti</h1>
+    <p>Elige dónde lo vas a abrir</p>
+    <div class="botones">
+      <button class="btn btn-rosa" data-dispositivo="celular">📱 Abrir en Celular</button>
+      <button class="btn btn-rosa" data-dispositivo="pc">💻 Abrir en PC</button>
+    </div>
   </div>
-</div>
+</section>
 
-<div id="contador"></div>
-<div id="tiempoTotal"></div>
-<div class="overlay" id="contenido">
-  <img src="imagen.jpg" alt="Foto juntos" class="center-image" />
-  <div class="center-message">TE AMO ❤️</div>
-  <button id="btnRecuerdos" class="btn">💌 Nuestros recuerdos</button>
-  <button id="btnFotos" class="btn">📷 Nuestras fotos</button>
-  <ul id="listaRecuerdos">
-    <li>15 de julio 2023 – Nuestro reencuentro y detalle 💖</li>
-    <li>21 de julio 2023 – Primera salida para volver a conocernos ✨</li>
-  </ul>
-</div>
-<div class="final-message" id="finalMessage">Gracias por dejarme formar parte de tu vida❤️</div>
+<!-- ============ PRINCIPAL ============ -->
+<section class="pantalla" id="pantallaPrincipal">
+  <canvas class="fondo" id="canvasPrincipal"></canvas>
+  <div id="contador" class="pildora"></div>
 
-<div id="recuerdosScreen">
-  <canvas id="canvasRecuerdos"></canvas>
-  <div id="recuerdosContent">
+  <main class="centro">
+    <img src="imagen.jpg" alt="Foto juntos" class="foto-central">
+    <div class="te-amo">TE AMO ❤️</div>
+    <div class="botones">
+      <button class="btn btn-rosa" id="btnRecuerdos">💌 Nuestros recuerdos</button>
+      <button class="btn btn-rosa" id="btnFotos">📷 Nuestras fotos</button>
+    </div>
+    <p id="mensajeFinal">Gracias por dejarme formar parte de tu vida❤️</p>
+  </main>
+
+  <div id="tiempoTotal" class="pildora"></div>
+</section>
+
+<!-- ============ RECUERDOS ============ -->
+<section class="pantalla" id="pantallaRecuerdos">
+  <canvas class="fondo" id="canvasRecuerdos"></canvas>
+  <div class="panel">
     <h2>Nuestros Recuerdos</h2>
-    <ul>
-      <li>15 de julio 2023 – Nuestro reencuentro y detalle 💖</li>
-      <li>21 de julio 2023 – Primera salida para volver a conocernos ✨</li>
-    </ul>
-    <div>
-      <button id="btnRegresarRecuerdos">⬅️ Regresar</button>
-      <button id="btnJuegos">🎮 Más Juegos</button>
-      <button id="btnJuegoHilo" style="background:#ff0000; box-shadow:0 0 15px #ff0000;">🧵 El Hilo Rojo</button>
+    <ul class="linea-tiempo" id="listaRecuerdos"></ul>
+    <div class="botones">
+      <button class="btn" id="btnRegresarRecuerdos">⬅️ Regresar</button>
+      <button class="btn btn-rosa" id="btnJuegos">🎮 Más Juegos</button>
+      <button class="btn btn-rojo" id="btnJuegoHilo">🧵 El Hilo Rojo</button>
     </div>
-    <div style="margin-top: 10px;">
-      <button id="btnCarta" style="display:none;">💌 Carta secreta</button>
-      <button id="btnNivelEspecial" style="display:none; background:#ff1493; box-shadow:0 0 25px #ff1493;">🎁 NIVEL ESPECIAL 🎂</button>
+    <div class="botones">
+      <button class="btn btn-rosa" id="btnCarta" hidden>💌 Carta secreta</button>
+      <button class="btn btn-magenta" id="btnNivelEspecial" hidden>🎁 NIVEL ESPECIAL 🎂</button>
     </div>
   </div>
-</div>
+</section>
 
-  <div id="hiloGameScreen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:35; flex-direction:column; align-items:center; justify-content:center;">
-    <h2 style="color:#ff0000; text-shadow:0 0 10px #ff0000; text-align:center;">🧵 Libera el Hilo del Destino ❤️</h2>
-    <p style="color:white; font-size:0.9rem; margin-bottom:10px;">Toca los nudos para desenredar nuestra historia</p>
-    
-    <canvas id="hiloGameCanvas" width="300" height="400" style="border:2px solid #ff0000; border-radius:15px; box-shadow:0 0 20px #ff0000; max-width:90%; background:#050505;"></canvas>
-    
-    <button id="btnRegresarHiloGame" style="margin-top:20px; padding:10px 20px; background:#333; color:white; border:none; border-radius:10px; cursor:pointer;">⬅️ Regresar</button>
-</div>
+<!-- ============ FOTOS ============ -->
+<section class="pantalla" id="pantallaFotos">
+  <canvas class="fondo" id="canvasFotos"></canvas>
+  <div class="panel-fotos">
+    <div class="titulo-fotos">
+      <h2>Nuestras Fotos</h2>
+      <small>Toca una foto para verla grande</small>
+    </div>
+    <button class="btn" id="btnRegresarFotos">⬅️ Regresar</button>
+  </div>
+</section>
 
-<div id="cartaModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
-  background:rgba(0,0,0,0.8);z-index:40;flex-direction:column;align-items:center;justify-content:center;
-  text-align:center;padding:20px;">
-  <div style="background:white;color:#ff69b4;padding:30px 20px;border-radius:20px;
-      box-shadow:0 0 30px #ff69b4;max-width:90%;">
+<!-- ============ JUEGO DEL HILO ROJO ============ -->
+<section class="pantalla" id="pantallaHilo">
+  <h2>🧵 Libera el Hilo del Destino ❤️</h2>
+  <p>Toca los nudos para desenredar nuestra historia</p>
+  <canvas id="canvasHilo"></canvas>
+  <div class="botones">
+    <button class="btn btn-rojo" id="btnViajarHilo" hidden>🧵 Seguir el Destino</button>
+    <button class="btn" id="btnRegresarHilo">⬅️ Regresar</button>
+  </div>
+</section>
+
+<!-- ============ MODALES ============ -->
+<div class="modal" id="modalCarta">
+  <div class="carta">
     <h2>💌 Carta para ti 💖</h2>
-    <p style="font-size:1rem;">
+    <p>
       Mi amor, cada momento contigo hace que mi corazón lata más fuerte.
       Gracias por cada sonrisa, cada mirada y cada instante que compartimos.
       Eres mi razón de ser y siempre lo serás. 💖
     </p>
-    <button id="cerrarCarta" style="margin-top:20px;padding:10px 20px;background:#ff69b4;
-      color:white;border:none;border-radius:10px;cursor:pointer;">Cerrar</button>
+    <div class="botones"><button class="btn btn-rosa" id="cerrarCarta">Cerrar</button></div>
   </div>
 </div>
 
-<div id="fotosScreen">
-  <canvas id="canvasFotos"></canvas>
-  <div id="fotosContent">
-    <h2>Nuestras Fotos</h2>
-    <button id="btnRegresarFotos">⬅️ Regresar</button>
-  </div>
-</div>
-
-<div id="fotoGrandeOverlay">
+<div class="modal" id="modalFoto">
   <img id="fotoGrande" src="" alt="Foto grande">
-  <button id="cerrarFoto">Cerrar</button>
+  <div class="botones"><button class="btn btn-rosa" id="cerrarFoto">Cerrar</button></div>
 </div>
 
+<!-- ============ EXTRAS ============ -->
 <canvas id="confetiCanvas"></canvas>
 <div id="confetiMensaje"></div>
+<button id="btnMusica" aria-label="Música" hidden>🔊</button>
 
 <audio id="musica" loop>
   <source src="musica.mp3" type="audio/mpeg">
 </audio>
-<canvas id="canvas"></canvas>
 
 <script>
-/* --- VARIABLES GLOBALES DE CONTROL --- */
-let lluviaPrincipalIniciada = false;
-let idAnimacionConfeti = null;
-let idAnimacionFotos = null; 
+(() => {
+'use strict';
 
-/* --- FUNCIÓN PARA GUARDAR LA ELECCIÓN --- */
-function elegirDispositivo(tipo) {
-  localStorage.setItem('dispositivoElegido', tipo);
-  iniciarSorpresa();
+/* =========================================================
+   1. CONFIGURACIÓN (todo lo que quieras cambiar está aquí)
+   ========================================================= */
+const CONFIG = {
+  inicioRelacion: new Date('2023-08-11T20:00:00'),
+  totalFotos: 40,
+  carpetaFotos: 'fotos/',
+  paginas: {
+    juegos: 'juegos.html',
+    cumple: 'cumpleanos_solar.html',
+    hilo:   'hilo_rojo.html'
+  },
+  // Carácter con el que se dibuja el corazón. Pon 'TE AMO' si prefieres texto.
+  particulaCorazon: '♥'
+};
+
+const RECUERDOS = [
+  { fecha: '15 de julio 2023', texto: 'Nuestro reencuentro y detalle 💖' },
+  { fecha: '21 de julio 2023', texto: 'Primera salida para volver a conocernos ✨' }
+];
+
+// mes: 0 = enero ... 11 = diciembre | mes null = todos los meses
+// Si coinciden varias, gana la última de la lista.
+const ESPECIALES = [
+  { dia: 11, mes: null, msg: 'Feliz otro mes más juntos 💖' },
+  { dia: 11, mes: 7,    msg: '🎉 Feliz aniversario 💖, otro año mas junto a ti💖' },
+  { dia: 8,  mes: 6,    msg: '🎂 Feliz cumpleaños amor 💖' },
+  { dia: 10, mes: 1,    msg: '🎂 Feliz cumpleaños 🎉' }
+];
+
+const $ = id => document.getElementById(id);
+let LITE = false; // true en celular: menos partículas para ir más fluido
+
+/* =========================================================
+   2. BUCLES DE ANIMACIÓN (se pausan solos si la pestaña se oculta)
+   ========================================================= */
+const bucles = new Set();
+
+function crearBucle(fn) {
+  const b = { quiere: false, id: null };
+  b.tick = () => {
+    b.id = null;
+    if (!b.quiere) return;
+    fn();
+    if (b.quiere) b.id = requestAnimationFrame(b.tick);
+  };
+  b.start = () => {
+    b.quiere = true;
+    if (b.id === null && !document.hidden) b.id = requestAnimationFrame(b.tick);
+  };
+  b.stop = () => {
+    b.quiere = false;
+    if (b.id !== null) { cancelAnimationFrame(b.id); b.id = null; }
+  };
+  bucles.add(b);
+  return b;
 }
 
-/* --- Funciones Principales --- */
-function iniciarSorpresa(){
-  document.getElementById('inicio').style.display='none';
-  document.getElementById('contenido').style.display='flex';
-  document.getElementById('contador').style.display='block';
-  document.getElementById('tiempoTotal').style.display='block';
-  document.getElementById('musica').play();
-  calcularDiasJuntos();
-  iniciarTiempoTotal();
-  if(!lluviaPrincipalIniciada){
-    iniciarAnimacion();
-    lluviaPrincipalIniciada=true;
-  }
-  checkFechasEspeciales(true);
-}
-
-function calcularDiasJuntos(){
-  const inicio=new Date("2023-08-11T20:00:00");
-  const hoy=new Date();
-  const diff=hoy-inicio;
-  const dias=Math.floor(diff/(1000*60*60*24));
-  document.getElementById("contador").innerText=`Llevamos ${dias} días juntos💖`;
-}
-
-function iniciarTiempoTotal(){
-  const inicio=new Date("2023-08-11T20:00:00");
-  function actualizar(){
-    const ahora=new Date();
-    let años=ahora.getFullYear()-inicio.getFullYear();
-    let meses=ahora.getMonth()-inicio.getMonth();
-    let dias=ahora.getDate()-inicio.getDate();
-    if(dias<0){meses--;dias+=new Date(ahora.getFullYear(),ahora.getMonth(),0).getDate();}
-    if(meses<0){años--;meses+=12;}
-    const diffMs=ahora-inicio;
-    const horas=Math.floor((diffMs/(1000*60*60))%24);
-    const minutos=Math.floor((diffMs/(1000*60))%60);
-    const segundos=Math.floor((diffMs/1000)%60);
-    document.getElementById("tiempoTotal").innerText=
-      `Años: ${años} | Meses: ${meses} | Días: ${dias}\n`+
-      `Tiempo juntos: ${horas}h ${minutos}m ${segundos}s`;
-  }
-  actualizar();
-  setInterval(actualizar,1000);
-}
-
-function iniciarAnimacion(){
-  const canvas=document.getElementById('canvas');
-  const ctx=canvas.getContext('2d');
-  canvas.width=window.innerWidth;
-  canvas.height=window.innerHeight;
-  ctx.font="16px monospace";
-  const drops=new Array(Math.floor(canvas.width/32)).fill(1);
-  function drawRain(){
-    ctx.fillStyle="rgba(0,0,0,0.1)";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle="#ff69b4";
-    drops.forEach((drop,i)=>{
-      const x=i*32;
-      const y=drop*12;
-      ctx.fillText("TE AMO",x,y);
-      if(y>canvas.height && Math.random()>0.98) drops[i]=0;
-      drops[i]+=0.7;
-    });
-    requestAnimationFrame(drawRain);
-  }
-  drawRain();
-  lanzarExplosionYFrase(ctx,canvas);
-  window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
-}
-
-function lanzarExplosionYFrase(ctx,canvas){
-  setTimeout(()=>{
-    const particles=[];
-    for(let t=0;t<Math.PI*2;t+=0.02){
-      const x=16*Math.pow(Math.sin(t),3);
-      const y=13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t);
-      const angle=Math.atan2(y,x);
-      const speed=2+Math.random()*2;
-      particles.push({
-        x:canvas.width/2,
-        y:canvas.height/2,
-        vx:Math.cos(angle)*speed*10,
-        vy:-Math.sin(angle)*speed*10,
-        alpha:1
-      });
+document.addEventListener('visibilitychange', () => {
+  for (const b of bucles) {
+    if (document.hidden) {
+      if (b.id !== null) { cancelAnimationFrame(b.id); b.id = null; }
+    } else if (b.quiere && b.id === null) {
+      b.id = requestAnimationFrame(b.tick);
     }
-    function animateHeart(){
-      ctx.fillStyle="rgba(0,0,0,0.2)";
-      ctx.fillRect(0,0,canvas.width,canvas.height);
-      particles.forEach(p=>{
-        ctx.fillStyle=`rgba(255,105,180,${p.alpha})`;
-        ctx.fillText("TE AMO",p.x,p.y);
-        p.x+=p.vx;
-        p.y+=p.vy;
-        p.alpha-=0.01;
-      });
-      if(particles[0].alpha>0){requestAnimationFrame(animateHeart);}
-      else{document.getElementById('finalMessage').style.display='block';}
-    }
-    animateHeart();
-  },1000);
-}
-
-/* --- Control de Pantallas y Botones --- */
-document.addEventListener("DOMContentLoaded", () => {
-  const btnRecuerdos=document.getElementById("btnRecuerdos");
-  const btnFotos=document.getElementById("btnFotos");
-  const btnRegresarRecuerdos=document.getElementById("btnRegresarRecuerdos");
-  const btnRegresarFotos=document.getElementById("btnRegresarFotos");
-  
-  const btnJuegos = document.getElementById("btnJuegos");
-  const btnCarta = document.getElementById("btnCarta");
-  const btnNivelEspecial = document.getElementById("btnNivelEspecial"); 
-
-  const cartaModal = document.getElementById("cartaModal");
-
-  const hoy = new Date();
-  
-  const esAniversario = (hoy.getDate() === 11 && hoy.getMonth() === 7); 
-  if (esAniversario) {
-    btnCarta.style.display = "inline-block"; 
-  } else {
-    btnCarta.style.display = "none";
   }
-
- const esCumpleanos = (hoy.getDate() === 8 && hoy.getMonth() === 6);
-  if (esCumpleanos) {
-    btnNivelEspecial.style.display = "inline-block";
-  } else {
-    btnNivelEspecial.style.display = "none";
-  }
-
-  btnRecuerdos.addEventListener("click",()=>{
-    mostrarPantalla('recuerdosScreen');
-    iniciarLluviaRecuerdos();
-  });
-
-  btnFotos.addEventListener("click",()=>{
-    mostrarPantalla('fotosScreen');
-    detenerConfeti(); 
-    iniciarLluviaFotos();
-  });
-
-  btnRegresarRecuerdos.addEventListener("click",()=>{regresarPantalla();});
-  
-  btnNivelEspecial.addEventListener("click", () => {
-    window.location.href = "cumpleanos_solar.html";
-  });
-  
-  btnRegresarFotos.addEventListener("click",()=>{
-    detenerLluviaFotos();
-    regresarPantalla();
-  });
-
-  // ESTA ES LA REDIRECCIÓN A LA PÁGINA DE JUEGOS
-  btnJuegos.addEventListener("click", () => {
-    window.location.href = "juegos.html";
-  });
-
-  btnCarta.addEventListener("click", () => {
-    cartaModal.style.display = 'flex';
-  });
-  
-  document.getElementById("cerrarCarta").addEventListener("click", () => {
-    cartaModal.style.display = 'none';
-  });
 });
 
-function mostrarPantalla(id){
-  document.getElementById('contenido').style.display='none';
-  document.getElementById('contador').style.display='none';
-  document.getElementById('tiempoTotal').style.display='none';
-  document.getElementById('finalMessage').style.display='none';
-  document.getElementById(id).style.display='flex';
-}
-
-function regresarPantalla(){
-  document.getElementById('recuerdosScreen').style.display='none';
-  document.getElementById('fotosScreen').style.display='none';
-  document.getElementById('contenido').style.display='flex';
-  document.getElementById('contador').style.display='block';
-  document.getElementById('tiempoTotal').style.display='block';
-  document.getElementById('finalMessage').style.display='none';
-  const canvas=document.getElementById('canvas');
-  const ctx=canvas.getContext('2d');
-  lanzarExplosionYFrase(ctx,canvas);
-  checkFechasEspeciales(false);
-}
-
-function iniciarLluviaRecuerdos(){
-  const canvas=document.getElementById('canvasRecuerdos');
-  const ctx=canvas.getContext('2d');
-  canvas.width=window.innerWidth;
-  canvas.height=window.innerHeight;
-  ctx.font="16px monospace";
-  const drops=new Array(Math.floor(canvas.width/32)).fill(1);
-  function draw(){
-    ctx.fillStyle="rgba(0,0,0,0.1)";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle="#ff69b4";
-    drops.forEach((drop,i)=>{
-      const x=i*32;
-      const y=drop*12;
-      ctx.fillText("TE AMO",x,y);
-      if(y>canvas.height && Math.random()>0.98) drops[i]=0;
-      drops[i]+=0.7;
-    });
-    requestAnimationFrame(draw);
-  }
-  draw();
-}
-
-function detenerLluviaFotos(){
-  if(idAnimacionFotos){
-    cancelAnimationFrame(idAnimacionFotos);
-    idAnimacionFotos = null;
-  }
-  const canvas = document.getElementById('canvasFotos');
+/* =========================================================
+   3. LLUVIA DE "TE AMO" (reutilizable) + CORAZÓN
+   ========================================================= */
+function crearLluvia(canvas, alDibujar) {
   const ctx = canvas.getContext('2d');
-  ctx.clearRect(0,0,canvas.width, canvas.height);
-}
+  let w = 0, h = 0, cols = [];
 
-function iniciarLluviaFotos(){
-  detenerLluviaFotos();
-  const canvas=document.getElementById('canvasFotos');
-  const ctx=canvas.getContext('2d');
-  canvas.width=window.innerWidth;
-  canvas.height=window.innerHeight;
-
-  const totalFotos=40;
-  const fotos=[];
-  for(let i=1;i<=totalFotos;i++){
-    const img=new Image();
-    img.src=`fotos/foto${i}.jpg`;
-    const f={
-      img:img,
-      x:Math.random()*canvas.width,
-      y:Math.random()*canvas.height,
-      speed:1+Math.random()*1.5,
-      size:50+Math.random()*50
-    };
-    fotos.push(f);
-    img.addEventListener('click',()=>mostrarFotoGrande(img.src));
+  function preparar() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+    const paso = LITE ? 76 : 58;
+    cols = Array.from({ length: Math.ceil(w / paso) }, (_, i) => ({
+      x: i * paso,
+      y: -Math.random() * h,
+      v: 0.55 + Math.random() * 0.6
+    }));
   }
 
-  canvas.addEventListener('click',function(e){
-    const rect=canvas.getBoundingClientRect();
-    const mx=e.clientX-rect.left;
-    const my=e.clientY-rect.top;
-    fotos.forEach(f=>{
-      if(mx>f.x && mx<f.x+f.size && my>f.y && my<f.y+f.size){
-        mostrarFotoGrande(f.img.src);
-      }
-    });
+  const bucle = crearBucle(() => {
+    ctx.font = "16px 'Courier New', monospace";
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = 'rgba(0,0,0,0.1)';
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#ff69b4';
+    for (const c of cols) {
+      ctx.fillText('TE AMO', c.x, c.y);
+      c.y += 8.4 * c.v;
+      if (c.y > h && Math.random() > 0.98) c.y = 0;
+    }
+    if (alDibujar) alDibujar(ctx, w, h);
   });
 
-  function draw(){
-    ctx.fillStyle="rgba(0,0,0,0.1)";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-    fotos.forEach(f=>{
-      if(f.img.complete){ ctx.drawImage(f.img,f.x,f.y,f.size,f.size); }
-      f.y+=f.speed;
-      if(f.y>canvas.height){
-        f.y=-f.size;
-        f.x=Math.random()*canvas.width;
-      }
+  return {
+    iniciar() { if (!bucle.quiere) { preparar(); bucle.start(); } },
+    detener() { bucle.stop(); },
+    redimensionar() { if (bucle.quiere) preparar(); }
+  };
+}
+
+/* ---- Corazón formado por partículas (se dibuja sobre la lluvia principal) ---- */
+const corazon = { parts: [], t: 0, activo: false, cx: 0, cy: 0 };
+let temporizadorCorazon = null;
+
+function lanzarCorazon() {
+  const w = window.innerWidth, h = window.innerHeight;
+  const escala = Math.min(w, h * 0.85) / 38;
+  const paso = LITE ? 0.09 : 0.055;
+  corazon.cx = w / 2;
+  corazon.cy = h * 0.46;
+  corazon.parts = [];
+  corazon.t = 0;
+  corazon.activo = true;
+  $('mensajeFinal').classList.remove('visible');
+
+  for (let t = 0; t < Math.PI * 2; t += paso) {
+    const x = 16 * Math.pow(Math.sin(t), 3);
+    const y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+    const tx = corazon.cx + x * escala;
+    const ty = corazon.cy - y * escala;
+    const dist = Math.hypot(tx - corazon.cx, ty - corazon.cy) || 1;
+    corazon.parts.push({
+      tx, ty,
+      vx: (tx - corazon.cx) / dist,
+      vy: (ty - corazon.cy) / dist,
+      retraso: Math.random() * 25,
+      size: 12 + Math.random() * 10
     });
-    idAnimacionFotos = requestAnimationFrame(draw);
   }
-  draw();
 }
 
-function mostrarFotoGrande(src){
-  const overlay=document.getElementById('fotoGrandeOverlay');
-  document.getElementById('fotoGrande').src=src;
-  overlay.style.display='flex';
-}
-document.getElementById('cerrarFoto').addEventListener('click',()=>{
-  document.getElementById('fotoGrandeOverlay').style.display='none';
-});
+function dibujarCorazon(ctx) {
+  if (!corazon.activo) return;
+  const t = ++corazon.t;
+  const { cx, cy } = corazon;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
 
-function checkFechasEspeciales(mostrarTexto = true){
-  const hoy=new Date();
-  const d=hoy.getDate();
-  const m=hoy.getMonth(); 
-  let mensaje=null;
-  
-  if(d===11){ mensaje="Feliz otro mes más juntos 💖"; }
-  if(d===11 && m===7){ mensaje="🎉 Feliz aniversario 💖, otro año mas junto a ti💖"; }
-  if(d===8 && m===6){ mensaje="🎂 Feliz cumpleaños amor 💖"; }
-  if(d===10 && m===1){ mensaje="🎂 Feliz cumpleaños 🎉"; }
-
-  if(mensaje){ lanzarConfeti(mensaje, mostrarTexto); }
-}
-
-function detenerConfeti(){
-  if(idAnimacionConfeti){
-    cancelAnimationFrame(idAnimacionConfeti);
-    idAnimacionConfeti = null;
+  for (const p of corazon.parts) {
+    const k = Math.max(0, t - p.retraso);
+    let x, y, a;
+    if (k < 70) {                       // 1) viaja desde el centro
+      const e = 1 - Math.pow(1 - k / 70, 3);
+      x = cx + (p.tx - cx) * e;
+      y = cy + (p.ty - cy) * e;
+      a = Math.min(1, k / 20);
+    } else if (k < 170) {               // 2) late en su lugar
+      const pulso = 1 + 0.025 * Math.sin((k - 70) / 6);
+      x = cx + (p.tx - cx) * pulso;
+      y = cy + (p.ty - cy) * pulso;
+      a = 1;
+    } else {                            // 3) se dispersa y se desvanece
+      const f = (k - 170) / 70;
+      x = p.tx + p.vx * f * 60;
+      y = p.ty + p.vy * f * 60;
+      a = 1 - f;
+    }
+    if (a <= 0) continue;
+    ctx.fillStyle = `rgba(255,105,180,${a})`;
+    ctx.font = `${p.size}px serif`;
+    ctx.fillText(CONFIG.particulaCorazon, x, y);
   }
-  const canvas=document.getElementById('confetiCanvas');
-  const ctx=canvas.getContext('2d');
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  document.getElementById('confetiMensaje').style.display = 'none';
+
+  if (t === 120) $('mensajeFinal').classList.add('visible');
+  if (t > 270) {
+    corazon.activo = false;
+    $('mensajeFinal').classList.add('visible');
+  }
 }
 
-function lanzarConfeti(mensaje, mostrarTexto){
-  const msg = document.getElementById('confetiMensaje');
-  const canvas = document.getElementById('confetiCanvas');
+const lluviaPrincipal = crearLluvia($('canvasPrincipal'), dibujarCorazon);
+const lluviaRecuerdos = crearLluvia($('canvasRecuerdos'));
+
+/* =========================================================
+   4. CONTADORES
+   ========================================================= */
+function actualizarContadores() {
+  const ahora = new Date();
+  const ini = CONFIG.inicioRelacion;
+
+  const dias = Math.floor((ahora - ini) / 86400000);
+  $('contador').textContent = `Llevamos ${dias} días juntos💖`;
+
+  let a = ahora.getFullYear() - ini.getFullYear();
+  let m = ahora.getMonth() - ini.getMonth();
+  let d = ahora.getDate() - ini.getDate();
+  let h = ahora.getHours() - ini.getHours();
+  let mi = ahora.getMinutes() - ini.getMinutes();
+  let s = ahora.getSeconds() - ini.getSeconds();
+
+  if (s < 0)  { s += 60; mi--; }
+  if (mi < 0) { mi += 60; h--; }
+  if (h < 0)  { h += 24; d--; }
+  if (d < 0)  { d += new Date(ahora.getFullYear(), ahora.getMonth(), 0).getDate(); m--; }
+  if (m < 0)  { m += 12; a--; }
+
+  $('tiempoTotal').textContent =
+    `Años: ${a} | Meses: ${m} | Días: ${d}\n` +
+    `Tiempo juntos: ${h}h ${mi}m ${s}s`;
+}
+
+/* =========================================================
+   5. CONFETI
+   ========================================================= */
+const confeti = (() => {
+  const canvas = $('confetiCanvas');
   const ctx = canvas.getContext('2d');
-  
-  if (mostrarTexto) {
-    msg.innerText = mensaje;
-    msg.style.display = 'block';
-    setTimeout(()=>{ msg.style.display = 'none'; }, 5000);
-  } else {
-    msg.style.display = 'none';
+  const msg = $('confetiMensaje');
+  let w = 0, h = 0, piezas = [], timerMsg = null;
+
+  function preparar() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
   }
 
-  if(idAnimacionConfeti) return;
-
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  const confetis=[];
-  for(let i=0;i<200;i++){
-    confetis.push({
-      x:Math.random()*canvas.width,
-      y:Math.random()*canvas.height,
-      r:Math.random()*6+4,
-      dx:Math.random()*2-1,
-      dy:Math.random()*2+1,
-      color:`hsl(${Math.random()*360},100%,50%)`
-    });
-  }
-
-  function draw(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    confetis.forEach(c=>{
+  const bucle = crearBucle(() => {
+    ctx.clearRect(0, 0, w, h);
+    for (const c of piezas) {
       ctx.beginPath();
-      ctx.arc(c.x,c.y,c.r,0,2*Math.PI);
-      ctx.fillStyle=c.color;
+      ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+      ctx.fillStyle = c.color;
       ctx.fill();
-      c.x+=c.dx;
-      c.y+=c.dy;
-      if(c.y>canvas.height) c.y=-10;
-      if(c.x>canvas.width || c.x<0) c.dx*=-1;
-    });
-    idAnimacionConfeti = requestAnimationFrame(draw);
-  }
-  draw();
-}
-
-  /* --- LÓGICA DEL JUEGO DEL HILO ROJO --- */
-const btnJuegoHilo = document.getElementById("btnJuegoHilo");
-const hiloGameScreen = document.getElementById("hiloGameScreen");
-const canvasH = document.getElementById("hiloGameCanvas");
-const ctxH = canvasH.getContext("2d");
-
-let nudos = [];
-let nudosRestantes = 10;
-let juegoHiloIniciado = false;
-
-btnJuegoHilo.addEventListener("click", () => {
-    document.getElementById('recuerdosScreen').style.display = 'none';
-    hiloGameScreen.style.display = 'flex';
-    iniciarJuegoHilo();
-});
-
-document.getElementById("btnRegresarHiloGame").addEventListener("click", () => {
-    hiloGameScreen.style.display = 'none';
-    document.getElementById('recuerdosScreen').style.display = 'flex';
-    juegoHiloIniciado = false;
-});
-
-function iniciarJuegoHilo() {
-    nudos = [];
-    nudosRestantes = 10;
-    juegoHiloIniciado = true;
-    for (let i = 0; i < nudosRestantes; i++) {
-        nudos.push({
-            x: Math.random() * (canvasH.width - 40) + 20,
-            y: Math.random() * (canvasH.height - 40) + 20,
-            vx: (Math.random() - 0.5) * 2,
-            vy: (Math.random() - 0.5) * 2,
-            r: 15,
-            activo: true
-        });
+      c.x += c.dx;
+      c.y += c.dy;
+      if (c.y > h) c.y = -10;
+      if (c.x > w || c.x < 0) c.dx *= -1;
     }
-    animarJuegoHilo();
-}
+  });
 
-function animarJuegoHilo() {
-    if (!juegoHiloIniciado) return;
-    ctxH.clearRect(0, 0, canvasH.width, canvasH.height);
-    
-    // Dibujar líneas que conectan los nudos (el "hilo")
-    ctxH.beginPath();
-    ctxH.strokeStyle = "rgba(255, 0, 0, 0.4)";
-    ctxH.lineWidth = 2;
-    let primeros = nudos.filter(n => n.activo);
-    if(primeros.length > 1) {
-        ctxH.moveTo(primeros[0].x, primeros[0].y);
-        for(let i = 1; i < primeros.length; i++) {
-            ctxH.lineTo(primeros[i].x, primeros[i].y);
-        }
-        ctxH.stroke();
-    }
-
-    // Dibujar nudos
-    nudos.forEach(n => {
-        if (n.activo) {
-            ctxH.beginPath();
-            ctxH.arc(n.x, n.y, n.r, 0, Math.PI * 2);
-            ctxH.fillStyle = "#ff0000";
-            ctxH.shadowBlur = 10;
-            ctxH.shadowColor = "red";
-            ctxH.fill();
-            
-            // Movimiento
-            n.x += n.vx;
-            n.y += n.vy;
-            if (n.x < n.r || n.x > canvasH.width - n.r) n.vx *= -1;
-            if (n.y < n.r || n.y > canvasH.height - n.r) n.vy *= -1;
-        }
-    });
-
-    if (nudosRestantes > 0) {
-        requestAnimationFrame(animarJuegoHilo);
+  function lanzar(mensaje, mostrarTexto) {
+    clearTimeout(timerMsg);
+    if (mostrarTexto) {
+      msg.textContent = mensaje;
+      msg.classList.add('visible');
+      timerMsg = setTimeout(() => msg.classList.remove('visible'), 5000);
     } else {
-        finalizarJuegoHilo();
+      msg.classList.remove('visible');
     }
+    if (bucle.quiere) return;
+    preparar();
+    const cantidad = LITE ? 90 : 200;
+    piezas = Array.from({ length: cantidad }, () => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      r: Math.random() * 6 + 4,
+      dx: Math.random() * 2 - 1,
+      dy: Math.random() * 2 + 1,
+      color: `hsl(${Math.random() * 360},100%,50%)`
+    }));
+    bucle.start();
+  }
+
+  function detener() {
+    clearTimeout(timerMsg);
+    bucle.stop();
+    ctx.clearRect(0, 0, w, h);
+    msg.classList.remove('visible');
+  }
+
+  return { lanzar, detener, redimensionar() { if (bucle.quiere) preparar(); } };
+})();
+
+function mensajeEspecial() {
+  const hoy = new Date();
+  const d = hoy.getDate(), m = hoy.getMonth();
+  const coinciden = ESPECIALES.filter(e => e.dia === d && (e.mes === null || e.mes === m));
+  return coinciden.length ? coinciden[coinciden.length - 1].msg : null;
 }
 
-canvasH.addEventListener("mousedown", manejarClickHilo);
-canvasH.addEventListener("touchstart", (e) => {
+/* =========================================================
+   6. FOTOS CAYENDO
+   ========================================================= */
+const fotos = (() => {
+  const canvas = $('canvasFotos');
+  const ctx = canvas.getContext('2d');
+  let w = 0, h = 0, items = [], cache = null;
+
+  // Las imágenes se cargan una sola vez y se reutilizan
+  function cargar() {
+    if (cache) return cache;
+    cache = [];
+    for (let i = 1; i <= CONFIG.totalFotos; i++) {
+      const img = new Image();
+      img.decoding = 'async';
+      img.src = `${CONFIG.carpetaFotos}foto${i}.jpg`;
+      cache.push(img);
+    }
+    return cache;
+  }
+
+  function preparar() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+    let imgs = [...cargar()].sort(() => Math.random() - 0.5);
+    if (LITE) imgs = imgs.slice(0, 24);
+    items = imgs.map(img => {
+      const s = 56 + Math.random() * 56;
+      return { img, s, x: Math.random() * Math.max(1, w - s), y: Math.random() * h, v: 1 + Math.random() * 1.5 };
+    });
+  }
+
+  function trazo(x, y, s) {
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x, y, s, s, 8); else ctx.rect(x, y, s, s);
+  }
+
+  function dibujarFoto(f) {
+    const { img, x, y, s } = f;
+    const iw = img.naturalWidth, ih = img.naturalHeight;
+    let sx = 0, sy = 0, sw = iw, sh = ih;
+    if (iw > ih) { sw = ih; sx = (iw - sw) / 2; } else { sh = iw; sy = (ih - sh) / 2; }
+    trazo(x, y, s);
+    ctx.save();
+    ctx.clip();
+    ctx.drawImage(img, sx, sy, sw, sh, x, y, s, s);
+    ctx.restore();
+    ctx.strokeStyle = 'rgba(255,105,180,.75)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  const bucle = crearBucle(() => {
+    ctx.clearRect(0, 0, w, h);
+    for (const f of items) {
+      if (f.img.complete && f.img.naturalWidth > 0) dibujarFoto(f);
+      f.y += f.v;
+      if (f.y > h) { f.y = -f.s; f.x = Math.random() * Math.max(1, w - f.s); }
+    }
+  });
+
+  // Un solo listener de clic (antes se acumulaba en cada visita)
+  canvas.addEventListener('click', e => {
+    const r = canvas.getBoundingClientRect();
+    const mx = (e.clientX - r.left) * (w / r.width);
+    const my = (e.clientY - r.top) * (h / r.height);
+    for (let i = items.length - 1; i >= 0; i--) {
+      const f = items[i];
+      if (mx > f.x && mx < f.x + f.s && my > f.y && my < f.y + f.s && f.img.naturalWidth > 0) {
+        abrirFoto(f.img.src);
+        break;
+      }
+    }
+  });
+
+  return {
+    iniciar() { if (!bucle.quiere) { preparar(); bucle.start(); } },
+    detener() { bucle.stop(); ctx.clearRect(0, 0, w, h); },
+    redimensionar() { if (bucle.quiere) { w = canvas.width = innerWidth; h = canvas.height = innerHeight; } }
+  };
+})();
+
+/* =========================================================
+   7. JUEGO DEL HILO ROJO
+   ========================================================= */
+const hilo = (() => {
+  const canvas = $('canvasHilo');
+  const ctx = canvas.getContext('2d');
+  const W = 300, H = 400, TOTAL = 10;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  let nudos = [], restantes = TOTAL, terminado = false;
+
+  function finalizar() {
+    terminado = true;
+    bucle.stop();
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#ff2a4d';
+    ctx.font = "20px 'Courier New', monospace";
+    ctx.textAlign = 'center';
+    ctx.shadowBlur = 14;
+    ctx.shadowColor = '#ff0000';
+    ctx.fillText('❤️ HILO LIBERADO ❤️', W / 2, H / 2);
+    ctx.shadowBlur = 0;
+    $('btnViajarHilo').hidden = false;
+  }
+
+  const bucle = crearBucle(() => {
+    ctx.clearRect(0, 0, W, H);
+    const activos = nudos.filter(n => n.activo);
+
+    // El "hilo" que une los nudos
+    if (activos.length > 1) {
+      ctx.save();
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = '#ff0000';
+      ctx.strokeStyle = 'rgba(255,40,60,.55)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(activos[0].x, activos[0].y);
+      for (let i = 1; i < activos.length; i++) ctx.lineTo(activos[i].x, activos[i].y);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Nudos
+    for (const n of activos) {
+      const g = ctx.createRadialGradient(n.x - 4, n.y - 4, 2, n.x, n.y, n.r);
+      g.addColorStop(0, '#ff8a9a');
+      g.addColorStop(1, '#e00020');
+      ctx.save();
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = '#ff0000';
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      n.x += n.vx;
+      n.y += n.vy;
+      if (n.x < n.r || n.x > W - n.r) n.vx *= -1;
+      if (n.y < n.r || n.y > H - n.r) n.vy *= -1;
+    }
+
+    ctx.fillStyle = 'rgba(255,255,255,.7)';
+    ctx.font = "12px 'Courier New', monospace";
+    ctx.textAlign = 'left';
+    ctx.fillText(`Nudos: ${restantes}`, 10, 18);
+
+    if (restantes <= 0) finalizar();
+  });
+
+  function iniciar() {
+    nudos = Array.from({ length: TOTAL }, () => ({
+      x: 20 + Math.random() * (W - 40),
+      y: 20 + Math.random() * (H - 40),
+      vx: (Math.random() - 0.5) * 2,
+      vy: (Math.random() - 0.5) * 2,
+      r: 15,
+      activo: true
+    }));
+    restantes = TOTAL;
+    terminado = false;
+    $('btnViajarHilo').hidden = true;
+    bucle.stop();
+    bucle.start();
+  }
+
+  // pointerdown sirve para mouse y dedo, y corrige la escala del canvas
+  canvas.addEventListener('pointerdown', e => {
+    if (terminado) return;
     e.preventDefault();
-    const rect = canvasH.getBoundingClientRect();
-    manejarClickHilo({ offsetX: e.touches[0].clientX - rect.left, offsetY: e.touches[0].clientY - rect.top });
+    const r = canvas.getBoundingClientRect();
+    const x = (e.clientX - r.left) * (W / r.width);
+    const y = (e.clientY - r.top) * (H / r.height);
+    let mejor = null, mejorDist = Infinity;
+    for (const n of nudos) {
+      if (!n.activo) continue;
+      const d = Math.hypot(x - n.x, y - n.y);
+      if (d < n.r + 12 && d < mejorDist) { mejorDist = d; mejor = n; }
+    }
+    if (mejor) { mejor.activo = false; restantes--; }
+  });
+
+  return { iniciar, detener() { bucle.stop(); } };
+})();
+
+/* =========================================================
+   8. NAVEGACIÓN ENTRE PANTALLAS
+   ========================================================= */
+const pantallas = {
+  inicio:    $('pantallaInicio'),
+  principal: $('pantallaPrincipal'),
+  recuerdos: $('pantallaRecuerdos'),
+  fotos:     $('pantallaFotos'),
+  hilo:      $('pantallaHilo')
+};
+
+function irA(nombre) {
+  for (const [k, el] of Object.entries(pantallas)) el.classList.toggle('activa', k === nombre);
+
+  // Solo corre la animación de la pantalla visible
+  clearTimeout(temporizadorCorazon);
+  if (nombre === 'principal') {
+    lluviaPrincipal.iniciar();
+    temporizadorCorazon = setTimeout(lanzarCorazon, 1000);
+  } else {
+    lluviaPrincipal.detener();
+    corazon.activo = false;
+  }
+
+  if (nombre === 'recuerdos') lluviaRecuerdos.iniciar(); else lluviaRecuerdos.detener();
+  if (nombre === 'fotos') { confeti.detener(); fotos.iniciar(); } else fotos.detener();
+  if (nombre === 'hilo') hilo.iniciar(); else hilo.detener();
+}
+
+function volverAPrincipal() {
+  irA('principal');
+  const msg = mensajeEspecial();
+  if (msg) confeti.lanzar(msg, false);
+}
+
+/* =========================================================
+   9. MODALES
+   ========================================================= */
+function abrirFoto(src) {
+  $('fotoGrande').src = src;
+  $('modalFoto').classList.add('abierto');
+}
+function cerrarModales() {
+  $('modalFoto').classList.remove('abierto');
+  $('modalCarta').classList.remove('abierto');
+}
+
+/* =========================================================
+   10. INICIO DE LA SORPRESA
+   ========================================================= */
+function iniciarSorpresa(tipo) {
+  try { localStorage.setItem('dispositivoElegido', tipo); } catch (e) {}
+  LITE = (tipo === 'celular');
+
+  const corazonesFondo = $('corazonesFondo');
+  if (corazonesFondo) corazonesFondo.remove();
+
+  $('btnMusica').hidden = false;
+  $('musica').play().catch(() => {});
+
+  irA('principal');
+  actualizarContadores();
+  setInterval(() => { if (!document.hidden) actualizarContadores(); }, 1000);
+
+  const msg = mensajeEspecial();
+  if (msg) confeti.lanzar(msg, true);
+}
+
+function crearCorazonesInicio() {
+  const cont = $('corazonesFondo');
+  for (let i = 0; i < 16; i++) {
+    const c = document.createElement('span');
+    c.className = 'corazon-flota';
+    c.textContent = '♥';
+    c.style.left = Math.random() * 100 + '%';
+    c.style.fontSize = (14 + Math.random() * 26) + 'px';
+    c.style.animationDuration = (7 + Math.random() * 8) + 's';
+    c.style.animationDelay = (-Math.random() * 12) + 's';
+    cont.appendChild(c);
+  }
+}
+
+/* =========================================================
+   11. EVENTOS
+   ========================================================= */
+document.addEventListener('DOMContentLoaded', () => {
+  crearCorazonesInicio();
+
+  // Recuerdos desde la lista de arriba
+  $('listaRecuerdos').innerHTML = RECUERDOS
+    .map(r => `<li><span class="fecha">${r.fecha}</span>${r.texto}</li>`)
+    .join('');
+
+  // Botones especiales según la fecha de hoy
+  const hoy = new Date();
+  $('btnCarta').hidden = !(hoy.getDate() === 11 && hoy.getMonth() === 7);
+  $('btnNivelEspecial').hidden = !(hoy.getDate() === 8 && hoy.getMonth() === 6);
+
+  // Elegir dispositivo
+  document.querySelectorAll('[data-dispositivo]').forEach(b =>
+    b.addEventListener('click', () => iniciarSorpresa(b.dataset.dispositivo)));
+
+  // Principal
+  $('btnRecuerdos').addEventListener('click', () => irA('recuerdos'));
+  $('btnFotos').addEventListener('click', () => irA('fotos'));
+
+  // Recuerdos
+  $('btnRegresarRecuerdos').addEventListener('click', volverAPrincipal);
+  $('btnJuegos').addEventListener('click', () => { window.location.href = CONFIG.paginas.juegos; });
+  $('btnNivelEspecial').addEventListener('click', () => { window.location.href = CONFIG.paginas.cumple; });
+  $('btnJuegoHilo').addEventListener('click', () => irA('hilo'));
+  $('btnCarta').addEventListener('click', () => $('modalCarta').classList.add('abierto'));
+
+  // Fotos
+  $('btnRegresarFotos').addEventListener('click', volverAPrincipal);
+
+  // Hilo rojo
+  $('btnRegresarHilo').addEventListener('click', () => irA('recuerdos'));
+  $('btnViajarHilo').addEventListener('click', () => { window.location.href = CONFIG.paginas.hilo; });
+
+  // Modales: botón, clic en el fondo y tecla Esc
+  $('cerrarCarta').addEventListener('click', cerrarModales);
+  $('cerrarFoto').addEventListener('click', cerrarModales);
+  [$('modalCarta'), $('modalFoto')].forEach(m =>
+    m.addEventListener('click', e => { if (e.target === m) cerrarModales(); }));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarModales(); });
+
+  // Música
+  const musica = $('musica'), btnMusica = $('btnMusica');
+  btnMusica.addEventListener('click', () => {
+    if (musica.paused) { musica.play().catch(() => {}); btnMusica.textContent = '🔊'; }
+    else { musica.pause(); btnMusica.textContent = '🔇'; }
+  });
+
+  // Redimensionar (con pausa para no recalcular en cada píxel)
+  let tResize;
+  window.addEventListener('resize', () => {
+    clearTimeout(tResize);
+    tResize = setTimeout(() => {
+      lluviaPrincipal.redimensionar();
+      lluviaRecuerdos.redimensionar();
+      fotos.redimensionar();
+      confeti.redimensionar();
+    }, 150);
+  });
 });
 
-function manejarClickHilo(e) {
-    nudos.forEach(n => {
-        if (n.activo) {
-            let dx = e.offsetX - n.x;
-            let dy = e.offsetY - n.y;
-            if (Math.sqrt(dx*dx + dy*dy) < n.r + 10) {
-                n.activo = false;
-                nudosRestantes--;
-            }
-        }
-    });
+/* =========================================================
+   12. MOTOR DE FONDO (PWA)
+   ========================================================= */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
 }
 
-function finalizarJuegoHilo() {
-    ctxH.clearRect(0, 0, canvasH.width, canvasH.height);
-    ctxH.fillStyle = "#ff0000";
-    ctxH.font = "20px Courier New";
-    ctxH.textAlign = "center";
-    ctxH.fillText("❤️ HILO LIBERADO ❤️", canvasH.width/2, canvasH.height/2);
-    
-    if (!document.getElementById("btnViajarHilo")) {
-        const btnFinal = document.createElement("button");
-        btnFinal.id = "btnViajarHilo";
-        btnFinal.innerText = "🧵 Seguir el Destino";
-        btnFinal.style.cssText = "margin-top:20px; padding:15px 30px; background:#ff0000; color:white; border:none; border-radius:15px; cursor:pointer; font-weight:bold; box-shadow:0 0 20px red;";
-        btnFinal.onclick = () => window.location.href = "hilo_rojo.html";
-        hiloGameScreen.insertBefore(btnFinal, document.getElementById("btnRegresarHiloGame"));
-    }
-}
-  
+})();
 </script>
 </body>
 </html>
