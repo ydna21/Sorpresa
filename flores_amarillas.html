@@ -2,209 +2,107 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#060400">
 <title>Feliz Día de las Flores Amarillas 🌻</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500;1,600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  body { 
-    margin: 0; background: black; overflow: hidden; 
-    font-family: 'Courier New', monospace; color: white; 
-  }
-  
-  #pantallaEntrada {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: radial-gradient(circle at center, #1a1000 0%, #000000 100%);
-    z-index: 999; display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    transition: opacity 2s ease;
-  }
+  :root { --gold:#ffdb58; --amber:#ff9d1a; --cream:#fff4d6; --serif:'Cormorant Garamond',Georgia,serif; --sans:'Jost',system-ui,sans-serif;
+          --glass:rgba(22,14,0,.55); --line:rgba(255,219,88,.4); }
+  * { box-sizing:border-box; }
+  html, body { height:100%; }
+  body { margin:0; background:#060400; overflow:hidden; font-family:var(--sans); color:#fff; -webkit-font-smoothing:antialiased; }
 
-  #btnIniciar {
-    background: transparent; border: none; color: #ffdb58; 
-    font-size: 1.5rem; font-family: 'Courier New', monospace;
-    cursor: pointer; display: flex; flex-direction: column;
-    align-items: center; gap: 15px; animation: latidoEntrada 2s infinite;
-    text-shadow: 0 0 15px rgba(255, 219, 88, 0.8);
-  }
+  /* Entrada */
+  #pantallaEntrada { position:fixed; inset:0; z-index:999; display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(ellipse at 50% 45%, #2a1a00 0%, #0d0700 60%, #060400 100%); transition:opacity 2s ease, transform 2s ease; }
+  #pantallaEntrada.salir { opacity:0; transform:scale(1.1); pointer-events:none; }
+  #btnIniciar { display:flex; flex-direction:column; align-items:center; gap:14px; background:none; border:none; cursor:pointer; color:var(--gold);
+    font:italic 500 clamp(1.6rem,5vw,2.4rem)/1.1 var(--serif); text-shadow:0 0 30px rgba(255,219,88,.7); animation:latido 2.6s ease-in-out infinite; }
+  #btnIniciar small { font:300 .85rem var(--sans); letter-spacing:.25em; text-transform:uppercase; color:rgba(255,244,214,.6); }
+  .icono-flor { font-size:3.6rem; filter:drop-shadow(0 0 24px var(--gold)); }
+  @keyframes latido { 50% { transform:scale(1.07); } }
 
-  .icono-flor { font-size: 3rem; filter: drop-shadow(0 0 20px #ffdb58); }
+  #threeCanvas { position:fixed; inset:0; z-index:1; touch-action:none; }
+  #threeCanvas canvas { display:block; }
+  #vineta { position:fixed; inset:0; z-index:2; pointer-events:none; background:radial-gradient(ellipse at center, transparent 55%, rgba(6,4,0,.65) 100%); }
+  #scrim { position:fixed; left:0; right:0; bottom:0; height:34vh; z-index:2; pointer-events:none; background:linear-gradient(to top, rgba(6,4,0,.85), transparent); opacity:0; transition:opacity 2s; }
 
-  @keyframes latidoEntrada {
-    0% { transform: scale(1); opacity: 0.8; }
-    50% { transform: scale(1.1); opacity: 1; text-shadow: 0 0 30px #ffdb58; }
-    100% { transform: scale(1); opacity: 0.8; }
-  }
+  #mainContent { position:fixed; top:max(28px, env(safe-area-inset-top) + 16px); left:0; right:0; z-index:3; padding:0 16px; text-align:center; pointer-events:none; opacity:0; transform:translateY(-8px); transition:opacity 3s ease, transform 3s ease; }
+  #mainContent.on { opacity:1; transform:none; }
+  h1 { margin:0; font:italic 600 clamp(1.7rem,5.5vw,3.2rem)/1.1 var(--serif); color:#fff; text-shadow:0 0 28px rgba(255,219,88,.8), 0 2px 16px rgba(0,0,0,.7); }
 
-  #threeCanvas { display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-  
-  #mainContent {
-    position: absolute; top: 50px; left: 0; width: 100%;
-    z-index: 2; display: flex; flex-direction: column;
-    align-items: center; text-align: center; pointer-events: none;
-    opacity: 0; transition: opacity 3s ease;
-  }
-  
-  h1 { 
-    font-size: 2.5rem; color: #fff; text-shadow: 0 0 20px #ffdb58, 0 0 40px #d4af37; 
-    margin: 0; font-family: 'Georgia', serif; font-style: italic;
-  }
+  #letrasContainer { position:fixed; left:50%; bottom:max(28px, env(safe-area-inset-bottom) + 18px); transform:translateX(-50%); z-index:100; width:min(900px,92vw); text-align:center; pointer-events:none;
+    font:italic 600 clamp(1.15rem,3.6vw,1.8rem)/1.4 var(--serif); color:#fff; text-shadow:0 2px 12px rgba(0,0,0,.9), 0 0 22px rgba(255,219,88,.6);
+    opacity:0; transition:opacity .35s ease; }
+  #letrasContainer span { font-family:var(--sans) !important; font-style:normal; font-weight:300; letter-spacing:.03em; }
 
-  #letrasContainer {
-    position: absolute; bottom: 30px; left: 0; width: 100%;
-    text-align: center; font-family: 'Georgia', serif; font-weight: bold;
-    color: white; z-index: 100; pointer-events: none;
-    text-shadow: 2px 2px 5px black, 0 0 15px #ffdb58;
-    font-size: 1.6rem; opacity: 0; transition: opacity 2s ease; line-height: 1.4;
-  }
+  #hud { position:fixed; top:max(86px, env(safe-area-inset-top) + 74px); left:50%; transform:translate(-50%,-8px); z-index:5; opacity:0; pointer-events:none; white-space:nowrap;
+    padding:9px 20px; border-radius:40px; background:var(--glass); border:1px solid var(--line); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    font-weight:300; font-size:.9rem; letter-spacing:.03em; color:var(--cream); transition:opacity 1s, transform 1s; }
+  #hud.on { opacity:1; transform:translate(-50%,0); }
+  #hud b { color:#fff; font-weight:500; }
 
-  #textoFinal {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: 90%; max-width: 800px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    text-align: center; font-family: 'Georgia', serif; font-style: italic;
-    color: white; z-index: 200; pointer-events: none;
-    text-shadow: 3px 3px 10px black, 0 0 25px #ffdb58, 0 0 40px #d4af37;
-    font-size: 2.2rem; line-height: 1.5;
-    opacity: 0; transition: opacity 4s ease; display: none;
-  }
+  /* Final */
+  #textoFinal { position:fixed; inset:0; z-index:200; display:none; flex-direction:column; align-items:center; justify-content:center; padding:20px; text-align:center;
+    overflow:auto; pointer-events:none; opacity:0; transition:opacity 4s ease; }
+  .fotos-bobby { display:flex; justify-content:center; gap:26px; margin-bottom:14px; pointer-events:auto; }
+  .fotos-bobby img { width:150px; height:150px; object-fit:cover; border-radius:50%; border:3px solid var(--gold); box-shadow:0 0 30px rgba(255,219,88,.8); animation:flotar 3.4s ease-in-out infinite; cursor:pointer; transition:transform .3s; }
+  .fotos-bobby img:nth-child(2) { animation-delay:1.7s; }
+  .fotos-bobby img:hover { transform:scale(1.1) translateY(-8px); }
+  .contenedor-video-miniatura { position:relative; display:inline-block; margin-bottom:18px; pointer-events:auto; cursor:pointer; animation:flotar 3.4s ease-in-out infinite .8s; }
+  .video-miniatura { width:130px; height:130px; object-fit:cover; border-radius:50%; border:3px solid var(--gold); box-shadow:0 0 30px rgba(255,219,88,.8); transition:transform .3s; display:block; }
+  .contenedor-video-miniatura:hover .video-miniatura { transform:scale(1.1) translateY(-8px); }
+  .icono-play { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:2.8rem; color:rgba(255,255,255,.92); pointer-events:none; text-shadow:0 0 14px #000; }
+  @keyframes flotar { 50% { transform:translateY(-12px); } }
 
-  .fotos-bobby {
-    display: flex; justify-content: center; gap: 30px; margin-bottom: 15px;
-    pointer-events: auto; 
-  }
+  .texto-mensaje { max-width:640px; margin-bottom:20px; padding:22px 30px; border-radius:26px; font:italic 500 clamp(1.15rem,3.6vw,1.9rem)/1.6 var(--serif); color:#fff;
+    text-shadow:0 0 18px rgba(255,219,88,.7); background:rgba(14,9,0,.5); border:1px solid var(--line); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); box-shadow:0 0 60px rgba(255,170,0,.25); }
+  .botones-finales { display:flex; gap:26px; pointer-events:auto; }
+  .btn-circulo { width:58px; height:58px; border-radius:50%; cursor:pointer; font-size:1.5rem; display:flex; align-items:center; justify-content:center; color:var(--gold);
+    background:var(--glass); border:1px solid var(--line); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); transition:all .3s; }
+  .btn-circulo:hover, .btn-circulo:focus-visible { background:rgba(255,219,88,.4); transform:scale(1.14); box-shadow:0 0 30px rgba(255,219,88,.8); outline:none; }
 
-  .fotos-bobby img {
-    width: 160px; height: 160px; object-fit: cover; border-radius: 50%;
-    border: 4px solid #ffdb58; box-shadow: 0 0 25px #ffdb58;
-    animation: flotarFoto 3s ease-in-out infinite;
-    cursor: pointer; transition: transform 0.3s ease;
-  }
+  #lightbox { display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,.88); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
+  .lightbox-content { max-width:92%; max-height:82%; border-radius:18px; border:3px solid var(--gold); box-shadow:0 0 50px rgba(255,219,88,.7); animation:zoomIn .35s cubic-bezier(.2,.8,.2,1); outline:none; }
+  .cerrar-lightbox { position:absolute; top:max(14px, env(safe-area-inset-top)); right:22px; color:var(--gold); font-size:44px; line-height:1; cursor:pointer; text-shadow:0 0 10px #000; transition:transform .3s; }
+  .cerrar-lightbox:hover { transform:scale(1.2); }
+  @keyframes zoomIn { from { transform:scale(.6); opacity:0; } to { transform:none; opacity:1; } }
 
-  .fotos-bobby img:nth-child(2) { animation-delay: 1.5s; }
-  .fotos-bobby img:hover { transform: scale(1.1) translateY(-10px); }
-
-  /* ESTILOS DEL VIDEO MINIATURA */
-  .contenedor-video-miniatura {
-    position: relative; display: inline-block; margin-bottom: 20px;
-    pointer-events: auto; cursor: pointer;
-    animation: flotarFoto 3s ease-in-out infinite; animation-delay: 0.7s;
-  }
-  
-  .video-miniatura {
-    width: 140px; height: 140px; object-fit: cover; border-radius: 50%;
-    border: 4px solid #ffdb58; box-shadow: 0 0 25px #ffdb58;
-    transition: transform 0.3s ease;
-  }
-
-  .contenedor-video-miniatura:hover .video-miniatura { transform: scale(1.1) translateY(-10px); }
-  
-  .icono-play {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    font-size: 3.5rem; color: rgba(255, 255, 255, 0.9);
-    pointer-events: none; text-shadow: 0 0 15px black;
-    transition: transform 0.3s ease;
-  }
-
-  .contenedor-video-miniatura:hover .icono-play { transform: translate(-50%, -60%) scale(1.1); }
-
-  @keyframes flotarFoto {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-15px); }
-  }
-
-  .texto-mensaje { margin-bottom: 20px; }
-
-  .botones-finales {
-    display: flex; justify-content: center; gap: 30px; margin-top: 15px;
-    pointer-events: auto; 
-  }
-
-  .btn-circulo {
-    background: rgba(255, 219, 88, 0.15); border: 2px solid #ffdb58;
-    color: #ffdb58; width: 65px; height: 65px; border-radius: 50%;
-    font-size: 1.8rem; cursor: pointer; display: flex;
-    align-items: center; justify-content: center; transition: all 0.3s ease;
-    box-shadow: 0 0 15px rgba(255, 219, 88, 0.3); text-shadow: none;
-  }
-
-  .btn-circulo:hover {
-    background: rgba(255, 219, 88, 0.5); transform: scale(1.15);
-    box-shadow: 0 0 30px rgba(255, 219, 88, 0.9);
-  }
-
-  #lightbox {
-    display: none; position: fixed; z-index: 9999; top: 0; left: 0;
-    width: 100%; height: 100%; background-color: rgba(0,0,0,0.85);
-    align-items: center; justify-content: center; backdrop-filter: blur(5px);
-  }
-
-  .lightbox-content {
-    max-width: 90%; max-height: 80%; border-radius: 15px;
-    border: 4px solid #ffdb58; box-shadow: 0 0 40px #ffdb58;
-    animation: zoomIn 0.3s ease; outline: none;
-  }
-
-  .cerrar-lightbox {
-    position: absolute; top: 20px; right: 30px;
-    color: #ffdb58; font-size: 45px; font-weight: bold; cursor: pointer;
-    text-shadow: 0 0 10px black; transition: transform 0.3s ease;
-  }
-  
-  .cerrar-lightbox:hover { transform: scale(1.2); }
-
-  @keyframes zoomIn {
-    from { transform: scale(0.5); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-  }
-
-  @media (max-width: 768px) {
-    h1 { font-size: 1.5rem; padding: 0 10px;}
-    #letrasContainer { font-size: 1.1rem; bottom: 20px; padding: 0 15px; width: auto; }
-    
-    #textoFinal { font-size: 1.2rem; width: 95%; }
-    .fotos-bobby img { width: 100px; height: 100px; }
-    .fotos-bobby { gap: 15px; margin-bottom: 10px; }
-    .video-miniatura { width: 90px; height: 90px; }
-    .icono-play { font-size: 2.5rem; }
-    
-    .btn-circulo { width: 55px; height: 55px; font-size: 1.5rem; }
+  @media (max-width:768px) {
+    .fotos-bobby img { width:96px; height:96px; } .fotos-bobby { gap:14px; margin-bottom:10px; }
+    .video-miniatura { width:86px; height:86px; } .icono-play { font-size:2rem; }
+    .texto-mensaje { padding:16px 18px; } .btn-circulo { width:52px; height:52px; font-size:1.35rem; }
   }
 </style>
 </head>
 <body>
 
-<audio id="musicaFondo" crossorigin="anonymous">
-  <source src="videos/musicafloresamarillas.mp3" type="audio/mpeg">
-</audio>
+<audio id="musicaFondo" preload="auto"><source src="videos/musicafloresamarillas.mp3" type="audio/mpeg"></audio>
 
 <div id="pantallaEntrada">
-  <button id="btnIniciar">
-    Toca para iniciar
-    <span class="icono-flor">🌻</span>
-  </button>
+  <button id="btnIniciar"><span class="icono-flor">🌻</span>Toca para iniciar<small>sube el volumen 🎧</small></button>
 </div>
 
 <div id="threeCanvas"></div>
+<div id="vineta"></div>
+<div id="scrim"></div>
 
-<div id="mainContent">
-  <h1 id="tituloPrincipal">Feliz Día de las Flores Amarillas 🌻💛</h1>
-</div>
-
+<div id="mainContent"><h1>Feliz Día de las Flores Amarillas 🌻💛</h1></div>
+<div id="hud"></div>
 <div id="letrasContainer"></div>
 
-<!-- CONTENEDOR DEL FINAL MÁGICO -->
 <div id="textoFinal">
   <div class="fotos-bobby">
-    <img src="./flores/foto1.jpeg" alt="Bobby 1" class="foto-zoom">
-    <img src="./flores/foto2.jpeg" alt="Bobby 2" class="foto-zoom">
+    <img data-src="./flores/foto1.jpeg" alt="Bobby 1" class="foto-zoom">
+    <img data-src="./flores/foto2.jpeg" alt="Bobby 2" class="foto-zoom">
   </div>
-
-  <!-- NUEVO: MINIATURA DE VIDEO -->
   <div class="contenedor-video-miniatura" id="btnAbrirVideo">
-    <!-- El muted autoplay loop hace que el video se mueva silenciosamente como un GIF en miniatura -->
-    <video src="./flores/video1.mp4" class="video-miniatura" muted autoplay loop playsinline></video>
+    <video class="video-miniatura" id="videoMini" muted loop playsinline preload="none"></video>
     <div class="icono-play">▶</div>
   </div>
-
   <div class="texto-mensaje">
     En este Día de las Flores Amarillas, 🌻<br><br>
     y recordando con mucha ternura el hermoso<br>
@@ -212,18 +110,16 @@
     te entrego este detalle hecho para ti<br>
     con todo mi amor. ✨
   </div>
-
   <div class="botones-finales">
-    <button id="btnRepetir" class="btn-circulo" title="Repetir Canción">🔄</button>
-    <button id="btnRetornar" class="btn-circulo" title="Volver al Inicio">↩️</button>
+    <button id="btnRepetir" class="btn-circulo" title="Repetir canción">🔄</button>
+    <button id="btnRetornar" class="btn-circulo" title="Volver al inicio">↩️</button>
   </div>
 </div>
 
-<!-- VISOR DE FOTO/VIDEO AMPLIA (LIGHTBOX) -->
 <div id="lightbox">
   <span class="cerrar-lightbox" id="btnCerrarLightbox">&times;</span>
-  <img class="lightbox-content" id="imgLightbox" style="display: none;">
-  <video class="lightbox-content" id="vidLightbox" controls style="display: none;"></video>
+  <img class="lightbox-content" id="imgLightbox" style="display:none">
+  <video class="lightbox-content" id="vidLightbox" controls playsinline style="display:none"></video>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -234,672 +130,295 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<!-- Letra sincronizada: archivo aparte (ver instrucciones). Si no existe, el resto funciona igual. -->
+<script src="letras.js"></script>
 
 <script>
-const esCelular = window.innerWidth < 768;
-let scene, camera, renderer, controls, composer;
-let systemRotationGroup, heartPoints, hitboxCorazon;
-let girasoles = [];
-let textosFlotantes = [];
-let fotosFlotantes = [];
-let explosionesActivas = [];
-
-let clicsCorazon = 0;
-let fotosMostradas = false;
-const textureLoader = new THREE.TextureLoader();
-
-let etapaFinal = false;
-let florParticulas = null;
-
-let texGirasol = null;
-let texRamito = null;
-
-function getTexGirasol() {
-    if (!texGirasol) {
-        const canvas = document.createElement('canvas');
-        canvas.width = 128; canvas.height = 128;
-        const ctx = canvas.getContext('2d');
-        ctx.font = '80px Arial';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText('🌻', 64, 64);
-        texGirasol = new THREE.CanvasTexture(canvas);
-    }
-    return texGirasol;
-}
-
-function getTexRamito() {
-    if (!texRamito) {
-        const canvas = document.createElement('canvas');
-        canvas.width = 256; canvas.height = 256;
-        const ctx = canvas.getContext('2d');
-        ctx.font = '90px Arial';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText('🌻', 100, 150);
-        ctx.fillText('🌻', 156, 150);
-        ctx.fillText('🌻', 128, 100);
-        texRamito = new THREE.CanvasTexture(canvas);
-    }
-    return texRamito;
-}
+/* ============ Utilidades y configuración ============ */
+const esCelular = innerWidth < 768 || (matchMedia('(pointer: coarse)').matches && innerWidth < 1100);
+const $ = id => document.getElementById(id);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const easeOut = t => 1 - Math.pow(1 - t, 3);
+const smooth = (k, dt) => 1 - Math.exp(-k * dt);
+const TIEMPO_FINAL = 226; // segundo de la canción en que empieza el final mágico
 
 const frases = [
-    "Un ramo de gracias por estar ahí ✨", "Eres mi sol de siempre 💛", "Contigo la vida es mejor 🌻",
-    "No siempre necesitas un jardín para florecer", "Tú iluminas mis días oscuros", "Gracias por quererme siempre",
-    "Mi lugar favorito es contigo", "Un amor bonito y sincero", "Que siempre florezca nuestra alegría",
-    "Para ti, con todo mi corazón 💛", "Eres mi universo entero", "A tu lado todo es dorado",
-    "Mi estrella más brillante ✨", "Mi mundo gira a tu alrededor", "Eres el amarillo de mi vida 🌻",
-    "Juntos brillamos más", "Un millón de girasoles para ti", "Tu sonrisa es mi luz", "Por siempre tú y yo",
-    "Cada día a tu lado es magia", "Haces mi vida hermosa", "Eres mi flor favorita", "Mi corazón te elige siempre",
-    "Eres mi lugar seguro", "Contigo hasta el infinito 🚀", "Un amor de otra galaxia", "Tus abrazos son mi sol"
+  "Un ramo de gracias por estar ahí ✨", "Eres mi sol de siempre 💛", "Contigo la vida es mejor 🌻", "No siempre necesitas un jardín para florecer",
+  "Tú iluminas mis días oscuros", "Gracias por quererme siempre", "Mi lugar favorito es contigo", "Un amor bonito y sincero", "Que siempre florezca nuestra alegría",
+  "Para ti, con todo mi corazón 💛", "Eres mi universo entero", "A tu lado todo es dorado", "Mi estrella más brillante ✨", "Mi mundo gira a tu alrededor",
+  "Eres el amarillo de mi vida 🌻", "Juntos brillamos más", "Un millón de girasoles para ti", "Tu sonrisa es mi luz", "Por siempre tú y yo",
+  "Cada día a tu lado es magia", "Haces mi vida hermosa", "Eres mi flor favorita", "Mi corazón te elige siempre", "Eres mi lugar seguro",
+  "Contigo hasta el infinito 🚀", "Un amor de otra galaxia", "Tus abrazos son mi sol"
 ];
 
-const letrasSincronizadas = [
-    { t: 0, txt: "" },
-    { t: 12, txt: "Tal vez sea la forma en que dices mi nombre<br><span style='font-size:0.7em; color:#ffe87c;'>Maybe it's the way you say my name</span>" },
-    { t: 18, txt: "Tal vez sea la forma en que juegas tu juego<br><span style='font-size:0.7em; color:#ffe87c;'>Maybe it's the way you play your game</span>" },
-    { t: 23, txt: "Pero es tan bueno<br><span style='font-size:0.7em; color:#ffe87c;'>But it's so good</span>" },
-    { t: 25, txt: "Nunca conocí a nadie como tú<br><span style='font-size:0.7em; color:#ffe87c;'>I've never known anybody like you</span>" },
-    { t: 29, txt: "Pero es tan bueno<br><span style='font-size:0.7em; color:#ffe87c;'>But it's so good</span>" },
-    { t: 31, txt: "Nunca soñé con nadie como tú<br><span style='font-size:0.7em; color:#ffe87c;'>I've never dreamed of nobody like you</span>" },
-    { t: 35, txt: "" },
-    { t: 36, txt: "Y he oído hablar de un amor que llega una vez en la vida<br><span style='font-size:0.7em; color:#ffe87c;'>And I've heard of a love that comes once in a lifetime</span>" },
-    { t: 42, txt: "Y estoy bastante seguro de que tú eres ese amor mío<br><span style='font-size:0.7em; color:#ffe87c;'>And I'm pretty sure that you are that love of mine</span>" },
-    { t: 48, txt: "Porque estoy en un campo de dientes de león<br><span style='font-size:0.7em; color:#ffe87c;'>'Cause I'm in a field of dandelions</span>" },
-    { t: 52, txt: "Deseando en cada uno de ellos que seas mía<br><span style='font-size:0.7em; color:#ffe87c;'>Wishing on every one that you'll be mine</span>" },
-    { t: 58, txt: "Mía<br><span style='font-size:0.7em; color:#ffe87c;'>Mine</span>" },
-    { t: 61, txt: "Y veo en tus ojos la eternidad<br><span style='font-size:0.7em; color:#ffe87c;'>And I see forever in your eyes</span>" },
-    { t: 64, txt: "Me siento bien cuando te veo sonreír<br><span style='font-size:0.7em; color:#ffe87c;'>I feel okay when I see you smile</span>" },
-    { t: 71, txt: "sonreír<br><span style='font-size:0.7em; color:#ffe87c;'>smile</span>" },
-    { t: 73, txt: "Pidiendo deseos en dientes de león todo el tiempo<br><span style='font-size:0.7em; color:#ffe87c;'>Wishing on dandelions all of the time</span>" },
-    { t: 76, txt: "Rezando a Dios para que un día seas mía<br><span style='font-size:0.7em; color:#ffe87c;'>Praying to God that one day you'll be mine</span>" },
-    { t: 79, txt: "Pidiendo deseos en dientes de león todo el tiempo<br><span style='font-size:0.7em; color:#ffe87c;'>Wishing on dandelions all of the time</span>" },
-    { t: 82, txt: "Todo el tiempo<br><span style='font-size:0.7em; color:#ffe87c;'>all of the time</span>" },
-    { t: 85, txt: "" },
-    { t: 86, txt: "Creo que eres la indicada para mí<br><span style='font-size:0.7em; color:#ffe87c;'>I think that you are the one for me</span>" },
-    { t: 92, txt: "Porque se me hace tan difícil respirar<br><span style='font-size:0.7em; color:#ffe87c;'>'Cause It gets so hard to breathe</span>" },
-    { t: 97, txt: "Cuando me miras<br><span style='font-size:0.7em; color:#ffe87c;'>When you're looking at me</span>" },
-    { t: 99, txt: "Nunca me sentí tan vivo y libre<br><span style='font-size:0.7em; color:#ffe87c;'>I've never felt so alive and free</span>" },
-    { t: 103, txt: "Cuando me miras a mí<br><span style='font-size:0.7em; color:#ffe87c;'>When you're looking at me</span>" },
-    { t: 105, txt: "Nunca me sentí tan feliz<br><span style='font-size:0.7em; color:#ffe87c;'>I've never felt so happy</span>" },
-    { t: 110, txt: "Y he oído hablar de un amor que llega una vez en la vida<br><span style='font-size:0.7em; color:#ffe87c;'>And I've heard of a love that comes once in a lifetime</span>" },
-    { t: 117, txt: "Y estoy bastante seguro de que tú eres ese amor mío<br><span style='font-size:0.7em; color:#ffe87c;'>And I'm pretty sure that you are that love of mine</span>" },
-    { t: 123, txt: "Porque estoy en un campo de dientes de león<br><span style='font-size:0.7em; color:#ffe87c;'>'Cause I'm in a field of dandelions</span>" },
-    { t: 126, txt: "Deseando en cada uno de ellos que seas mía, mía<br><span style='font-size:0.7em; color:#ffe87c;'>Wishing on every one that you'll be mine, mine</span>" },
-    { t: 135, txt: "Y veo en tus ojos la eternidad<br><span style='font-size:0.7em; color:#ffe87c;'>And I see forever in your eyes</span>" },
-    { t: 138, txt: "Me siento bien cuando te veo sonreír<br><span style='font-size:0.7em; color:#ffe87c;'>I feel okay when I see you smile</span>" },
-    { t: 144, txt: "sonreír<br><span style='font-size:0.7em; color:#ffe87c;'>smile</span>" },
-    { t: 147, txt: "Pidiendo deseos en dientes de león todo el tiempo<br><span style='font-size:0.7em; color:#ffe87c;'>Wishing on dandelions all of the time</span>" },
-    { t: 150, txt: "Rezando a Dios para que un día seas mía<br><span style='font-size:0.7em; color:#ffe87c;'>Praying to God that one day you'll be mine</span>" },
-    { t: 156, txt: "Todo el tiempo<br><span style='font-size:0.7em; color:#ffe87c;'>All of the time</span>" },
-    { t: 159, txt: "" },
-    { t: 160, txt: "Diente de león, hacia el viento vas<br><span style='font-size:0.7em; color:#ffe87c;'>Dandelion, into the wind you go</span>" },
-    { t: 163, txt: "¿No dejarás que mi cariño sepa?<br><span style='font-size:0.7em; color:#ffe87c;'>Won't you let my darling know?</span>" },
-    { t: 166, txt: "Diente de león, hacia el viento vas<br><span style='font-size:0.7em; color:#ffe87c;'>Dandelion, into the wind you go</span>" },
-    { t: 169, txt: "¿No dejarás que mi cariño lo sepa?<br><span style='font-size:0.7em; color:#ffe87c;'>Won't you let my darling know that?</span>" },
-    { t: 174, txt: "Estoy en un campo de dientes de león<br><span style='font-size:0.7em; color:#ffe87c;'>I'm in a field of dandelions</span>" },
-    { t: 177, txt: "Deseando en cada uno de ellos que seas mía, mía<br><span style='font-size:0.7em; color:#ffe87c;'>Wishing on every one that you'll be mine, mine</span>" },
-    { t: 186, txt: "Y veo en tus ojos la eternidad<br><span style='font-size:0.7em; color:#ffe87c;'>Oh, and I see forever in your eyes</span>" },
-    { t: 189, txt: "Me siento bien cuando te veo sonreír, sonreir<br><span style='font-size:0.7em; color:#ffe87c;'>I feel okay when I see you smile, smile</span>" },
-    { t: 198, txt: "Pidiendo deseos en dientes de león todo el tiempo<br><span style='font-size:0.7em; color:#ffe87c;'>Wishing on dandelions all of the time</span>" },
-    { t: 201, txt: "Rezando a Dios para que un día seas mía<br><span style='font-size:0.7em; color:#ffe87c;'>Praying to God that one day you'll be mine</span>" },
-    { t: 204, txt: "Pidiendo deseos en dientes de león todo el tiempo<br><span style='font-size:0.7em; color:#ffe87c;'>Wishing on dandelions all of the time</span>" },
-    { t: 207, txt: "Todo el tiempo<br><span style='font-size:0.7em; color:#ffe87c;'>All of the time</span>" },
-    { t: 211, txt: "Estoy en un campo de dientes de león<br><span style='font-size:0.7em; color:#ffe87c;'>I'm in a field of dandelions</span>" },
-    { t: 215, txt: "Deseando al soplar cada uno que seas mía, mía<br><span style='font-size:0.7em; color:#ffe87c;'>Wishing on every one that you'll be mine, mine</span>" },
-    { t: 223, txt: "🌻💛✨" },
-    { t: 226, txt: "" } 
-];
-  
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
+// Latido "lub-dub"
+function latido(t) { const p = (t % 1) , g = (x, c, w) => Math.exp(-Math.pow((x - c) / w, 2)); return Math.min(1, g(p, .08, .06) + .65 * g(p, .34, .06)); }
 
-document.getElementById('btnIniciar').addEventListener('click', function() {
-    document.getElementById('musicaFondo').play();
-    const pantalla = document.getElementById('pantallaEntrada');
-    pantalla.style.opacity = '0';
-    
-    setTimeout(() => {
-        pantalla.style.display = 'none';
-        document.getElementById('mainContent').style.opacity = '1';
-        document.getElementById('letrasContainer').style.opacity = '1';
-        iniciarViaje();
-    }, 2000);
-});
+/* ============ Estado ============ */
+let scene, camera, renderer, composer, bloomPass, controls, world, heart, hit, halo, bgStars, bgTwinkle, florParticulas = null;
+const pivots = [], textos = [], explosiones = [], fotosFlotantes = [], fotosTex = [];
+const raycaster = new THREE.Raycaster(), ndc = new THREE.Vector2(), clock = new THREE.Clock();
+let enViaje = false, viajeT = 0, etapaFinal = false, florScale = 0, clics = 0, fotosMostradas = false, tiempo = 0, cargaFotosTerminada = false, pr, hudTimer = 0;
+let letraIdx = -1, letraTimer = 0, fpsAcc = 0, fpsN = 0;
+const tex = {};
 
-/* LÓGICA DE LOS BOTONES FINALES */
-document.getElementById('btnRepetir').addEventListener('click', () => {
-    const textoFinalDiv = document.getElementById('textoFinal');
-    textoFinalDiv.style.opacity = '0';
-    setTimeout(() => { textoFinalDiv.style.display = 'none'; }, 1000);
+/* ============ Texturas ============ */
+function radial(stops, s = 128) {
+  const c = document.createElement('canvas'); c.width = c.height = s; const g = c.getContext('2d'), r = s / 2, gr = g.createRadialGradient(r, r, 0, r, r, r);
+  stops.forEach(x => gr.addColorStop(x[0], x[1])); g.fillStyle = gr; g.fillRect(0, 0, s, s); return new THREE.CanvasTexture(c);
+}
+const texDot = () => tex.dot || (tex.dot = radial([[0, 'rgba(255,255,255,1)'], [.35, 'rgba(255,255,255,.75)'], [1, 'rgba(255,255,255,0)']], 64));
+const texGlow = () => tex.glow || (tex.glow = radial([[0, 'rgba(255,255,255,1)'], [.2, 'rgba(255,255,255,.4)'], [.6, 'rgba(255,255,255,.08)'], [1, 'rgba(255,255,255,0)']], 256));
+function emoji(draw, s = 256) {
+  const c = document.createElement('canvas'); c.width = c.height = s; const g = c.getContext('2d'); g.textAlign = 'center'; g.textBaseline = 'middle'; draw(g); const t = new THREE.CanvasTexture(c); t.anisotropy = 1; return t;
+}
+const texGirasol = () => tex.gir || (tex.gir = emoji(g => { g.font = '170px Arial'; g.fillText('🌻', 128, 134); }));
+const texRamito = () => tex.ram || (tex.ram = emoji(g => { g.font = '120px Arial'; g.fillText('🌻', 84, 168); g.fillText('🌻', 172, 168); g.fillText('🌻', 128, 96); }));
 
-    etapaFinal = false;
-    if (florParticulas) {
-        scene.remove(florParticulas);
-        florParticulas = null;
-    }
-    
-    systemRotationGroup.scale.set(1, 1, 1);
-    
-    document.getElementById('mainContent').style.opacity = '1';
-    document.getElementById('letrasContainer').style.opacity = '1';
-
-    camera.position.set(0, 500, 9000);
-    viajeProgress = 0;
-    controls.enabled = false;
-    iniciarViaje();
-
-    const audio = document.getElementById('musicaFondo');
-    audio.currentTime = 0;
-    audio.play();
-});
-
-// NUEVO: EL BOTÓN RETORNAR AHORA REDIRIGE
-document.getElementById('btnRetornar').addEventListener('click', () => {
-    window.location.href = 'hilo_rojo.html'; 
-});
-
-/* LÓGICA DEL LIGHTBOX (ZOOM FOTOS Y VIDEOS) */
-const lightbox = document.getElementById('lightbox');
-const imgLightbox = document.getElementById('imgLightbox');
-const vidLightbox = document.getElementById('vidLightbox');
-const btnCerrar = document.getElementById('btnCerrarLightbox');
-const fotosZoom = document.querySelectorAll('.foto-zoom');
-const btnVideo = document.getElementById('btnAbrirVideo');
-
-// Mostrar imagen
-fotosZoom.forEach(foto => {
-  foto.addEventListener('click', () => {
-    imgLightbox.src = foto.src;
-    imgLightbox.style.display = 'block';
-    vidLightbox.style.display = 'none';
-    vidLightbox.pause(); // Detenemos el video si estaba sonando
-    lightbox.style.display = 'flex';
-  });
-});
-
-// Mostrar video
-btnVideo.addEventListener('click', () => {
-  vidLightbox.src = "./flores/video1.mp4"; // Ruta del video en tamaño completo
-  vidLightbox.style.display = 'block';
-  imgLightbox.style.display = 'none';
-  lightbox.style.display = 'flex';
-  vidLightbox.play(); // Reproduce automáticamente al abrir
-});
-
-// Cerrar Lightbox
-lightbox.addEventListener('click', (e) => {
-  // Cierra si tocas la 'X' o el fondo oscuro (fuera de la foto/video)
-  if(e.target !== imgLightbox && e.target !== vidLightbox || e.target === btnCerrar) {
-    lightbox.style.display = 'none';
-    vidLightbox.pause(); // Pausa el video al cerrar
-  }
-});
-
-
+/* ============ Escena ============ */
 function init() {
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x050300);
-    scene.fog = new THREE.FogExp2(0x050300, 0.0001); 
+  scene = new THREE.Scene(); scene.background = new THREE.Color(0x060400);
+  camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 1, 30000); camera.position.set(0, 500, 9000);
 
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 30000);
-    camera.position.set(0, 500, 9000);
+  pr = Math.min(devicePixelRatio, esCelular ? 1.5 : 2);
+  renderer = new THREE.WebGLRenderer({ antialias: !esCelular, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(pr); renderer.setSize(innerWidth, innerHeight); $('threeCanvas').appendChild(renderer.domElement);
 
-    renderer = new THREE.WebGLRenderer({ antialias: !esCelular });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    document.getElementById('threeCanvas').appendChild(renderer.domElement);
+  if (!esCelular) { // el brillo (bloom) solo en PC; en celular se simula con halos para mantener los FPS
+    composer = new THREE.EffectComposer(renderer); composer.addPass(new THREE.RenderPass(scene, camera));
+    bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .9, .6, .6); composer.addPass(bloomPass);
+  }
 
-    const renderScene = new THREE.RenderPass(scene, camera);
-    const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.5, 0.7);
-    composer = new THREE.EffectComposer(renderer);
-    composer.addPass(renderScene);
-    composer.addPass(bloomPass);
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  Object.assign(controls, { enableDamping: true, dampingFactor: .06, enabled: false, minDistance: 500, maxDistance: 14000, rotateSpeed: .6, zoomSpeed: .8, enablePan: false });
 
-    controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.enabled = false;
-    controls.minDistance = 500; 
-    controls.maxDistance = 14000; 
+  world = new THREE.Group(); scene.add(world);
+  crearCorazon(); crearFondo(); crearFlores(); crearFrases();
 
-    systemRotationGroup = new THREE.Group();
-    scene.add(systemRotationGroup);
-
-    crearCorazonCentral();
-    crearPolvoEstelarDorado();
-    crearGirasolesYTextos();
-
-    window.addEventListener('resize', onWindowResize);
-    window.addEventListener('click', onInteractuar);
-    window.addEventListener('touchstart', onInteractuar, { passive: false });
+  const el = renderer.domElement; let down = null;
+  el.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, t: performance.now() }; });
+  el.addEventListener('pointerup', e => { if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 8 && performance.now() - down.t < 600) tocar(e.clientX, e.clientY); down = null; });
 }
 
-function crearCorazonCentral() {
-    const geometry = new THREE.BufferGeometry();
-    const positions = [];
-    const colors = [];
-    const colorDorado = new THREE.Color(0xffdb58);
-    const colorNaranja = new THREE.Color(0xff8c00);
-
-    for (let i = 0; i < 2000; i++) {
-        const t = Math.random() * Math.PI * 2;
-        const x = 16 * Math.pow(Math.sin(t), 3);
-        const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
-        const z = (Math.random() - 0.5) * 10;
-
-        const scale = 15;
-        positions.push(x * scale, y * scale, z * scale);
-
-        const mixedColor = colorDorado.clone().lerp(colorNaranja, Math.random());
-        colors.push(mixedColor.r, mixedColor.g, mixedColor.b);
-    }
-
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-
-    const material = new THREE.PointsMaterial({
-        size: esCelular ? 4 : 6, vertexColors: true, transparent: true,
-        opacity: 0.8, blending: THREE.AdditiveBlending
-    });
-
-    heartPoints = new THREE.Points(geometry, material);
-    systemRotationGroup.add(heartPoints);
-
-    const hitboxGeom = new THREE.SphereGeometry(400, 16, 16);
-    const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
-    hitboxCorazon = new THREE.Mesh(hitboxGeom, hitboxMat);
-    systemRotationGroup.add(hitboxCorazon);
-
-    const light = new THREE.PointLight(0xffdb58, 2, 2000);
-    scene.add(light);
+function crearCorazon() {
+  const N = esCelular ? 2600 : 4800, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), c1 = new THREE.Color(0xffdb58), c2 = new THREE.Color(0xff8c00), cw = new THREE.Color(0xfff3b0), c = new THREE.Color();
+  for (let i = 0; i < N; i++) {
+    const t = Math.random() * Math.PI * 2, x = 16 * Math.pow(Math.sin(t), 3), y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+    const k = i < N * .55 ? 1 : Math.pow(Math.random(), .7); // 55% contorno, resto relleno interior
+    pos.set([x * 15 * k, y * 15 * k, (Math.random() - .5) * 140 * (1.1 - k * .6)], i * 3);
+    c.copy(c1).lerp(c2, Math.random()); if (Math.random() < .08) c.copy(cw); col.set([c.r, c.g, c.b], i * 3);
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  heart = new THREE.Points(g, new THREE.PointsMaterial({ size: esCelular ? 22 : 26, map: texDot(), vertexColors: true, transparent: true, opacity: .9, blending: THREE.AdditiveBlending, depthWrite: false }));
+  world.add(heart);
+  hit = new THREE.Mesh(new THREE.SphereGeometry(400, 12, 12), new THREE.MeshBasicMaterial({ visible: false })); world.add(hit);
+  halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: texGlow(), color: 0xffb400, transparent: true, opacity: .4, blending: THREE.AdditiveBlending, depthWrite: false }));
+  halo.scale.setScalar(1300); world.add(halo);
 }
 
-function crearPolvoEstelarDorado() {
-    const starsGeometry = new THREE.BufferGeometry();
-    const starsPositions = [];
-    for (let i = 0; i < 5000; i++) {
-        starsPositions.push(
-            (Math.random() - 0.5) * 15000,
-            (Math.random() - 0.5) * 15000,
-            (Math.random() - 0.5) * 15000
-        );
-    }
-    starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsPositions, 3));
-    const starsMaterial = new THREE.PointsMaterial({ color: 0xffe87c, size: 3, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending });
-    scene.add(new THREE.Points(starsGeometry, starsMaterial));
+function crearFondo() {
+  const n = esCelular ? 1800 : 4500, pos = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) pos.set([(Math.random() - .5) * 18000, (Math.random() - .5) * 18000, (Math.random() - .5) * 18000], i * 3);
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const m = (s, o) => new THREE.PointsMaterial({ color: 0xffe9a0, size: s, map: texDot(), transparent: true, opacity: o, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: false });
+  bgStars = new THREE.Points(g, m(2.4, .75)); bgTwinkle = new THREE.Points(g, m(5, .4)); scene.add(bgStars, bgTwinkle);
 }
 
-function crearSpriteGirasol() {
-    return new THREE.Sprite(new THREE.SpriteMaterial({ map: getTexGirasol(), transparent: true }));
+// Flores de fondo: pocas "capas" de puntos que giran juntas = 6 dibujos en vez de 600 sprites
+function crearFlores() {
+  const capas = (textura, total, tamanos, rMin, rSpan) => tamanos.forEach((sz, b) => {
+    const per = Math.floor(total / tamanos.length), pos = new Float32Array(per * 3);
+    for (let i = 0; i < per; i++) { const r = rMin + Math.random() * rSpan, a = Math.random() * Math.PI * 2; pos.set([Math.cos(a) * r, (Math.random() - .5) * 6000, Math.sin(a) * r], i * 3); }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const p = new THREE.Points(g, new THREE.PointsMaterial({ size: sz, map: textura, transparent: true, depthWrite: false, alphaTest: .02 }));
+    p.frustumCulled = false; world.add(p); pivots.push({ g: p, speed: .025 + b * .035 });
+  });
+  capas(texGirasol(), esCelular ? 200 : 420, [85, 130, 190], 1000, 9000);
+  capas(texRamito(), esCelular ? 100 : 210, [130, 200, 290], 1200, 8500);
 }
 
-function crearSpriteRamito() {
-    return new THREE.Sprite(new THREE.SpriteMaterial({ map: getTexRamito(), transparent: true }));
+function spriteTexto(txt) {
+  const c = document.createElement('canvas'); c.width = 1024; c.height = 128; const g = c.getContext('2d');
+  g.font = '600 42px "Jost", "Courier New", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.lineWidth = 8; g.strokeStyle = 'rgba(0,0,0,.85)'; g.lineJoin = 'round'; g.strokeText(txt, 512, 64);
+  g.fillStyle = '#fff4d6'; g.shadowColor = '#ffb000'; g.shadowBlur = 12; g.fillText(txt, 512, 64);
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); s.scale.set(800, 100, 1); return s;
 }
 
-function crearSpriteTexto(texto) {
-    const canvas = document.createElement('canvas');
-    canvas.width = 1200; canvas.height = 128;
-    const ctx = canvas.getContext('2d');
-    ctx.font = 'bold 45px "Courier New"';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    
-    ctx.lineWidth = 8; ctx.strokeStyle = 'black'; 
-    ctx.strokeText(texto, 600, 64);
-
-    ctx.fillStyle = '#ffeedd'; ctx.shadowColor = '#ffb000'; ctx.shadowBlur = 10;
-    ctx.fillText(texto, 600, 64);
-    
-    const tex = new THREE.CanvasTexture(canvas);
-    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, blending: THREE.AdditiveBlending }));
-    sprite.scale.set(800, 85, 1);
-    return sprite;
+function crearFrases() {
+  frases.forEach((f, i) => {
+    const pivot = new THREE.Group(), r = 600 + Math.random() * 3900, h = (Math.random() - .5) * 1500;
+    pivot.rotation.y = (i / frases.length) * Math.PI * 2 + Math.random() * .5;
+    const flor = new THREE.Sprite(new THREE.SpriteMaterial({ map: texGirasol(), transparent: true, depthWrite: false })); flor.scale.set(150, 150, 1); flor.position.set(r, h, 0);
+    const t = spriteTexto(f); t.position.set(r, h - 100, 0);
+    pivot.add(flor, t); world.add(pivot); pivots.push({ g: pivot, speed: .06 + Math.random() * .12 }); textos.push({ t, base: h - 100, fase: Math.random() * 6 });
+  });
 }
 
-function crearGirasolesYTextos() {
-    for (let i = 0; i < 400; i++) {
-        const girasolFondo = crearSpriteGirasol();
-        const radioF = 1000 + (Math.random() * 9000); 
-        const anguloF = Math.random() * Math.PI * 2;
-        const alturaF = (Math.random() - 0.5) * 6000;
-        girasolFondo.position.set(Math.cos(anguloF) * radioF, alturaF, Math.sin(anguloF) * radioF);
-        
-        const escalaF = 50 + Math.random() * 110;
-        girasolFondo.scale.set(escalaF, escalaF, 1);
-        
-        girasoles.push({ mesh: girasolFondo, angulo: anguloF, radio: radioF, velocidad: 0.0005 + Math.random() * 0.002 });
-        systemRotationGroup.add(girasolFondo);
-    }
-
-    for (let i = 0; i < 200; i++) {
-        const ramitoFondo = crearSpriteRamito();
-        const radioF = 1200 + (Math.random() * 8500); 
-        const anguloF = Math.random() * Math.PI * 2;
-        const alturaF = (Math.random() - 0.5) * 6000;
-        ramitoFondo.position.set(Math.cos(anguloF) * radioF, alturaF, Math.sin(anguloF) * radioF);
-        
-        const escalaF = 80 + Math.random() * 150; 
-        ramitoFondo.scale.set(escalaF, escalaF, 1);
-        
-        girasoles.push({ mesh: ramitoFondo, angulo: anguloF, radio: radioF, velocidad: 0.0004 + Math.random() * 0.0015 });
-        systemRotationGroup.add(ramitoFondo);
-    }
-
-    const cantidad = frases.length;
-    for (let i = 0; i < cantidad; i++) {
-        const girasol = crearSpriteGirasol();
-        const radioCirculo = 600 + (Math.random() * 3900);
-        const angulo = (i / cantidad) * Math.PI * 2 + (Math.random() * 0.5);
-        const alturaAleatoria = (Math.random() - 0.5) * 1500;
-        
-        girasol.position.set(Math.cos(angulo) * radioCirculo, alturaAleatoria, Math.sin(angulo) * radioCirculo);
-        girasol.scale.set(150, 150, 1);
-        
-        girasoles.push({ mesh: girasol, angulo: angulo, radio: radioCirculo, velocidad: 0.001 + Math.random() * 0.002 });
-        systemRotationGroup.add(girasol);
-
-        const texto = crearSpriteTexto(frases[i]);
-        texto.position.set(girasol.position.x, girasol.position.y - 100, girasol.position.z);
-        textosFlotantes.push({ mesh: texto, angulo: angulo, radio: radioCirculo, velocidad: 0.001 + Math.random() * 0.002, offsetY: alturaAleatoria });
-        systemRotationGroup.add(texto);
-    }
+/* ============ Fotos: precarga ligera (se reducen a 512px para no trabar el celular) ============ */
+function cargarFotos(i = 1, fallos = 0) {
+  if (i > 40 || fallos >= 3) { cargaFotosTerminada = true; return; }
+  const img = new Image();
+  img.onload = () => {
+    const k = Math.min(1, 512 / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); const t = new THREE.CanvasTexture(c); t.minFilter = THREE.LinearFilter; t.generateMipmaps = false;
+    fotosTex.push({ t, aspect: img.width / img.height }); setTimeout(() => cargarFotos(i + 1, 0), 60);
+  };
+  img.onerror = () => cargarFotos(i + 1, fallos + 1);
+  img.src = `fotos/foto${i}.jpg`;
 }
 
-function onInteractuar(event) {
-    if(!controls.enabled || etapaFinal) return;
-    let clientX = event.clientX; let clientY = event.clientY;
-    if (event.touches && event.touches.length > 0) {
-        clientX = event.touches[0].clientX; clientY = event.touches[0].clientY;
-    }
-    mouse.x = (clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(clientY / window.innerHeight) * 2 + 1;
-
-    raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObject(hitboxCorazon);
-
-    if (intersects.length > 0) {
-        clicsCorazon++;
-        crearExplosionFlores();
-
-        if (clicsCorazon === 10 && !fotosMostradas) {
-            mostrarEventoFotos();
-        }
-    }
+/* ============ Interacción ============ */
+function hud(html) { const h = $('hud'); h.innerHTML = html; h.classList.add('on'); clearTimeout(hudTimer); }
+function tocar(x, y) {
+  if (!controls.enabled || etapaFinal) return;
+  ndc.set(x / innerWidth * 2 - 1, -(y / innerHeight) * 2 + 1); raycaster.setFromCamera(ndc, camera);
+  if (!raycaster.intersectObject(hit).length) return;
+  clics++; explotar();
+  if (!fotosMostradas) hud(`Toca el corazón dorado · <b>${Math.min(clics, 10)} de 10</b>`);
+  if (clics >= 10 && !fotosMostradas) { fotosMostradas = true; $('hud').classList.remove('on'); mostrarFotos(); }
 }
 
-function crearExplosionFlores() {
-    const numParticulas = esCelular ? 100 : 200;
-    const geometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(numParticulas * 3);
-    const velocidades = [];
+function explotar() {
+  while (explosiones.length >= 5) quitarExplosion(0);
+  const n = esCelular ? 80 : 170, pos = new Float32Array(n * 3), vel = new Float32Array(n * 3);
+  for (let i = 0; i < n * 3; i++) vel[i] = (Math.random() - .5) * 6500;
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const p = new THREE.Points(g, new THREE.PointsMaterial({ size: esCelular ? 150 : 220, map: texGirasol(), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+  p.frustumCulled = false; p.userData = { vel, vida: 1 }; world.add(p); explosiones.push(p);
+}
+function quitarExplosion(i) { const p = explosiones[i]; world.remove(p); p.geometry.dispose(); p.material.dispose(); explosiones.splice(i, 1); }
 
-    for (let i = 0; i < numParticulas; i++) {
-        positions[i * 3] = 0;
-        positions[i * 3 + 1] = 0;
-        positions[i * 3 + 2] = 0;
-        
-        velocidades.push(
-            (Math.random() - 0.5) * 350,
-            (Math.random() - 0.5) * 350,
-            (Math.random() - 0.5) * 350
-        );
-    }
-
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-    const material = new THREE.PointsMaterial({
-        size: esCelular ? 150 : 250, 
-        map: getTexGirasol(),
-        transparent: true,
-        opacity: 1.0,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending 
-    });
-
-    const points = new THREE.Points(geometry, material);
-    points.userData = { vels: velocidades, vida: 1.0 };
-
-    systemRotationGroup.add(points);
-    explosionesActivas.push(points);
+function mostrarFotos() {
+  let i = 0;
+  const iv = setInterval(() => {
+    if (i >= fotosTex.length) { if (cargaFotosTerminada || i >= 40) clearInterval(iv); return; }
+    const f = fotosTex[i++], s = new THREE.Sprite(new THREE.SpriteMaterial({ map: f.t, transparent: true, opacity: 0, depthWrite: false })), pivot = new THREE.Group();
+    const r = 350 + Math.random() * 1000; pivot.rotation.y = Math.random() * Math.PI * 2; s.position.set(r, (Math.random() - .5) * 800, 0); s.scale.set(.01, .01, 1);
+    s.userData = { h: 230, w: 230 * clamp(f.aspect, .6, 1.6) }; pivot.add(s); world.add(pivot); pivots.push({ g: pivot, speed: .12 + Math.random() * .25 }); fotosFlotantes.push(s);
+  }, 550);
 }
 
-function mostrarEventoFotos() {
-    fotosMostradas = true;
-    let i = 1;
-    
-    const intervaloFotos = setInterval(() => {
-        if (i > 40) {
-            clearInterval(intervaloFotos);
-            return;
-        }
-        
-        const material = new THREE.SpriteMaterial({ transparent: true, opacity: 0, color: 0xcccccc });
-        const sprite = new THREE.Sprite(material);
-        
-        const angulo = Math.random() * Math.PI * 2;
-        const radio = 350 + Math.random() * 1000; 
-        const altura = (Math.random() - 0.5) * 800;
-        
-        sprite.position.set(Math.cos(angulo) * radio, altura, Math.sin(angulo) * radio);
-        sprite.scale.set(0, 0, 1); 
-        
-        sprite.userData = { 
-            angulo: angulo, radio: radio, velocidad: 0.002 + Math.random() * 0.004, 
-            opacityTarget: 1, scaleTarget: 220 
-        };
-        fotosFlotantes.push(sprite);
-        systemRotationGroup.add(sprite);
-
-        textureLoader.load(`fotos/foto${i}.jpg`, (texture) => {
-            sprite.material.map = texture;
-            sprite.material.needsUpdate = true;
-        });
-
-        i++;
-    }, 550); 
-}
-
-function crearFlorParticulas() {
-    const geometry = new THREE.BufferGeometry();
-    const positions = [];
-    const colors = [];
-    const colorCentro = new THREE.Color(0x5c2c00); 
-    const colorPetalo1 = new THREE.Color(0xffdb58); 
-    const colorPetalo2 = new THREE.Color(0xff9900); 
-
-    for (let i = 0; i < 6000; i++) {
-        let x, y, z, colorDeseado;
-        
-        if (i < 2500) {
-            const r = Math.sqrt(i) * 0.4;
-            const theta = i * 137.5 * (Math.PI / 180);
-            x = r * Math.cos(theta);
-            y = r * Math.sin(theta);
-            z = (Math.random() - 0.5) * 2;
-            colorDeseado = colorCentro.clone().lerp(new THREE.Color(0x3a1b00), Math.random());
-        } else {
-            const theta = Math.random() * Math.PI * 2;
-            const largoBase = 18;
-            const extension = 35 * Math.pow(Math.abs(Math.sin(theta * 8)), 0.5); 
-            const r = largoBase + Math.random() * extension;
-            
-            x = r * Math.cos(theta);
-            y = r * Math.sin(theta);
-            z = (Math.random() - 0.5) * 4;
-            colorDeseado = colorPetalo1.clone().lerp(colorPetalo2, Math.random());
-        }
-
-        positions.push(x * 1.5, y * 1.5, z * 1.5);
-        colors.push(colorDeseado.r, colorDeseado.g, colorDeseado.b);
-    }
-
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-
-    const material = new THREE.PointsMaterial({
-        size: esCelular ? 3 : 5, vertexColors: true, transparent: true,
-        opacity: 0.9, blending: THREE.AdditiveBlending
-    });
-
-    return new THREE.Points(geometry, material);
-}
-
-function iniciarFinalMagico() {
-    etapaFinal = true;
-    
-    document.getElementById('mainContent').style.opacity = '0';
-    document.getElementById('letrasContainer').style.opacity = '0';
-    
-    florParticulas = crearFlorParticulas();
-    florParticulas.scale.set(0, 0, 0); 
-    scene.add(florParticulas); 
-    
-    document.getElementById('textoFinal').style.display = 'flex';
-}
-
+/* ============ Letra sincronizada (letras.js) ============ */
 function actualizarLetras() {
-    const audioEl = document.getElementById('musicaFondo');
-    const divLetras = document.getElementById('letrasContainer');
-    if (!audioEl || !divLetras) return;
-
-    const tiempo = audioEl.currentTime;
-
-    // Recuerda cambiar el 226 para tu versión final
-    if (tiempo >= 226 && !etapaFinal) {
-        iniciarFinalMagico();
-    }
-
-    let textoActual = "";
-    for (let i = 0; i < letrasSincronizadas.length; i++) {
-        if (tiempo >= letrasSincronizadas[i].t) {
-            textoActual = letrasSincronizadas[i].txt;
-        } else {
-            break;
-        }
-    }
-
-    if (!etapaFinal && divLetras.innerHTML !== textoActual) {
-        divLetras.innerHTML = textoActual;
-    }
+  const L = typeof letrasSincronizadas !== 'undefined' ? letrasSincronizadas : [], t = $('musicaFondo').currentTime;
+  if (t >= TIEMPO_FINAL && !etapaFinal) { iniciarFinal(); return; }
+  if (etapaFinal || !L.length) return;
+  if (letraIdx >= 0 && t < L[letraIdx].t) letraIdx = -1;
+  let idx = letraIdx; for (let i = Math.max(0, letraIdx); i < L.length && t >= L[i].t; i++) idx = i;
+  if (idx !== letraIdx) {
+    letraIdx = idx; const d = $('letrasContainer'), txt = L[idx].txt; d.style.opacity = 0; clearTimeout(letraTimer);
+    letraTimer = setTimeout(() => { d.innerHTML = txt; d.style.opacity = txt ? 1 : 0; }, 350);
+  }
 }
 
-let enViaje = false;
-let viajeProgress = 0;
-const viajeDuration = 4000;
-
-function iniciarViaje() {
-    enViaje = true;
+/* ============ Final mágico ============ */
+function crearFlor() {
+  const N = esCelular ? 3200 : 6000, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), cc = new THREE.Color(0x7a3a00), cd = new THREE.Color(0x3a1b00), p1 = new THREE.Color(0xffdb58), p2 = new THREE.Color(0xff9900), c = new THREE.Color();
+  const centro = Math.floor(N * .42);
+  for (let i = 0; i < N; i++) {
+    let x, y;
+    if (i < centro) { const r = Math.sqrt(i * 2500 / centro) * .4, th = i * 137.5 * Math.PI / 180; x = r * Math.cos(th); y = r * Math.sin(th); c.copy(cc).lerp(cd, Math.random()); }
+    else { const th = Math.random() * Math.PI * 2, r = 18 + Math.random() * 35 * Math.pow(Math.abs(Math.sin(th * 8)), .5); x = r * Math.cos(th); y = r * Math.sin(th); c.copy(p1).lerp(p2, Math.random()); }
+    pos.set([x * 1.5, y * 1.5, (Math.random() - .5) * 5], i * 3); col.set([c.r, c.g, c.b], i * 3);
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  return new THREE.Points(g, new THREE.PointsMaterial({ size: esCelular ? 26 : 22, map: texDot(), vertexColors: true, transparent: true, opacity: .95, blending: THREE.AdditiveBlending, depthWrite: false }));
 }
 
-let prevTime = Date.now();
+function iniciarFinal() {
+  etapaFinal = true; florScale = 0;
+  $('mainContent').classList.remove('on'); $('letrasContainer').style.opacity = 0; $('scrim').style.opacity = 0; $('hud').classList.remove('on');
+  document.querySelectorAll('.fotos-bobby img[data-src]').forEach(i => { i.src = i.dataset.src; i.removeAttribute('data-src'); });
+  const v = $('videoMini'); if (!v.src) { v.src = './flores/video1.mp4'; } v.play().catch(() => {});
+  florParticulas = crearFlor(); florParticulas.scale.setScalar(.001); scene.add(florParticulas);
+  const t = $('textoFinal'); t.style.display = 'flex'; t.style.opacity = 0;
+}
 
+/* ============ Botones ============ */
+$('btnIniciar').addEventListener('click', () => {
+  const a = $('musicaFondo'); a.volume = 0; a.play().catch(() => {});
+  const fade = setInterval(() => { a.volume = Math.min(1, a.volume + .05); if (a.volume >= 1) clearInterval(fade); }, 100);
+  $('pantallaEntrada').classList.add('salir'); cargarFotos();
+  setTimeout(() => { $('pantallaEntrada').style.display = 'none'; $('mainContent').classList.add('on'); $('scrim').style.opacity = 1; enViaje = true; viajeT = 0; }, 1500);
+});
+
+$('btnRepetir').addEventListener('click', () => {
+  const t = $('textoFinal'); t.style.opacity = 0; setTimeout(() => { t.style.display = 'none'; }, 1000);
+  etapaFinal = false; letraIdx = -1; $('videoMini').pause();
+  if (florParticulas) { scene.remove(florParticulas); florParticulas.geometry.dispose(); florParticulas.material.dispose(); florParticulas = null; }
+  world.visible = true; world.scale.setScalar(1);
+  $('mainContent').classList.add('on'); $('scrim').style.opacity = 1;
+  camera.position.set(0, 500, 9000); controls.enabled = false; enViaje = true; viajeT = 0;
+  const a = $('musicaFondo'); a.currentTime = 0; a.play().catch(() => {});
+});
+$('btnRetornar').addEventListener('click', () => { location.href = 'hilo_rojo.html'; });
+
+// Visor de fotos y video
+const lb = $('lightbox'), imgLb = $('imgLightbox'), vidLb = $('vidLightbox');
+function cerrarLb() { lb.style.display = 'none'; vidLb.pause(); }
+document.querySelectorAll('.foto-zoom').forEach(f => f.addEventListener('click', () => { imgLb.src = f.src; imgLb.style.display = 'block'; vidLb.style.display = 'none'; vidLb.pause(); lb.style.display = 'flex'; }));
+$('btnAbrirVideo').addEventListener('click', () => { vidLb.src = './flores/video1.mp4'; vidLb.style.display = 'block'; imgLb.style.display = 'none'; lb.style.display = 'flex'; vidLb.play().catch(() => {}); });
+lb.addEventListener('click', e => { if ((e.target !== imgLb && e.target !== vidLb) || e.target.id === 'btnCerrarLightbox') cerrarLb(); });
+addEventListener('keydown', e => { if (e.key === 'Escape') cerrarLb(); });
+document.addEventListener('visibilitychange', () => { const a = $('musicaFondo'); if (document.hidden) a.pause(); else if (!enViajeInicial() && a.currentTime > 0) a.play().catch(() => {}); });
+function enViajeInicial() { return $('pantallaEntrada').style.display !== 'none' && !$('pantallaEntrada').classList.contains('salir'); }
+
+/* ============ Bucle ============ */
 function animate() {
-    requestAnimationFrame(animate);
-    const time = Date.now();
-    const delta = (time - prevTime) / 1000;
-    prevTime = time;
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), .05); tiempo += dt;
 
-    actualizarLetras(); 
+  // Calidad adaptable: si va lento, baja un poco la resolución
+  fpsAcc += dt; if (++fpsN >= 90) {
+    if (fpsAcc / fpsN > .027 && pr > 1) { pr = Math.max(1, pr - .25); renderer.setPixelRatio(pr); renderer.setSize(innerWidth, innerHeight); if (composer) { composer.setPixelRatio(pr); composer.setSize(innerWidth, innerHeight); } }
+    fpsAcc = fpsN = 0;
+  }
 
-    if (etapaFinal) {
-        systemRotationGroup.rotation.y += delta * 4;
-        systemRotationGroup.scale.lerp(new THREE.Vector3(0, 0, 0), 0.015);
-        
-        if (systemRotationGroup.scale.x < 0.2 && florParticulas) {
-            florParticulas.scale.lerp(new THREE.Vector3(25, 25, 25), 0.02);
-            florParticulas.rotation.z += delta * 0.2; 
-            
-            if (florParticulas.scale.x > 15) {
-                document.getElementById('textoFinal').style.opacity = '1';
-            }
-        }
-    } else {
-        systemRotationGroup.rotation.y += delta * 0.05;
+  actualizarLetras();
+  bgTwinkle.material.opacity = .25 + .25 * Math.sin(tiempo * 1.6);
 
-        if (heartPoints && hitboxCorazon) {
-            let latido = 1 + Math.sin(time * 0.004) * 0.08;
-            heartPoints.scale.set(latido, latido, latido);
-            hitboxCorazon.scale.set(latido, latido, latido);
-        }
-
-        girasoles.forEach((g) => {
-            g.angulo += g.velocidad;
-            g.mesh.position.x = Math.cos(g.angulo) * g.radio;
-            g.mesh.position.z = Math.sin(g.angulo) * g.radio;
-        });
-
-        textosFlotantes.forEach((t) => {
-            t.angulo += t.velocidad;
-            t.mesh.position.x = Math.cos(t.angulo) * t.radio;
-            t.mesh.position.z = Math.sin(t.angulo) * t.radio;
-            t.mesh.position.y = t.offsetY + Math.sin(time * 0.002 + t.angulo) * 40; 
-        });
-
-        fotosFlotantes.forEach((f) => {
-            f.userData.angulo += f.userData.velocidad;
-            f.position.x = Math.cos(f.userData.angulo) * f.userData.radio;
-            f.position.z = Math.sin(f.userData.angulo) * f.userData.radio;
-            
-            if (f.material.opacity < f.userData.opacityTarget) {
-                f.material.opacity += 0.02; 
-            }
-            if (f.scale.x < f.userData.scaleTarget) {
-                const nuevaEscala = f.scale.x + (f.userData.scaleTarget - f.scale.x) * 0.05;
-                f.scale.set(nuevaEscala, nuevaEscala, 1);
-            }
-        });
+  if (etapaFinal) {
+    world.rotation.y += dt * 4;
+    if (world.visible) { const s = world.scale.x + (0 - world.scale.x) * smooth(1.2, dt); world.scale.setScalar(Math.max(s, .0001)); if (s < .01) world.visible = false; }
+    if (world.scale.x < .2 && florParticulas) {
+      florScale += (25 - florScale) * smooth(1.2, dt); florParticulas.scale.setScalar(Math.max(florScale, .001)); florParticulas.rotation.z += dt * .2;
+      if (florScale > 15) $('textoFinal').style.opacity = 1;
     }
+  } else {
+    world.rotation.y += dt * .05;
+    const p = latido(tiempo * .95), s = 1 + p * .1;
+    heart.scale.setScalar(s); hit.scale.setScalar(s); halo.material.opacity = .28 + p * .22; halo.scale.setScalar(1300 * (1 + p * .08));
+    for (let i = 0; i < pivots.length; i++) pivots[i].g.rotation.y += pivots[i].speed * dt;
+    for (let i = 0; i < textos.length; i++) { const x = textos[i]; x.t.position.y = x.base + Math.sin(tiempo * 2 + x.fase) * 40; }
+    fotosFlotantes.forEach(f => {
+      const m = f.material, u = f.userData; m.opacity += (1 - m.opacity) * smooth(2.5, dt);
+      f.scale.x += (u.w - f.scale.x) * smooth(3, dt); f.scale.y += (u.h - f.scale.y) * smooth(3, dt);
+    });
+  }
 
-    for (let i = explosionesActivas.length - 1; i >= 0; i--) {
-        let explosion = explosionesActivas[i];
-        explosion.userData.vida -= 0.015; 
-        
-        if (explosion.userData.vida <= 0) {
-            systemRotationGroup.remove(explosion);
-            explosion.geometry.dispose();
-            explosion.material.dispose();
-            explosionesActivas.splice(i, 1);
-        } else {
-            explosion.material.opacity = explosion.userData.vida;
-            
-            const positions = explosion.geometry.attributes.position.array;
-            const vels = explosion.userData.vels;
-            
-            for (let j = 0; j < positions.length / 3; j++) {
-                positions[j*3] += vels[j*3];     
-                positions[j*3+1] += vels[j*3+1]; 
-                positions[j*3+2] += vels[j*3+2];  
-            }
-            explosion.geometry.attributes.position.needsUpdate = true;
-        }
-    }
+  for (let i = explosiones.length - 1; i >= 0; i--) {
+    const e = explosiones[i], u = e.userData; u.vida -= dt / 1.6;
+    if (u.vida <= 0) { quitarExplosion(i); continue; }
+    const pos = e.geometry.attributes.position.array, v = u.vel, d = Math.exp(-2.2 * dt);
+    for (let j = 0; j < pos.length; j++) { v[j] *= d; pos[j] += v[j] * dt; }
+    e.geometry.attributes.position.needsUpdate = true; e.material.opacity = u.vida;
+  }
 
-    if (enViaje) {
-        viajeProgress += delta * 1000;
-        if (viajeProgress >= viajeDuration) {
-            viajeProgress = viajeDuration;
-            enViaje = false;
-            controls.enabled = true;
-        }
-        const ratio = viajeProgress / viajeDuration;
-        const easeRatio = 1 - Math.pow(1 - ratio, 3);
-        camera.position.z = THREE.MathUtils.lerp(9000, 2200, easeRatio);
-        camera.position.y = THREE.MathUtils.lerp(500, 200, easeRatio);
-    }
+  if (enViaje) {
+    viajeT += dt / 4.5; const k = easeOut(clamp(viajeT, 0, 1));
+    camera.position.set(0, THREE.MathUtils.lerp(500, 200, k), THREE.MathUtils.lerp(9000, 2200, k)); camera.lookAt(0, 0, 0);
+    if (viajeT >= 1) { enViaje = false; controls.target.set(0, 0, 0); controls.enabled = true; controls.update(); if (!fotosMostradas) hud(`Toca el corazón dorado · <b>${clics} de 10</b>`); }
+  } else if (controls.enabled) controls.update();
 
-    if (controls.enabled) controls.update();
-    composer.render();
+  composer ? composer.render() : renderer.render(scene, camera);
 }
 
-function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    composer.setSize(window.innerWidth, window.innerHeight);
-}
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); if (composer) composer.setSize(innerWidth, innerHeight);
+});
 
-init();
-animate();
+init(); animate();
 </script>
 </body>
 </html>
