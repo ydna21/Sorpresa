@@ -2,148 +2,142 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#06020b">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Un Universo para Ti 💖</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500;1,600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --ink: #06020b; --rose: #ff7eb6; --blush: #ffd6e7; --magenta: #ff2d8a; --gold: #ffe2b0;
-    --serif: 'Cormorant Garamond', Georgia, serif; --sans: 'Jost', system-ui, sans-serif;
-    --glass: rgba(24, 6, 22, .55); --line: rgba(255, 150, 200, .35);
-  }
-  * { box-sizing: border-box; }
-  html, body { height: 100%; }
-  body { margin: 0; background: var(--ink); overflow: hidden; font-family: var(--sans); color: #fff; -webkit-font-smoothing: antialiased; }
-  button { font-family: inherit; }
-
-  /* ---------- Entrada ---------- */
+  body { margin: 0; background: black; overflow: hidden; font-family: 'Courier New', monospace; color: white; }
+  
   #pantallaEntrada {
-    position: fixed; inset: 0; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px;
-    background: radial-gradient(ellipse at 50% 40%, #2a0a2e 0%, #0d0414 55%, #06020b 100%);
-    transition: opacity 1.2s ease, transform 1.2s ease; text-align: center; padding: 24px;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: black; z-index: 999; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; color: #ff69b4;
+    transition: opacity 1s ease;
   }
-  #pantallaEntrada.salir { opacity: 0; transform: scale(1.15); pointer-events: none; }
-  #pantallaEntrada h2 { margin: 0; font: italic 500 clamp(2rem, 6vw, 3.4rem)/1.1 var(--serif); color: var(--blush); text-shadow: 0 0 40px rgba(255, 45, 138, .6); }
-  #pantallaEntrada small { font-weight: 300; letter-spacing: .08em; color: rgba(255, 214, 231, .6); }
-  .barra { width: min(260px, 70vw); height: 2px; background: rgba(255,255,255,.12); border-radius: 2px; overflow: hidden; transition: opacity .6s; }
-  .barra i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--rose), var(--gold)); box-shadow: 0 0 12px var(--rose); transition: width .25s linear; }
+  #pantallaEntrada h2 { font-size: 2rem; text-shadow: 0 0 15px #ff69b4; text-align: center; padding: 0 20px;}
+  
   #btnEmpezarUniverso {
-    padding: 16px 44px; font-size: 1.05rem; font-weight: 500; letter-spacing: .06em; color: #fff; cursor: pointer;
-    background: linear-gradient(135deg, #ff5fa2, #c01a6e); border: 1px solid rgba(255,255,255,.35); border-radius: 60px;
-    box-shadow: 0 0 40px rgba(255, 45, 138, .45), inset 0 1px 0 rgba(255,255,255,.35);
-    opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity .8s, transform .8s, box-shadow .3s;
+    margin-top: 30px; padding: 15px 40px; font-size: 1.5rem; background: #ff1493;
+    color: white; border: none; border-radius: 50px; 
+    box-shadow: 0 0 25px #ff1493;
+    opacity: 0.5; cursor: not-allowed; pointer-events: none; 
+    transition: all 0.5s ease;
   }
-  #btnEmpezarUniverso.listo { opacity: 1; transform: none; pointer-events: auto; animation: latido 2.4s ease-in-out infinite; }
-  #btnEmpezarUniverso:hover { box-shadow: 0 0 60px rgba(255, 45, 138, .8), inset 0 1px 0 rgba(255,255,255,.5); }
-  @keyframes latido { 50% { transform: scale(1.05); } }
-
-  /* ---------- Escena ---------- */
-  #threeCanvas { position: fixed; inset: 0; z-index: 1; touch-action: none; }
-  #threeCanvas canvas { display: block; }
-  .velo { position: fixed; inset: auto 0 0 0; height: 45vh; z-index: 2; pointer-events: none; background: linear-gradient(to top, rgba(6,2,11,.85), transparent); opacity: 0; transition: opacity 2.5s; }
-
-  #mainContent {
-    position: fixed; left: 0; right: 0; bottom: max(96px, env(safe-area-inset-bottom) + 80px); z-index: 3; display: flex; flex-direction: column;
-    align-items: center; text-align: center; padding: 0 20px; pointer-events: none; opacity: 0; transform: translateY(14px);
-    transition: opacity 2.4s ease, transform 2.4s ease;
+  
+  #btnEmpezarUniverso.listo {
+    opacity: 1; cursor: pointer; pointer-events: auto; 
+    animation: latidoEntrada 1.5s infinite;
   }
-  #mainContent.visible { opacity: 1; transform: none; }
-  h1 { margin: 0 0 12px; font: italic 600 clamp(2.2rem, 7vw, 4.4rem)/1.05 var(--serif); letter-spacing: .01em; color: #fff;
-       text-shadow: 0 0 30px rgba(255, 126, 182, .75), 0 2px 18px rgba(0,0,0,.6); }
-  #parrafoCumple { margin: 0; max-width: 560px; font-weight: 300; font-size: clamp(.95rem, 2.6vw, 1.2rem); line-height: 1.6; color: var(--blush); text-shadow: 0 2px 14px rgba(0,0,0,.7); }
-  #pastelBtn { display: inline-block; cursor: default; pointer-events: none; opacity: .75; transition: opacity 1s; }
-  #pastelBtn.pastel-activo { cursor: pointer; pointer-events: auto; opacity: 1; animation: pastel 1.6s ease-in-out infinite; filter: drop-shadow(0 0 14px var(--rose)); }
-  @keyframes pastel { 50% { transform: scale(1.25) rotate(-6deg); } }
 
-  /* HUD + mensajes */
-  #hint {
-    position: fixed; top: max(18px, env(safe-area-inset-top) + 8px); left: 50%; transform: translate(-50%, -10px); z-index: 5; opacity: 0; pointer-events: none;
-    padding: 9px 20px; border-radius: 40px; background: var(--glass); border: 1px solid var(--line); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-    font-weight: 300; font-size: .9rem; letter-spacing: .03em; color: var(--blush); white-space: nowrap; transition: opacity 1s, transform 1s;
+  @keyframes latidoEntrada {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
   }
-  #hint.visible { opacity: 1; transform: translate(-50%, 0); }
-  #hint b { font-weight: 500; color: #fff; }
 
   #mensajePlaneta {
-    position: fixed; top: 50%; left: 50%; z-index: 6; pointer-events: none; opacity: 0; transform: translate(-50%, -42%) scale(.96);
-    max-width: 86vw; padding: 20px 34px; text-align: center; border-radius: 26px;
-    font: italic 500 clamp(1.4rem, 4.5vw, 2rem)/1.3 var(--serif); color: #fff; text-shadow: 0 0 18px rgba(255,126,182,.7);
-    background: var(--glass); border: 1px solid var(--line); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-    box-shadow: 0 0 60px rgba(255, 45, 138, .35), inset 0 1px 0 rgba(255,255,255,.15);
-    transition: opacity .6s ease, transform .6s cubic-bezier(.2,.8,.2,1);
+    display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: rgba(20, 0, 10, 0.85); border: 2px solid #ff1493; color: white;
+    padding: 15px 30px; border-radius: 20px; font-size: 1.4rem; text-align: center;
+    z-index: 1000; box-shadow: 0 0 40px #ff1493; animation: aparecerMensaje 0.5s ease;
+    pointer-events: none; text-shadow: 0 0 10px #ffb6c1;
   }
-  #mensajePlaneta.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  @keyframes aparecerMensaje { from { opacity: 0; transform: translate(-50%, -40%); } to { opacity: 1; transform: translate(-50%, -50%); } }
 
-  #contenedorBotones { position: fixed; bottom: max(22px, env(safe-area-inset-bottom) + 10px); left: 50%; transform: translateX(-50%); z-index: 20; display: none; gap: 12px; }
-  .btn-flotante {
-    padding: 11px 22px; border-radius: 40px; cursor: pointer; font-size: .9rem; font-weight: 400; letter-spacing: .04em; color: var(--blush); white-space: nowrap;
-    background: var(--glass); border: 1px solid var(--line); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); transition: background .3s, box-shadow .3s, color .3s;
+  #threeCanvas { display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+  
+  #mainContent {
+    position: absolute; bottom: 100px; left: 0; width: 100%;
+    z-index: 2; display: flex; flex-direction: column;
+    align-items: center; text-align: center; pointer-events: none;
+    opacity: 0; transition: opacity 2s ease;
   }
-  .btn-flotante:hover, .btn-flotante:focus-visible { background: rgba(255, 95, 162, .85); color: #fff; box-shadow: 0 0 30px rgba(255, 95, 162, .6); outline: none; }
-  #btnLeerCarta { display: none; }
+  
+  h1 { font-size: 2.6rem; color: #fff; text-shadow: 0 0 20px #ff69b4, 0 0 30px #ff1493; margin-bottom: 10px; animation: glow 2s ease-in-out infinite alternate; margin-top: 0; }
+  p { font-size: 1.2rem; color: #ffb6c1; max-width: 600px; margin-top: 0; margin-bottom: 0; }
+  
+  #pastelBtn {
+    display: inline-block;
+    cursor: default;
+    pointer-events: none;
+    opacity: 0.7;
+    transition: all 1s ease;
+  }
 
-  #flash { position: fixed; inset: 0; z-index: 1500; background: radial-gradient(circle, #fff, #ffc2dd 50%, transparent 80%); opacity: 0; pointer-events: none; transition: opacity 1.4s ease; }
-  #flash.on { opacity: 1; transition: opacity .25s ease; }
+  .pastel-activo {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    animation: latidoPastel 1.5s infinite;
+    filter: drop-shadow(0 0 15px #ff69b4);
+  }
 
-  /* ---------- Carta ---------- */
+  @keyframes latidoPastel {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+  }
+
+  #contenedorBotones {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    z-index: 20; display: none; gap: 15px; justify-content: center; width: auto;
+  }
+
+  .btn-volver-flotante {
+     padding: 12px 25px; background: rgba(0,0,0,0.6); 
+     border: 2px solid #ff69b4; color: #ffb6c1; border-radius: 25px; 
+     cursor: pointer; font-family: 'Courier New', monospace; font-size: 1rem; font-weight: bold;
+     transition: all 0.3s; white-space: nowrap; box-shadow: 0 0 15px rgba(255, 105, 180, 0.4); pointer-events: auto;
+  }
+  .btn-volver-flotante:hover { background: #ff69b4; color: white; box-shadow: 0 0 30px #ff69b4; }
+
+  /* --- ESTILOS DE LA CARTA FINAL --- */
   #cartaFinal {
-    position: fixed; top: 50%; left: 50%; z-index: 2000; width: min(520px, 90vw); max-height: 86vh; overflow: auto; padding: clamp(28px, 6vw, 48px);
-    text-align: center; border-radius: 28px; visibility: hidden; opacity: 0; transform: translate(-50%, -46%) scale(.97);
-    background: linear-gradient(160deg, rgba(40, 10, 36, .72), rgba(14, 3, 20, .8)); border: 1px solid var(--line);
-    backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); box-shadow: 0 0 90px rgba(255, 45, 138, .35), inset 0 1px 0 rgba(255,255,255,.18);
-    transition: opacity 1.6s ease, transform 1.6s cubic-bezier(.2,.8,.2,1), visibility 0s 1.6s;
+      display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: rgba(15, 0, 10, 0.75); border: 2px solid #ff1493; color: white;
+      padding: 40px; border-radius: 15px; text-align: center; z-index: 2000;
+      box-shadow: 0 0 50px #ff69b4; opacity: 0; transition: opacity 2s ease;
+      max-width: 85%; width: 500px; backdrop-filter: blur(5px);
   }
-  #cartaFinal.abierta { visibility: visible; opacity: 1; transform: translate(-50%, -50%); transition: opacity 1.6s ease, transform 1.6s cubic-bezier(.2,.8,.2,1); }
-  #cartaFinal h3 { margin: 0 0 22px; font: italic 600 clamp(2rem, 7vw, 2.8rem)/1.1 var(--serif); color: var(--blush); text-shadow: 0 0 22px rgba(255, 45, 138, .7); }
-  #cartaFinal p { margin: 0 0 16px; font-weight: 300; font-size: clamp(.98rem, 2.8vw, 1.1rem); line-height: 1.85; color: #fff3f8; }
-  #cartaFinal .firma { margin-top: 26px; font: italic 600 1.8rem var(--serif); color: var(--rose); text-align: right; }
-  #cartaFinal > * { opacity: 0; transform: translateY(10px); transition: opacity 1.2s ease, transform 1.2s ease; }
-  #cartaFinal.abierta > * { opacity: 1; transform: none; }
-  #cartaFinal.abierta > :nth-child(1) { transition-delay: .5s; } #cartaFinal.abierta > :nth-child(2) { transition-delay: 1.4s; }
-  #cartaFinal.abierta > :nth-child(3) { transition-delay: 2.6s; } #cartaFinal.abierta > :nth-child(4) { transition-delay: 3.6s; }
-  #cartaFinal.abierta > :nth-child(5) { transition-delay: 4.2s; }
-  #cerrarCartaFinal { margin-top: 18px; }
-
-  @media (prefers-reduced-motion: reduce) { #btnEmpezarUniverso.listo, #pastelBtn.pastel-activo { animation: none; } }
+  #cartaFinal h3 { font-size: 2.2rem; margin-top: 0; color: #ffb6c1; text-shadow: 0 0 15px #ff1493; margin-bottom: 20px;}
+  #cartaFinal p { font-size: 1.1rem; line-height: 1.8; color: #fdfdfd; margin-bottom: 15px;}
+  #cartaFinal .firma { font-weight: bold; color: #ff69b4; font-size: 1.4rem; text-align: right; margin-top: 30px;}
 </style>
+  <meta name="theme-color" content="#000000">
 </head>
 <body>
 
-<audio id="musica2" loop preload="auto"><source src="musica2.mp3" type="audio/mpeg"></audio>
-<audio id="sfxFirework" preload="auto"><source src="sfx_firework.mp3" type="audio/mpeg"></audio>
+<audio id="musica2" loop crossorigin="anonymous">
+  <source src="musica2.mp3" type="audio/mpeg">
+</audio>
+<audio id="sfxFirework">
+  <source src="sfx_firework.mp3" type="audio/mpeg">
+</audio>
 
 <div id="pantallaEntrada">
-  <h2 id="tituloEntrada">Preparando el viaje espacial…</h2>
-  <div class="barra" id="barra"><i id="barraFill"></i></div>
-  <button id="btnEmpezarUniverso">Entrar al universo 🚀</button>
-  <small>Sube el volumen y usa audífonos 🎧</small>
+  <h2>✨ Preparando el viaje espacial... ✨</h2>
+  <button id="btnEmpezarUniverso">Cargando motores... (4s)</button>
 </div>
 
-<div id="threeCanvas"></div>
-<div class="velo" id="velo"></div>
-<div id="hint"></div>
 <div id="mensajePlaneta"></div>
-<div id="flash"></div>
+
+<div id="threeCanvas"></div>
 
 <div id="mainContent">
   <h1 id="tituloCumple">¡Feliz Cumpleaños! <span id="pastelBtn" title="Regresar al inicio">🎂</span>💖</h1>
-  <p id="parrafoCumple">Eres el sol que ilumina mi universo. Que este nuevo año cumplas muchas cosas y sigamos siempre juntos ❤️</p>
+  <p id="parrafoCumple">Eres el sol que ilumina mi universo. Que este nuevo año cumplas muchas cosas y sigamos siempre juntos❤️</p>
 </div>
 
-<div id="cartaFinal" role="dialog" aria-label="Carta final">
+<!-- CONTENEDOR DE LA CARTA FINAL MODIFICADA -->
+<div id="cartaFinal">
   <h3>Para mi universo ✨</h3>
   <p>Cada recuerdo a tu lado es una estrella que ilumina mi vida. Quería hacer algo verdaderamente especial para demostrarte que mi mundo entero gira a tu alrededor.</p>
   <p>Que este nuevo año te traiga tanta felicidad como la que tú me das todos los días. Te amo infinitamente.</p>
-  <p class="firma">— Andy</p>
-  <button class="btn-flotante" id="cerrarCartaFinal">Cerrar carta</button>
+  <p class="firma">- Andy</p>
+  <button id="cerrarCartaFinal" style="margin-top:20px; padding:10px 25px; background:#ff69b4; color:white; border:none; border-radius:12px; cursor:pointer; font-size:1.1rem; box-shadow:0 0 15px #ff1493; font-family:'Courier New', monospace; font-weight:bold;">Cerrar Carta</button>
 </div>
 
 <div id="contenedorBotones">
-  <button class="btn-flotante" id="btnLeerCarta">💌 Leer carta</button>
-  <button class="btn-flotante" id="btnRepetirViaje">🚀 Repetir viaje</button>
+  <button class="btn-volver-flotante" id="btnRepetirViaje">🚀 Repetir Viaje</button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -156,483 +150,733 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 
 <script>
-/* ============ Configuración ============ */
-let eleccion = null;
-try { eleccion = localStorage.getItem('dispositivoElegido'); } catch (e) {}
+const eleccion = localStorage.getItem('dispositivoElegido');
 const esCelular = (eleccion === 'celular') || (window.innerWidth < 768 && eleccion !== 'pc');
-const $ = id => document.getElementById(id);
-const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-const easeInOut = t => t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;
-const smooth = (k, dt) => 1 - Math.exp(-k * dt); // suavizado independiente de los FPS
+
+let contadorCarga = 4;
+const btnEmpezar = document.getElementById('btnEmpezarUniverso');
+const intervaloCarga = setInterval(() => {
+    contadorCarga--;
+    if (contadorCarga > 0) {
+        btnEmpezar.innerText = `Cargando motores... (${contadorCarga}s)`;
+    } else {
+        clearInterval(intervaloCarga);
+        btnEmpezar.innerText = "🚀 Entrar al Universo";
+        btnEmpezar.classList.add("listo"); 
+        document.querySelector('#pantallaEntrada h2').innerText = "✨ El universo está listo ✨";
+    }
+}, 1000);
+
+let enViaje = false;
+let viajeProgress = 0;
+const viajeDuration = 3000;
+
+let audioContext, analyser, dataArray;
+let composer, bloomPass;
+const sfxFirework = document.getElementById('sfxFirework');
+
+document.getElementById('btnRepetirViaje').addEventListener('click', () => window.location.reload());
+
+document.getElementById('cerrarCartaFinal').addEventListener('click', () => {
+    document.getElementById('cartaFinal').style.opacity = '0';
+    setTimeout(() => { document.getElementById('cartaFinal').style.display = 'none'; }, 500);
+});
+
+document.getElementById('btnEmpezarUniverso').addEventListener('click', function() {
+    const audio = document.getElementById('musica2');
+    if (!esCelular) {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const source = audioContext.createMediaElementSource(audio);
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 256;
+            source.connect(analyser);
+            analyser.connect(audioContext.destination);
+            dataArray = new Uint8Array(analyser.frequencyBinCount);
+        }
+        if (audioContext.state === 'suspended') audioContext.resume();
+    }
+    audio.play();
+
+    enViaje = true;
+    controls.enabled = false;
+    
+    const pantalla = document.getElementById('pantallaEntrada');
+    pantalla.style.opacity = '0';
+    
+    setTimeout(() => {
+        pantalla.style.display = 'none';
+        document.getElementById('mainContent').style.opacity = '1';
+        document.getElementById('contenedorBotones').style.display = 'flex'; 
+        controls.enabled = true;
+        enViaje = false;
+        if (!esCelular) { camera.fov = 75; camera.updateProjectionMatrix(); }
+        
+        setTimeout(() => {
+            document.getElementById('pastelBtn').classList.add('pastel-activo');
+        }, 60000);
+
+    }, viajeDuration + 500); 
+});
+
+document.getElementById('pastelBtn').addEventListener('click', () => window.location.href = 'index.html');
+
+if (esCelular) {
+    const titulo = document.getElementById('tituloCumple');
+    const parrafo = document.getElementById('parrafoCumple');
+    titulo.style.fontSize = "1.4rem";      
+    titulo.style.marginBottom = "5px";
+    parrafo.style.fontSize = "0.95rem";      
+    parrafo.style.maxWidth = "90%";
+    parrafo.style.padding = "0 15px";
+
+    const carta = document.getElementById('cartaFinal');
+    carta.style.padding = "25px";
+    carta.querySelector('h3').style.fontSize = "1.8rem";
+    carta.querySelector('p').style.fontSize = "0.95rem";
+}
+
+let scene, camera, renderer, controls, sun;
+let width, height, starfield, systemRotationGroup;
+let detailedPlanets = []; 
+let photoStars = []; 
+let activeExplosions = []; 
+const textureLoader = new THREE.TextureLoader();
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+let mouseXParallax = 0, mouseYParallax = 0, targetCameraX = 0, targetCameraY = 300;
+
+// --- VARIABLES PARA EL EVENTO FINAL ---
+let planetasLeidos = new Set();
+let faseEvento = 0; 
+let tiempoEventoFinal = 0;
+let indiceFotoActual = -1;
+let estrellasFugacesEspeciales = []; 
+let grupoConstelacion = null;
+let estrellaGigante = null;
 
 const frasesPlanetas = [
-  "Eres mi estrella favorita ✨", "Contigo hasta el infinito 🚀", "Mi mundo gira por ti 🌍", "Te amo de aquí a la luna 🌙",
-  "Juntos somos magia 💖", "Mi lugar favorito es contigo 🥰", "Gracias por existir ✨", "Eres mi universo entero 🌌"
+    "Eres mi estrella favorita ✨",
+    "Contigo hasta el infinito 🚀",
+    "Mi mundo gira por ti 🌍",
+    "Te amo de aquí a la luna 🌙",
+    "Juntos somos magia 💖",
+    "Mi lugar favorito es contigo 🥰",
+    "Gracias por existir ✨",
+    "Eres mi universo entero 🌌"
 ];
 
-/* ============ Pantalla de entrada ============ */
-let progresoCarga = 0, cargaLista = false;
-const t0 = performance.now();
-const tickCarga = setInterval(() => {
-  progresoCarga = clamp((performance.now() - t0) / 3000, 0, 1);
-  $('barraFill').style.width = (progresoCarga * 100) + '%';
-  if (progresoCarga >= 1 && !cargaLista) {
-    Promise.race([document.fonts ? document.fonts.ready : Promise.resolve(), new Promise(r => setTimeout(r, 1500))]).then(() => {
-      cargaLista = true;
-      $('tituloEntrada').textContent = 'El universo está listo';
-      $('barra').style.opacity = 0;
-      $('btnEmpezarUniverso').classList.add('listo');
-    });
-    clearInterval(tickCarga);
-  }
-}, 100);
-
-/* ============ Estado ============ */
-let scene, camera, renderer, controls, sun, sunHit, glowInner, glowOuter, composer, bloomPass, starfield, twinkle, systemRotationGroup;
-let enViaje = false, viajeProgress = 0; const viajeDuration = 3600;
-let audioContext, analyser, dataArray, beat = 0, beatSmooth = 0;
-const detailedPlanets = [], photoStars = [], bursts = [], comets = [], fugaces = [];
-const textureLoader = new THREE.TextureLoader();
-const raycaster = new THREE.Raycaster(), ndc = new THREE.Vector2();
-const sfxFirework = $('sfxFirework');
-const planetasLeidos = new Set();
-let faseEvento = 0, tEv = 0, indiceFoto = -1, grupoConstelacion = null, estrellaGigante = null, hoverPendiente = false, hoverPlaneta = null, ultimoTexto = 0;
-const cache = {};
-
-/* ============ Texturas procedurales ============ */
-function radialTexture(stops, size = 128) {
-  const c = document.createElement('canvas'); c.width = c.height = size;
-  const g = c.getContext('2d'), grad = g.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
-  stops.forEach(s => grad.addColorStop(s[0], s[1]));
-  g.fillStyle = grad; g.fillRect(0, 0, size, size);
-  return new THREE.CanvasTexture(c);
-}
-const texDot = () => cache.dot || (cache.dot = radialTexture([[0, 'rgba(255,255,255,1)'], [.35, 'rgba(255,255,255,.85)'], [1, 'rgba(255,255,255,0)']], 64));
-const texGlow = () => cache.glow || (cache.glow = radialTexture([[0, 'rgba(255,255,255,1)'], [.2, 'rgba(255,255,255,.45)'], [.55, 'rgba(255,255,255,.1)'], [1, 'rgba(255,255,255,0)']], 256));
-
-function planetTexture(hex) {
-  const c = document.createElement('canvas'); c.width = 256; c.height = 128;
-  const g = c.getContext('2d'), base = new THREE.Color(hex);
-  g.fillStyle = '#' + base.getHexString(); g.fillRect(0, 0, 256, 128);
-  for (let i = 0; i < 26; i++) {
-    const y = Math.random() * 128, h = 2 + Math.random() * 12;
-    g.fillStyle = Math.random() < .5 ? `rgba(255,255,255,${.05 + Math.random() * .14})` : `rgba(80,0,50,${.04 + Math.random() * .12})`;
-    g.fillRect(0, y, 256, h);
-  }
-  const tex = new THREE.CanvasTexture(c); tex.wrapS = THREE.RepeatWrapping; return tex;
-}
-function emojiTexture(text, w = 128, font = '84px Arial') {
-  const c = document.createElement('canvas'); c.width = w; c.height = 128;
-  const g = c.getContext('2d'); g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#fff';
-  g.shadowColor = '#ff69b4'; g.shadowBlur = 16; g.font = font; g.fillText(text, w / 2, 66);
-  return new THREE.CanvasTexture(c);
-}
-
-/* ============ Inicialización ============ */
 function init() {
-  scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x06020b);
-  camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.5, 40000);
-  camera.position.set(0, 1000, 5000);
+  width = window.innerWidth;
+  height = window.innerHeight;
 
-  renderer = new THREE.WebGLRenderer({ antialias: !esCelular, powerPreference: 'high-performance' });
-  renderer.setSize(innerWidth, innerHeight);
-  renderer.setPixelRatio(esCelular ? Math.min(devicePixelRatio, 1.5) : Math.min(devicePixelRatio, 2));
-  $('threeCanvas').appendChild(renderer.domElement);
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x000000);
+  scene.fog = new THREE.FogExp2(0x000000, 0.0001); 
+
+  camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 30000);
+  camera.position.set(0, 1000, 5000); 
+
+  renderer = new THREE.WebGLRenderer({ antialias: !esCelular }); 
+  renderer.setSize(width, height);
+  renderer.setPixelRatio(esCelular ? 1 : Math.min(window.devicePixelRatio, 2)); 
+  document.getElementById('threeCanvas').appendChild(renderer.domElement);
 
   if (!esCelular) {
-    composer = new THREE.EffectComposer(renderer);
-    composer.addPass(new THREE.RenderPass(scene, camera));
-    bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.7, 0.7, 0.35);
-    composer.addPass(bloomPass);
+      const renderScene = new THREE.RenderPass(scene, camera);
+      bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+      bloomPass.threshold = 0.8;
+      bloomPass.strength = 0.15;
+      bloomPass.radius = 0.2;
+      composer = new THREE.EffectComposer(renderer);
+      composer.addPass(renderScene);
+      composer.addPass(bloomPass);
   }
 
   controls = new THREE.OrbitControls(camera, renderer.domElement);
-  Object.assign(controls, { enableDamping: true, dampingFactor: 0.06, minDistance: 900, maxDistance: 6000, enablePan: false, rotateSpeed: 0.55, zoomSpeed: 0.7, enabled: false });
-  controls.autoRotate = true; controls.autoRotateSpeed = 0.35;
+  controls.enableDamping = true; 
+  controls.dampingFactor = 0.05;
+  controls.minDistance = 900; 
+  controls.maxDistance = 6000;
+  controls.enablePan = false; 
 
-  systemRotationGroup = new THREE.Group(); scene.add(systemRotationGroup);
+  systemRotationGroup = new THREE.Group();
+  scene.add(systemRotationGroup);
 
-  // Sol con corona de luz
-  sun = new THREE.Mesh(new THREE.SphereGeometry(60, 48, 48), new THREE.MeshBasicMaterial({ color: 0xffe9a8 }));
-  systemRotationGroup.add(sun);
-  glowInner = new THREE.Sprite(new THREE.SpriteMaterial({ map: texGlow(), color: 0xffd7a0, transparent: true, opacity: .9, blending: THREE.AdditiveBlending, depthWrite: false }));
-  glowInner.scale.set(420, 420, 1);
-  glowOuter = new THREE.Sprite(new THREE.SpriteMaterial({ map: texGlow(), color: 0xff3d97, transparent: true, opacity: .55, blending: THREE.AdditiveBlending, depthWrite: false }));
-  glowOuter.scale.set(1300, 1300, 1);
-  sun.add(glowInner, glowOuter);
-  sunHit = new THREE.Mesh(new THREE.SphereGeometry(110, 8, 8), new THREE.MeshBasicMaterial({ visible: false }));
-  sun.add(sunHit);
-  sun.add(new THREE.PointLight(0xffb0d0, 4, 3200));
-  scene.add(new THREE.AmbientLight(0x6a4a70, 1.3));
+  const sunGeometry = new THREE.SphereGeometry(60, 32, 32);
+  const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffdf00 }); 
+  sun = new THREE.Mesh(sunGeometry, sunMaterial);
+  systemRotationGroup.add(sun); 
+  
+  const sunLight = new THREE.PointLight(0xff69b4, 4, 3000); 
+  sun.add(sunLight);
+  const ambientLight = new THREE.AmbientLight(0x404040, 1.2); 
+  scene.add(ambientLight);
 
-  const defs = [[10, 0xffb6c1, 150, .9, 0, 0], [15, 0xdda0dd, 200, .72, 0, 0], [18, 0x87cefa, 260, .6, 0, 1], [12, 0xffdab9, 310, .54, 0, 0],
-                [50, 0x98fb98, 500, .36, 1, 1], [40, 0xd8bfd8, 650, .3, 0, 0], [30, 0xafeeee, 800, .24, 0, 0], [28, 0xb0c4de, 950, .21, 0, 0]];
-  defs.forEach((d, i) => createPlanet(d[0], d[1], d[2], d[3], !!d[4], !!d[5], frasesPlanetas[i]));
+  createDetailedPlanet(10, 0xffb6c1, 150, 0.015, false, false, frasesPlanetas[0]);
+  createDetailedPlanet(15, 0xdda0dd, 200, 0.012, false, false, frasesPlanetas[1]);
+  createDetailedPlanet(18, 0x87cefa, 260, 0.010, false, true,  frasesPlanetas[2]); 
+  createDetailedPlanet(12, 0xffdab9, 310, 0.009, false, false, frasesPlanetas[3]);
+  createDetailedPlanet(50, 0x98fb98, 500, 0.006, true,  true,  frasesPlanetas[4]); 
+  createDetailedPlanet(40, 0xd8bfd8, 650, 0.005, false, false, frasesPlanetas[5]);
+  createDetailedPlanet(30, 0xafeeee, 800, 0.004, false, false, frasesPlanetas[6]);
+  createDetailedPlanet(28, 0xb0c4de, 950, 0.0035,false, false, frasesPlanetas[7]);
 
-  createStarfield(); createNebulae(); loadPhotoStars();
+  createStarfield();
+  createRealisticLocalizedFog();
+  loadPhotoStars();
 
-  const el = renderer.domElement; let down = null;
-  el.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, t: performance.now() }; });
-  el.addEventListener('pointerup', e => {
-    if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 8 && performance.now() - down.t < 600) pick(e.clientX, e.clientY);
-    down = null;
-  });
-  el.addEventListener('pointermove', e => {
-    if (e.pointerType === 'mouse') { ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); hoverPendiente = true; }
-  });
+  const canvasElement = document.getElementById('threeCanvas');
+  canvasElement.addEventListener('click', onWorldClick); 
+  canvasElement.addEventListener('touchstart', onWorldTouch, { passive: false });
+  window.addEventListener('mousemove', onMouseMove);
 }
 
-function createPlanet(radius, color, distance, speed, hasRing, hasMoon, mensaje) {
-  const seg = esCelular ? 16 : 40;
-  const mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, seg, seg),
-    new THREE.MeshStandardMaterial({ map: planetTexture(color), roughness: .55, metalness: .05, emissive: 0x000000 }));
-  mesh.userData.mensaje = mensaje;
-  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: texGlow(), color, transparent: true, opacity: .35, blending: THREE.AdditiveBlending, depthWrite: false }));
-  glow.scale.set(radius * 5, radius * 5, 1); mesh.add(glow);
-  const hit = new THREE.Mesh(new THREE.SphereGeometry(Math.max(radius * 1.8, 34), 8, 8), new THREE.MeshBasicMaterial({ visible: false }));
-  mesh.add(hit);
+function onMouseMove(event) {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    if (!esCelular) {
+        mouseXParallax = (event.clientX - window.innerWidth / 2) * 2; 
+        mouseYParallax = (event.clientY - window.innerHeight / 2) * 2; 
+    }
+}
 
-  let moonPivot = null;
-  if (!esCelular && hasMoon) {
-    moonPivot = new THREE.Group();
-    const moon = new THREE.Mesh(new THREE.SphereGeometry(radius * .3, 20, 20), new THREE.MeshStandardMaterial({ color: 0xe8e0e6, roughness: .8 }));
-    moon.position.set(radius + 18, 0, 0); moonPivot.add(moon); mesh.add(moonPivot);
-  }
-  if (hasRing) {
-    const ring = new THREE.Mesh(new THREE.RingGeometry(radius + 12, radius + 62, esCelular ? 48 : 128),
-      new THREE.MeshBasicMaterial({ color: 0xff8fc4, side: THREE.DoubleSide, transparent: true, opacity: .3, depthWrite: false }));
-    ring.rotation.x = Math.PI / 2.1; mesh.add(ring);
-  }
-  const p = { mesh, hit, glow, distance, angle: Math.random() * Math.PI * 2, speed, selfRotation: .4 + Math.random() * .8, moonPivot, descubierto: false, baseGlow: .35 };
-  hit.userData.planeta = p; detailedPlanets.push(p); systemRotationGroup.add(mesh);
+function createDetailedPlanet(radius, color, distance, speed, hasRing, hasMoon, mensaje) {
+    const geometry = new THREE.SphereGeometry(radius, esCelular ? 12 : 32, esCelular ? 12 : 32); 
+    const material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6, emissive: 0x000000 });
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.userData.baseColor = color; 
+    mesh.userData.mensaje = mensaje; 
+    const angle = Math.random() * Math.PI * 2;
+    mesh.position.set(Math.cos(angle) * distance, 0, Math.sin(angle) * distance);
+    let moonPivot = null;
+    if (!esCelular && hasMoon) {
+        moonPivot = new THREE.Group();
+        const moonGeo = new THREE.SphereGeometry(radius * 0.3, 16, 16);
+        const moonMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.8 });
+        const moon = new THREE.Mesh(moonGeo, moonMat);
+        moon.position.set(radius + 15, 0, 0); 
+        moonPivot.add(moon);
+        mesh.add(moonPivot); 
+    }
+    detailedPlanets.push({ mesh: mesh, distance, angle, speed, selfRotation: 0.01 + Math.random()*0.02, moonPivot: moonPivot });
+    systemRotationGroup.add(mesh); 
+    createOrbitRing(distance);
+    if (hasRing) createSaturnRing(mesh, radius);
+}
 
-  const pts = []; for (let i = 0; i <= 160; i++) { const a = i / 160 * Math.PI * 2; pts.push(new THREE.Vector3(Math.cos(a) * distance, 0, Math.sin(a) * distance)); }
-  systemRotationGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0xff8fc4, transparent: true, opacity: .12 })));
+function createSaturnRing(planetMesh, planetRadius) {
+    const ringGeometry = new THREE.RingGeometry(planetRadius + 10, planetRadius + 60, esCelular ? 32 : 128);
+    const ringMaterial = new THREE.MeshBasicMaterial({ color: 0xff69b4, side: THREE.DoubleSide, transparent: true, opacity: 0.25 });
+    const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+    ring.rotation.x = Math.PI / 2.1; 
+    planetMesh.add(ring); 
+}
+
+function createOrbitRing(distance) {
+  const ringGeometry = new THREE.RingGeometry(distance - 0.5, distance + 0.5, esCelular ? 64 : 128);
+  const ringMaterial = new THREE.MeshBasicMaterial({ color: 0xff69b4, side: THREE.DoubleSide, transparent: true, opacity: 0.1 });
+  const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+  ring.rotation.x = Math.PI / 2;
+  systemRotationGroup.add(ring); 
 }
 
 function createStarfield() {
-  const n = esCelular ? 2500 : 7000, pos = new Float32Array(n * 3), col = new Float32Array(n * 3);
-  const palette = [new THREE.Color(0xffffff), new THREE.Color(0xffc2dd), new THREE.Color(0xb9d8ff), new THREE.Color(0xffe6c0)];
-  for (let i = 0; i < n; i++) {
-    const r = 6000 + Math.random() * 11000, th = Math.random() * Math.PI * 2, ph = Math.acos(2 * Math.random() - 1);
-    pos[i*3] = r * Math.sin(ph) * Math.cos(th); pos[i*3+1] = r * Math.cos(ph); pos[i*3+2] = r * Math.sin(ph) * Math.sin(th);
-    const c = palette[(Math.random() * palette.length) | 0], b = .5 + Math.random() * .5; col.set([c.r * b, c.g * b, c.b * b], i * 3);
-  }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
-  const mat = (size, op) => new THREE.PointsMaterial({ size, map: texDot(), vertexColors: true, transparent: true, opacity: op, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: false });
-  starfield = new THREE.Points(g, mat(esCelular ? 3.2 : 2.6, .9));
-  twinkle = new THREE.Points(g, mat(esCelular ? 6 : 5, .5));
-  scene.add(starfield, twinkle);
-  if (!esCelular) createComets();
+    const starsGeometry = new THREE.BufferGeometry();
+    const starsPositions = [];
+    const numEstrellas = esCelular ? 3000 : 8000;
+    for (let i = 0; i < numEstrellas; i++) { 
+        starsPositions.push((Math.random() - 0.5) * 18000, (Math.random() - 0.5) * 18000, (Math.random() - 0.5) * 18000);
+    }
+    starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsPositions, 3));
+    const starsMaterial = new THREE.PointsMaterial({ size: esCelular ? 4 : 3, color: 0xffffff, transparent: true, opacity: 0.8 });
+    starfield = new THREE.Points(starsGeometry, starsMaterial);
+    scene.add(starfield); 
+    if (!esCelular) createComets();
 }
 
-function createNebulae() {
-  const cols = [0xff2d8a, 0x7a3cff, 0x3ea0ff, 0xff7eb6, 0xb02cff];
-  const tex = radialTexture([[0, 'rgba(255,255,255,.55)'], [.4, 'rgba(255,255,255,.18)'], [1, 'rgba(255,255,255,0)']], 256);
-  cols.forEach((c, i) => {
-    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: c, transparent: true, opacity: .16, blending: THREE.AdditiveBlending, depthWrite: false }));
-    const a = i / cols.length * Math.PI * 2 + .6, d = 7000 + Math.random() * 3000;
-    s.position.set(Math.cos(a) * d, (Math.random() - .5) * 3500, Math.sin(a) * d);
-    s.scale.setScalar(5500 + Math.random() * 3500); scene.add(s);
-  });
-}
-
+let comets = [];
 function createComets() {
-  const geo = new THREE.SphereGeometry(2, 8, 8);
-  for (let i = 0; i < 14; i++) {
-    const c = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0xffe6f2, transparent: true, opacity: 0 }));
-    resetComet(c); comets.push(c); scene.add(c);
-  }
+    const cometMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
+    const cometGeometry = new THREE.SphereGeometry(2, 8, 8); 
+    for (let i = 0; i < 20; i++) {
+        const comet = new THREE.Mesh(cometGeometry, cometMaterial.clone());
+        resetComet(comet); 
+        comets.push(comet);
+        scene.add(comet);
+    }
 }
-function resetComet(c) {
-  c.position.set((Math.random() - .5) * 15000, (Math.random() - .5) * 8000, (Math.random() - .5) * 15000);
-  const v = new THREE.Vector3(Math.random() - .5, (Math.random() - .5) * .5, Math.random() - .5).normalize().multiplyScalar(1500 + Math.random() * 1500);
-  c.userData.v = v; c.scale.set(1, 1, 35); c.lookAt(c.position.clone().add(v)); c.material.opacity = 0;
+function resetComet(comet) {
+    comet.position.set((Math.random() - 0.5) * 15000, (Math.random() - 0.5) * 10000, (Math.random() - 0.5) * 15000);
+    const v = new THREE.Vector3((Math.random() - 0.5), (Math.random() - 0.5), (Math.random() - 0.5)).normalize().multiplyScalar(150 + Math.random() * 100);
+    comet.userData.velocity = v;
+    comet.scale.set(1, 1, 30);
+    comet.lookAt(comet.position.clone().add(v));
+    comet.material.opacity = 0; 
+}
+
+function createRealisticLocalizedFog() {
+    const fogParticlesGeometry = new THREE.BufferGeometry();
+    const fogPositions = []; const fogColors = [];
+    const totalFogParticles = esCelular ? 300 : 600; 
+    const nebulaBaseColor = new THREE.Color(0xff69b4); const nebulaAltColor = new THREE.Color(0x87cefa); 
+    const origin = new THREE.Vector3(4000, 500, -4000);
+    for (let i = 0; i < totalFogParticles; i++) {
+        fogPositions.push(origin.x + (Math.random() - 0.5) * 2000, origin.y + (Math.random() - 0.5) * 1500, origin.z + (Math.random() - 0.5) * 2000);
+        const colorRatio = Math.random();
+        fogColors.push(THREE.MathUtils.lerp(nebulaBaseColor.r, nebulaAltColor.r, colorRatio), THREE.MathUtils.lerp(nebulaBaseColor.g, nebulaAltColor.g, colorRatio), THREE.MathUtils.lerp(nebulaBaseColor.b, nebulaAltColor.b, colorRatio));
+    }
+    fogParticlesGeometry.setAttribute('position', new THREE.Float32BufferAttribute(fogPositions, 3));
+    fogParticlesGeometry.setAttribute('color', new THREE.Float32BufferAttribute(fogColors, 3));
+    const fogMaterial = new THREE.PointsMaterial({ size: 50, vertexColors: true, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending });
+    textureLoader.load('https://dl.dropboxusercontent.com/s/7t7i03848w481d6/nebula_background_texture.jpg', (texture) => {
+        fogMaterial.map = texture; fogMaterial.needsUpdate = true;
+    });
+    const localizedFogMesh = new THREE.Points(fogParticlesGeometry, fogMaterial);
+    scene.add(localizedFogMesh); 
 }
 
 function loadPhotoStars() {
-  for (let i = 1; i <= 40; i++) {
-    textureLoader.load(`fotos/foto${i}.jpg`, tex => {
-      const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0, depthWrite: false }));
-      const d = 1500 + Math.random() * 3000, a = Math.random() * Math.PI * 2;
-      spr.position.set(Math.cos(a) * d, (Math.random() - .5) * 2000, Math.sin(a) * d);
-      spr.userData = { aspect: tex.image.width / tex.image.height, pulse: .5 + Math.random() * .5 };
-      spr.scale.set(150 * spr.userData.aspect, 150, 1);
-      photoStars.push(spr); systemRotationGroup.add(spr);
-    }, undefined, () => {});
-  }
-}
-
-/* ============ Interacción ============ */
-function setNdc(x, y) { ndc.set(x / innerWidth * 2 - 1, -(y / innerHeight) * 2 + 1); raycaster.setFromCamera(ndc, camera); }
-
-function pick(x, y) {
-  if (enViaje) return;
-  setNdc(x, y);
-  if (raycaster.intersectObject(sunHit).length) { explotarSol(); return; }
-  const hits = raycaster.intersectObjects(detailedPlanets.map(p => p.hit));
-  if (!hits.length) return;
-  const p = hits[0].object.userData.planeta;
-  mostrarMensaje(p.mesh.userData.mensaje);
-  if (!p.descubierto) {
-    p.descubierto = true; p.baseGlow = .85; planetasLeidos.add(p);
-    actualizarHint();
-    if (planetasLeidos.size === detailedPlanets.length && faseEvento === 0) setTimeout(iniciarEventoFinal, 4200);
-  }
-}
-
-function mostrarMensaje(texto) {
-  const d = $('mensajePlaneta'); d.textContent = texto; d.classList.add('show');
-  clearTimeout(ultimoTexto); ultimoTexto = setTimeout(() => d.classList.remove('show'), 3200);
-}
-function actualizarHint(texto) {
-  const h = $('hint');
-  h.innerHTML = texto || `Toca los planetas y el sol · <b>${planetasLeidos.size} de ${detailedPlanets.length}</b>`;
-  h.classList.add('visible');
-}
-
-/* ============ Explosión del sol ============ */
-function explotarSol() {
-  if (sfxFirework) { sfxFirework.currentTime = 0; sfxFirework.play().catch(() => {}); }
-  const mk = (n, tex, size, speed) => {
-    const pos = new Float32Array(n * 3), vel = new Float32Array(n * 3);
-    for (let i = 0; i < n; i++) {
-      const v = new THREE.Vector3(Math.random() - .5, Math.random() - .5, Math.random() - .5).normalize().multiplyScalar(speed * (.5 + Math.random() * .8));
-      vel.set([v.x, v.y, v.z], i * 3);
+    const totalFotos = 40;
+    for (let i = 1; i <= totalFotos; i++) {
+        textureLoader.load(`fotos/foto${i}.jpg`, (texture) => {
+            const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+            const sprite = new THREE.Sprite(material);
+            const distance = 1500 + Math.random() * 3000;
+            const angle = Math.random() * Math.PI * 2;
+            const y = (Math.random() - 0.5) * 2000; 
+            sprite.position.set(Math.cos(angle) * distance, y, Math.sin(angle) * distance);
+            sprite.scale.set(150, 150, 1);
+            sprite.userData.pulseOpacity = 0.5 + Math.random() * 0.5;
+            photoStars.push(sprite);
+            systemRotationGroup.add(sprite); 
+        }, undefined, () => {});
     }
-    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    const m = new THREE.PointsMaterial({ size, map: tex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
-    const pts = new THREE.Points(g, m); pts.frustumCulled = false; systemRotationGroup.add(pts);
-    return { pts, g, m, pos, vel, n };
-  };
-  cache.heart = cache.heart || emojiTexture('💖');
-  cache.teamo = cache.teamo || emojiTexture('TE AMO', 256, '600 44px Jost, Arial');
-  bursts.push({ start: performance.now(), life: 4200, layers: [mk(esCelular ? 90 : 180, cache.heart, 70, 1000), mk(esCelular ? 22 : 45, cache.teamo, 150, 800)] });
 }
 
-/* ============ Evento final ============ */
-function iniciarEventoFinal() {
-  faseEvento = 1; tEv = 0; indiceFoto = -1;
-  actualizarHint('Algo está por pasar…');
-  photoStars.forEach(s => s.userData.pulse = 0);
-}
-
-function crearFugaz() {
-  const m = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .9 });
-  const s = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 100 + Math.random() * 200), m);
-  s.position.set((Math.random() - .5) * 8000, (Math.random() - .5) * 8000, (Math.random() - .5) * 8000);
-  const v = new THREE.Vector3(Math.random() - .5, Math.random() - .5, Math.random() - .5).normalize().multiplyScalar(4000 + Math.random() * 2000);
-  s.userData = { v, life: 2 }; s.lookAt(s.position.clone().add(v)); scene.add(s); fugaces.push(s);
-}
-
-function frente(dist) { const d = new THREE.Vector3(); camera.getWorldDirection(d); return camera.position.clone().add(d.multiplyScalar(dist)); }
-
-function crearConstelacion() {
-  const c = document.createElement('canvas'); c.width = 1024; c.height = 512;
-  const g = c.getContext('2d'); g.fillStyle = '#000'; g.fillRect(0, 0, 1024, 512);
-  g.fillStyle = '#fff'; g.font = 'bold 180px "Courier New"'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('P Y A', 512, 256);
-  const data = g.getImageData(0, 0, 1024, 512).data, target = [], start = [];
-  for (let y = 0; y < 512; y += 5) for (let x = 0; x < 1024; x += 5) {
-    if (data[(y * 1024 + x) * 4] > 128) {
-      target.push(-(x - 512) * 1.1, -(y - 256) * 1.1, 0);
-      start.push((Math.random() - .5) * 8000, (Math.random() - .5) * 8000, (Math.random() - .5) * 8000);
+function triggerSunExplosion() {
+    if (sfxFirework) { sfxFirework.currentTime = 0; sfxFirework.play().catch(e=>console.log("SFX bloq")); }
+    const totalExplosionParticles = esCelular ? 250 : 500; 
+    const geometry = new THREE.BufferGeometry();
+    const positions = []; const velocities = []; const sizes = [];
+    for (let i = 0; i < totalExplosionParticles; i++) {
+        positions.push(0, 0, 0); 
+        const v = new THREE.Vector3((Math.random() - 0.5), (Math.random() - 0.5), (Math.random() - 0.5));
+        v.normalize().multiplyScalar(15 + Math.random() * 10); 
+        velocities.push(v.x, v.y, v.z);
+        sizes.push(30 + Math.random() * 20); 
     }
-  }
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(start, 3)); geo.setAttribute('targetPos', new THREE.Float32BufferAttribute(target, 3));
-  const mat = new THREE.PointsMaterial({ color: 0xffc8de, map: texDot(), size: esCelular ? 11 : 8, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
-  grupoConstelacion = new THREE.Points(geo, mat); grupoConstelacion.frustumCulled = false;
-  const p = frente(600); p.y += 80; grupoConstelacion.position.copy(p); grupoConstelacion.lookAt(camera.position); scene.add(grupoConstelacion);
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute('size', new THREE.Float32BufferAttribute(sizes, 1));
+    geometry.setAttribute('velocity', new THREE.Float32BufferAttribute(velocities, 3));
+    const heartTexture = createGlowShapeTexture("💖");
+    const teAmoTexture = createGlowTextTexture("TE AMO");
+    const material = new THREE.PointsMaterial({ size: 50, transparent: true, opacity: 1, depthWrite: false, blending: THREE.AdditiveBlending });
+    const heartParticles = new THREE.Points(geometry, material.clone()); heartParticles.material.map = heartTexture;
+    const teAmoParticles = new THREE.Points(geometry, material.clone()); teAmoParticles.material.map = teAmoTexture;
+    systemRotationGroup.add(heartParticles); systemRotationGroup.add(teAmoParticles); 
+    const startTime = Date.now();
+    activeExplosions.push({ 
+        geometry, 
+        material: heartParticles.material, 
+        teAmoMaterial: teAmoParticles.material, 
+        heartTex: heartTexture, 
+        teAmoTex: teAmoTexture,
+        positions: geometry.getAttribute('position').array, 
+        velocities, 
+        totalExplosionParticles, 
+        heartMesh: heartParticles, 
+        teAmoMesh: teAmoParticles, 
+        startTime, 
+        lifeSpan: 4000 
+    });
 }
 
+function createGlowShapeTexture(char) {
+    const canvas = document.createElement('canvas'); canvas.width = 128; canvas.height = 128;
+    const ctx = canvas.getContext('2d'); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'white';
+    ctx.shadowColor = '#ff69b4'; ctx.shadowBlur = 15; ctx.font = '80px Arial'; ctx.fillText(char, 64, 64);
+    return new THREE.CanvasTexture(canvas);
+}
+function createGlowTextTexture(text) {
+    const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 128;
+    const ctx = canvas.getContext('2d'); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'white';
+    ctx.shadowColor = '#ff69b4'; ctx.shadowBlur = 15; ctx.font = 'bold 40px Courier New'; ctx.fillText(text, 128, 64);
+    return new THREE.CanvasTexture(canvas);
+}
+
+function mostrarMensajeEspecial(texto) {
+    const div = document.getElementById('mensajePlaneta');
+    div.innerText = texto;
+    div.style.display = 'block';
+    setTimeout(() => { div.style.display = 'none'; }, 4000);
+}
+
+function crearEstrellaFugazEspecial() {
+    const geom = new THREE.BoxGeometry(2, 2, 100 + Math.random() * 200);
+    const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
+    const star = new THREE.Mesh(geom, mat);
+
+    const startPos = new THREE.Vector3(
+        (Math.random() - 0.5) * 8000,
+        (Math.random() - 0.5) * 8000,
+        (Math.random() - 0.5) * 8000
+    );
+    star.position.copy(startPos);
+    
+    const v = new THREE.Vector3(
+        (Math.random() - 0.5),
+        (Math.random() - 0.5),
+        (Math.random() - 0.5)
+    ).normalize().multiplyScalar(4000 + Math.random() * 2000); 
+    
+    star.userData = { velocity: v, life: 2.0 };
+    star.lookAt(star.position.clone().add(v));
+
+    scene.add(star);
+    estrellasFugacesEspeciales.push(star);
+}
+
+// --- GENERADOR DE LA CONSTELACIÓN P Y A MODIFICADO ---
+function crearConstelacionTexto() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024; canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'black'; ctx.fillRect(0, 0, 1024, 512);
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 180px "Courier New"';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText("P Y A", 512, 256);
+
+    const imgData = ctx.getImageData(0, 0, 1024, 512).data;
+    const targetPositions = [];
+    const randomPositions = [];
+
+    // Ajustamos la escala para que se arme más cerca de la cámara (escalado más pequeño)
+    for(let y=0; y<512; y+=6) {
+        for(let x=0; x<1024; x+=6) {
+            const idx = (y * 1024 + x) * 4;
+            if(imgData[idx] > 128) { 
+                targetPositions.push(-(x - 512) * 1.2, -(y - 256) * 1.2, 0);
+                randomPositions.push(
+                    (Math.random() - 0.5) * 8000,
+                    (Math.random() - 0.5) * 8000,
+                    (Math.random() - 0.5) * 8000
+                );
+            }
+        }
+    }
+
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute('position', new THREE.Float32BufferAttribute(randomPositions, 3));
+    geom.setAttribute('targetPos', new THREE.Float32BufferAttribute(targetPositions, 3));
+    
+    // Partículas un poco más chicas porque la constelación estará más cerca
+    const mat = new THREE.PointsMaterial({color: 0xffb6c1, size: esCelular? 6 : 4, transparent: true, opacity: 0, blending: THREE.AdditiveBlending});
+    grupoConstelacion = new THREE.Points(geom, mat);
+    
+    let dir = new THREE.Vector3();
+    camera.getWorldDirection(dir);
+    // Ahora aparece a solo 600 unidades delante de la cámara, poniéndolo firmemente DELANTE del sol
+    let posFrente = camera.position.clone().add(dir.multiplyScalar(600));
+    posFrente.y += 100; // Lo subimos ligeramente para que quede perfectamente centrado
+    grupoConstelacion.position.copy(posFrente);
+    grupoConstelacion.lookAt(camera.position);
+    
+    scene.add(grupoConstelacion);
+}
+
+// --- ESTRELLA FUGAZ GIGANTE QUE TRAE LA CARTA ---
 function crearEstrellaGigante() {
-  estrellaGigante = new THREE.Mesh(new THREE.SphereGeometry(25, 32, 32), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: texGlow(), color: 0xff69b4, transparent: true, opacity: .9, blending: THREE.AdditiveBlending, depthWrite: false }));
-  glow.scale.set(300, 300, 1); estrellaGigante.add(glow);
-  const p = frente(6000); p.y += 1500; p.x += 1500; estrellaGigante.position.copy(p);
-  estrellaGigante.userData.target = camera.position.clone(); scene.add(estrellaGigante);
+    const geom = new THREE.SphereGeometry(25, 32, 32);
+    const mat = new THREE.MeshBasicMaterial({color: 0xffffff});
+    estrellaGigante = new THREE.Mesh(geom, mat);
+    
+    const glowGeom = new THREE.SphereGeometry(70, 32, 32);
+    const glowMat = new THREE.MeshBasicMaterial({color: 0xff69b4, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending});
+    const glow = new THREE.Mesh(glowGeom, glowMat);
+    estrellaGigante.add(glow);
+
+    let dir = new THREE.Vector3();
+    camera.getWorldDirection(dir);
+    
+    let startPos = camera.position.clone().add(dir.clone().multiplyScalar(6000));
+    startPos.y += 1500;
+    startPos.x += 1500;
+    estrellaGigante.position.copy(startPos);
+    
+    estrellaGigante.userData.target = camera.position.clone();
+    scene.add(estrellaGigante);
 }
 
-function abrirCarta() { $('cartaFinal').classList.add('abierta'); }
-function cerrarCarta() { $('cartaFinal').classList.remove('abierta'); }
+function iniciarEventoFinal() {
+    faseEvento = 1;
+    photoStars.forEach(sprite => {
+        sprite.material.opacity = 0;
+        sprite.userData.pulseOpacity = 0;
+    });
+}
 
-function actualizarEvento(dt) {
-  tEv += dt;
-  if (Math.random() < .12) crearFugaz();
-  for (let i = fugaces.length - 1; i >= 0; i--) {
-    const s = fugaces[i]; s.position.addScaledVector(s.userData.v, dt); s.userData.life -= dt; s.material.opacity = clamp(s.userData.life, 0, .9);
-    if (s.userData.life <= 0) { scene.remove(s); s.geometry.dispose(); s.material.dispose(); fugaces.splice(i, 1); }
+function onWorldClick(e) {
+  raycaster.setFromCamera(mouse, camera);
+  
+  if (raycaster.intersectObject(sun).length > 0) {
+      triggerSunExplosion();
+      return; 
   }
-
-  if (faseEvento === 1) {
-    const intervalo = 1.8, idx = Math.floor(tEv / intervalo);
-    if (idx > indiceFoto && idx < photoStars.length) {
-      indiceFoto = idx; const s = photoStars[idx];
-      systemRotationGroup.remove(s); scene.add(s);
-      const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
-      s.position.copy(frente(600)).addScaledVector(right, (Math.random() - .5) * 260);
-      const h = esCelular ? 300 : 360; s.scale.set(h * s.userData.aspect, h, 1);
-      s.material.depthTest = false; s.renderOrder = 10; s.material.opacity = 0;
-      s.userData.activa = true; s.userData.born = performance.now();
-    }
-    if (idx >= photoStars.length && tEv > photoStars.length * intervalo + 1.5) { faseEvento = 2; tEv = 0; crearConstelacion(); }
-  }
-
-  const up = new THREE.Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
-  photoStars.forEach(s => {
-    if (!s.userData.activa) return;
-    const age = (performance.now() - s.userData.born) / 1000;
-    s.material.opacity = clamp(age / .6, 0, 1) * (1 - clamp((age - 2.2) / 1.1, 0, 1));
-    s.position.addScaledVector(up, dt * 28);
-    if (age > 3.4) { s.userData.activa = false; scene.remove(s); }
-  });
-
-  if (faseEvento === 2 && grupoConstelacion) {
-    grupoConstelacion.material.opacity = Math.min(1, grupoConstelacion.material.opacity + dt * .5);
-    grupoConstelacion.material.size = (esCelular ? 11 : 8) * (1 + .12 * Math.sin(tEv * 3));
-    const pos = grupoConstelacion.geometry.attributes.position.array, tg = grupoConstelacion.geometry.attributes.targetPos.array, k = smooth(1.8, dt);
-    for (let i = 0; i < pos.length; i++) pos[i] += (tg[i] - pos[i]) * k;
-    grupoConstelacion.geometry.attributes.position.needsUpdate = true;
-    if (tEv > 16) { faseEvento = 3; crearEstrellaGigante(); }
-  }
-
-  if (faseEvento === 3 && estrellaGigante) {
-    const cur = estrellaGigante.position, tgt = estrellaGigante.userData.target;
-    cur.lerp(tgt, smooth(1.5, dt)); estrellaGigante.scale.addScalar(dt * 10);
-    if (grupoConstelacion) grupoConstelacion.material.opacity = Math.max(0, grupoConstelacion.material.opacity - dt * .4);
-    if (cur.distanceTo(tgt) < 320) {
-      faseEvento = 4; scene.remove(estrellaGigante);
-      $('flash').classList.add('on'); setTimeout(() => $('flash').classList.remove('on'), 300);
-      setTimeout(() => { abrirCarta(); $('btnLeerCarta').style.display = 'inline-block'; actualizarHint('Con todo mi amor 💖'); }, 700);
-      setTimeout(() => { if (grupoConstelacion) { scene.remove(grupoConstelacion); grupoConstelacion = null; } }, 3000);
-    }
+  
+  const intersectPlanetas = raycaster.intersectObjects(detailedPlanets.map(p => p.mesh));
+  if (intersectPlanetas.length > 0) {
+      const mensajeSecreto = intersectPlanetas[0].object.userData.mensaje;
+      mostrarMensajeEspecial(mensajeSecreto);
+      
+      if (!planetasLeidos.has(mensajeSecreto)) {
+          planetasLeidos.add(mensajeSecreto);
+          
+          if (planetasLeidos.size === frasesPlanetas.length && faseEvento === 0) {
+              setTimeout(iniciarEventoFinal, 4000); 
+          }
+      }
   }
 }
 
-/* ============ Botones ============ */
-$('btnRepetirViaje').addEventListener('click', () => location.reload());
-$('btnLeerCarta').addEventListener('click', abrirCarta);
-$('cerrarCartaFinal').addEventListener('click', cerrarCarta);
-$('pastelBtn').addEventListener('click', () => { location.href = 'index.html'; });
-
-$('btnEmpezarUniverso').addEventListener('click', () => {
-  const audio = $('musica2');
-  // El análisis de audio solo funciona servido por http(s); en file:// se usa un pulso simulado
-  if (!esCelular && location.protocol !== 'file:') {
-    try {
-      audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const src = audioContext.createMediaElementSource(audio);
-      analyser = audioContext.createAnalyser(); analyser.fftSize = 256;
-      src.connect(analyser); analyser.connect(audioContext.destination);
-      dataArray = new Uint8Array(analyser.frequencyBinCount);
-      if (audioContext.state === 'suspended') audioContext.resume();
-    } catch (e) { analyser = null; }
+function onWorldTouch(e) {
+  if (e.touches.length > 0) {
+    mouse.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
+    onWorldClick(e); 
   }
-  audio.volume = 0; audio.play().catch(() => {});
-  const fade = setInterval(() => { audio.volume = Math.min(1, audio.volume + .04); if (audio.volume >= 1) clearInterval(fade); }, 120);
+}
 
-  enViaje = true; viajeProgress = 0;
-  $('pantallaEntrada').classList.add('salir');
-  setTimeout(() => { $('pantallaEntrada').style.display = 'none'; }, 1300);
-  $('contenedorBotones').style.display = 'flex';
-  $('velo').style.opacity = 1;
-  setTimeout(() => $('mainContent').classList.add('visible'), viajeDuration - 800);
-  setTimeout(() => $('pastelBtn').classList.add('pastel-activo'), 60000);
-});
+let prevTime = Date.now();
 
-/* ============ Bucle principal ============ */
-const clock = new THREE.Clock(); let tiempo = 0;
 function animate() {
   requestAnimationFrame(animate);
-  const dt = Math.min(clock.getDelta(), .05); tiempo += dt;
+  const time = Date.now();
+  const delta = (time - prevTime) / 1000; 
+  prevTime = time;
 
-  // Pulso del sol: audio real o simulado
-  let target;
-  if (analyser && dataArray) { analyser.getByteFrequencyData(dataArray); let s = 0; for (let i = 0; i < 12; i++) s += dataArray[i]; target = s / 12 / 255; }
-  else target = enViaje ? 0 : .35 + .35 * Math.pow(Math.max(0, Math.sin(tiempo * 2.2)), 6);
-  beatSmooth += (target - beatSmooth) * smooth(10, dt);
-  const sc = 1 + beatSmooth * .22; sun.scale.setScalar(sc);
-  glowInner.material.opacity = .75 + beatSmooth * .25; glowOuter.material.opacity = .4 + beatSmooth * .4;
-  if (bloomPass) bloomPass.strength = .6 + beatSmooth * .35;
-  sun.rotation.y += dt * .12;
-  twinkle.material.opacity = .25 + .25 * Math.sin(tiempo * 1.7);
+  if (!esCelular && analyser && dataArray && !enViaje) {
+      analyser.getByteFrequencyData(dataArray);
+      let sum = 0;
+      for(let i = 0; i < 15; i++) sum += dataArray[i];
+      let avgBass = sum / 15;
+      let scale = 1 + (avgBass / 256) * 0.3; 
+      sun.scale.set(scale, scale, scale);
+      if (bloomPass) {
+          bloomPass.strength = 0.15 + (avgBass / 256) * 0.2; 
+      }
+  } else {
+      sun.scale.set(1, 1, 1); 
+  }
+
+  sun.rotation.y += 0.002;
+  photoStars.forEach(sprite => {
+      if(!sprite.userData.esRecuerdoActivo){
+          if (Math.random() < 0.01) sprite.userData.pulseOpacity = 0.6 + Math.random() * 0.4;
+          sprite.material.opacity = THREE.MathUtils.lerp(sprite.material.opacity, sprite.userData.pulseOpacity, 0.05);
+      }
+  });
 
   if (enViaje) {
-    viajeProgress += dt * 1000;
-    const r = clamp(viajeProgress / viajeDuration, 0, 1), t = easeInOut(r);
-    camera.position.set(0, THREE.MathUtils.lerp(1000, 300, t), THREE.MathUtils.lerp(5000, 1100, t));
-    camera.lookAt(0, 0, 0);
-    if (!esCelular) { camera.fov = 70 + Math.sin(r * Math.PI) * 40; camera.updateProjectionMatrix(); starfield.rotation.z += 3 * (1 - r) * dt; }
-    systemRotationGroup.rotation.y += (10 * (1 - r) + .1) * dt;
-    if (r >= 1) {
-      enViaje = false; camera.fov = 70; camera.updateProjectionMatrix();
-      controls.target.set(0, 0, 0); controls.enabled = true; controls.update();
-      actualizarHint();
-    }
+      viajeProgress += delta * 1000;
+      if (viajeProgress > viajeDuration) viajeProgress = viajeDuration;
+      const ratio = viajeProgress / viajeDuration;
+      const targetX = 0; const targetY = 300; const targetZ = 1100;
+      const t = Math.pow(ratio, 2); 
+      camera.position.x = THREE.MathUtils.lerp(0, targetX, t);
+      camera.position.y = THREE.MathUtils.lerp(1000, targetY, t);
+      camera.position.z = THREE.MathUtils.lerp(5000, targetZ, t);
+      if (!esCelular) {
+          const warpFov = Math.sin(ratio * Math.PI) * 50; 
+          camera.fov = 75 + warpFov;
+          camera.updateProjectionMatrix();
+          starfield.rotation.z += 5 * (1 - ratio) * delta;
+          const speed = 12 * (1 - ratio) + 0.1;
+          systemRotationGroup.rotation.y += speed * delta;
+      } else {
+          starfield.rotation.y += 0.0001;
+          const speed = 4 * (1 - ratio) + 0.1; 
+          systemRotationGroup.rotation.y += speed * delta;
+      }
   } else {
-    controls.autoRotate = faseEvento === 0 || faseEvento === 4;
-    controls.update(dt);
-    const vSis = faseEvento === 1 ? 1.4 : faseEvento === 0 ? .06 : .08;
-    systemRotationGroup.rotation.y += dt * vSis;
-    if (faseEvento === 1) { systemRotationGroup.rotation.x += dt * .08; starfield.rotation.y += dt * .5; }
-    else starfield.rotation.y += dt * .006;
-  }
-  twinkle.rotation.copy(starfield.rotation);
+      controls.update();
+      
+      if (faseEvento === 0) {
+          starfield.rotation.y += 0.0001;
+          systemRotationGroup.rotation.y += 0.001;
+      } else if (faseEvento === 1) { 
+          systemRotationGroup.rotation.y += delta * 2.0; 
+          systemRotationGroup.rotation.x += delta * 0.3;
+          starfield.rotation.y += delta * 0.8;
+          starfield.rotation.z += delta * 0.3;
+      } else { 
+          systemRotationGroup.rotation.y += delta * 0.1; 
+          systemRotationGroup.rotation.x += delta * 0.05;
+          starfield.rotation.y += delta * 0.05;
+      }
 
-  // Planetas
+      if (!esCelular) {
+          targetCameraX = mouseXParallax * 0.15;
+          targetCameraY = -mouseYParallax * 0.15 + 300; 
+          camera.position.x += (targetCameraX - camera.position.x) * 0.02;
+          camera.position.y += (targetCameraY - camera.position.y) * 0.02;
+          camera.lookAt(scene.position); 
+          raycaster.setFromCamera(mouse, camera);
+          let intersects = raycaster.intersectObjects(detailedPlanets.map(p => p.mesh));
+          detailedPlanets.forEach(p => p.mesh.material.emissive.setHex(0x000000));
+          document.body.style.cursor = 'default';
+          if (intersects.length > 0) {
+              intersects[0].object.material.emissive.setHex(0xff1493); 
+              document.body.style.cursor = 'pointer';
+          }
+          if(raycaster.intersectObject(sun).length > 0) document.body.style.cursor = 'pointer';
+      }
+  }
+
   detailedPlanets.forEach(p => {
-    p.angle += p.speed * dt * .35;
-    p.mesh.position.set(Math.cos(p.angle) * p.distance, 0, Math.sin(p.angle) * p.distance);
-    p.mesh.rotation.y += p.selfRotation * dt;
-    if (p.moonPivot) p.moonPivot.rotation.y += 2.4 * dt;
-    const pulso = p.descubierto ? 1 + .12 * Math.sin(tiempo * 2 + p.distance) : 1;
-    p.glow.material.opacity += (p.baseGlow * pulso - p.glow.material.opacity) * smooth(6, dt);
+    p.angle += p.speed;
+    p.mesh.position.x = Math.cos(p.angle) * p.distance;
+    p.mesh.position.z = Math.sin(p.angle) * p.distance;
+    p.mesh.rotation.y += p.selfRotation; 
+    if (p.moonPivot) p.moonPivot.rotation.y += 0.04;
   });
-
-  // Hover (solo cuando el cursor se movió)
-  if (hoverPendiente && !esCelular) {
-    hoverPendiente = false; raycaster.setFromCamera(ndc, camera);
-    const hits = raycaster.intersectObjects(detailedPlanets.map(p => p.hit));
-    const nuevo = hits.length ? hits[0].object.userData.planeta : null;
-    if (nuevo !== hoverPlaneta) { if (hoverPlaneta) hoverPlaneta.mesh.material.emissive.setHex(0); hoverPlaneta = nuevo; if (nuevo) nuevo.mesh.material.emissive.setHex(0x7a1048); }
-    renderer.domElement.style.cursor = (nuevo || raycaster.intersectObject(sunHit).length) ? 'pointer' : 'grab';
+  
+  if (!esCelular) {
+      comets.forEach(comet => {
+          comet.position.add(comet.userData.velocity.clone().multiplyScalar(delta));
+          const dist = comet.position.distanceTo(scene.position);
+          if (dist < 8000 && dist > 100) comet.material.opacity = Math.min(comet.material.opacity + 0.1, 1);
+          else comet.material.opacity = Math.max(comet.material.opacity - 0.1, 0);
+          if (dist > 18000 || Math.abs(comet.position.y) > 10000) resetComet(comet);
+      });
   }
 
-  // Cometas
-  comets.forEach(c => {
-    c.position.addScaledVector(c.userData.v, dt);
-    const d = c.position.length();
-    c.material.opacity = clamp(c.material.opacity + (d < 9000 && d > 200 ? 3 : -3) * dt, 0, 1);
-    if (d > 18000) resetComet(c);
-  });
-
-  // Explosiones
-  const now = performance.now();
-  for (let i = bursts.length - 1; i >= 0; i--) {
-    const b = bursts[i], e = now - b.start, r = e / b.life;
-    if (r >= 1) { b.layers.forEach(l => { systemRotationGroup.remove(l.pts); l.g.dispose(); l.m.dispose(); }); bursts.splice(i, 1); continue; }
-    const drag = Math.exp(-1.4 * dt);
-    b.layers.forEach(l => {
-      for (let j = 0; j < l.n * 3; j++) { l.vel[j] *= drag; l.pos[j] += l.vel[j] * dt; }
-      l.g.attributes.position.needsUpdate = true; l.m.opacity = 1 - r * r;
-    });
+  const currentTime = Date.now();
+  for (let i = activeExplosions.length - 1; i >= 0; i--) {
+      const exp = activeExplosions[i];
+      const elapsed = currentTime - exp.startTime;
+      if (elapsed > exp.lifeSpan) {
+          systemRotationGroup.remove(exp.heartMesh); 
+          systemRotationGroup.remove(exp.teAmoMesh); 
+          exp.geometry.dispose(); 
+          exp.material.dispose(); 
+          exp.teAmoMaterial.dispose();
+          exp.heartTex.dispose();
+          exp.teAmoTex.dispose();
+          activeExplosions.splice(i, 1);
+          continue;
+      }
+      const ratio = elapsed / exp.lifeSpan;
+      const opacity = 1 - Math.pow(ratio, 2); 
+      exp.material.opacity = opacity;
+      exp.teAmoMaterial.opacity = opacity;
+      for (let j = 0; j < exp.totalExplosionParticles; j++) {
+          exp.positions[j * 3] += exp.velocities[j * 3]; 
+          exp.positions[j * 3 + 1] += exp.velocities[j * 3 + 1]; 
+          exp.positions[j * 3 + 2] += exp.velocities[j * 3 + 2]; 
+      }
+      exp.geometry.getAttribute('position').needsUpdate = true;
   }
 
-  if (faseEvento >= 1 && faseEvento <= 3) actualizarEvento(dt);
+  // --- LÓGICA DE FASES DEL EVENTO FINAL ---
+  if (faseEvento >= 1 && faseEvento <= 3) {
+      tiempoEventoFinal += delta;
 
-  composer ? composer.render() : renderer.render(scene, camera);
+      if (Math.random() < 0.15) crearEstrellaFugazEspecial();
+
+      for (let i = estrellasFugacesEspeciales.length - 1; i >= 0; i--) {
+          let star = estrellasFugacesEspeciales[i];
+          star.position.add(star.userData.velocity.clone().multiplyScalar(delta));
+          star.userData.life -= delta;
+          if (star.userData.life <= 0) {
+              scene.remove(star);
+              star.geometry.dispose(); star.material.dispose();
+              estrellasFugacesEspeciales.splice(i, 1);
+          }
+      }
+
+      if (faseEvento === 1) {
+          let nuevoIndice = Math.floor(tiempoEventoFinal / 2.0);
+          
+          if (nuevoIndice > indiceFotoActual && nuevoIndice < photoStars.length) {
+              indiceFotoActual = nuevoIndice;
+              let sprite = photoStars[indiceFotoActual];
+              systemRotationGroup.remove(sprite);
+              scene.add(sprite);
+
+              let direccionCamara = new THREE.Vector3();
+              camera.getWorldDirection(direccionCamara);
+              let posicionFrente = camera.position.clone().add(direccionCamara.multiplyScalar(600));
+
+              sprite.position.copy(posicionFrente);
+              sprite.scale.set(350, 350, 1); 
+              sprite.material.opacity = 1;
+              sprite.userData.esRecuerdoActivo = true; 
+          }
+
+          if (nuevoIndice >= photoStars.length) {
+              faseEvento = 2;
+              tiempoEventoFinal = 0;
+              crearConstelacionTexto();
+          }
+      }
+
+      photoStars.forEach(sprite => {
+          if (sprite.userData.esRecuerdoActivo) {
+              sprite.position.y += delta * 40; 
+              sprite.material.opacity -= delta * 0.4; 
+          }
+      });
+
+      if (faseEvento === 2 && grupoConstelacion) {
+          grupoConstelacion.material.opacity = Math.min(1, grupoConstelacion.material.opacity + delta * 0.5);
+          const pos = grupoConstelacion.geometry.attributes.position.array;
+          const target = grupoConstelacion.geometry.attributes.targetPos.array;
+          for(let i = 0; i < pos.length; i++) {
+              pos[i] += (target[i] - pos[i]) * 0.03; 
+          }
+          grupoConstelacion.geometry.attributes.position.needsUpdate = true;
+
+          if (tiempoEventoFinal > 18) {
+              faseEvento = 3;
+              crearEstrellaGigante();
+          }
+      }
+
+      if (faseEvento === 3 && estrellaGigante) {
+          let current = estrellaGigante.position;
+          let target = estrellaGigante.userData.target;
+          current.lerp(target, delta * 1.5);
+          estrellaGigante.scale.addScalar(delta * 12);
+          
+          if (current.distanceTo(target) < 300) {
+              faseEvento = 4;
+              scene.remove(estrellaGigante);
+              const carta = document.getElementById('cartaFinal');
+              carta.style.display = 'block';
+              setTimeout(() => { carta.style.opacity = '1'; }, 100);
+          }
+      }
+  }
+
+  if (!esCelular && composer) composer.render(); 
+  else renderer.render(scene, camera); 
 }
 
-addEventListener('resize', () => {
-  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
-  if (composer) composer.setSize(innerWidth, innerHeight);
+window.addEventListener('resize', () => {
+  width = window.innerWidth;
+  height = window.innerHeight;
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(width, height);
+  if (composer && !esCelular) composer.setSize(width, height);
 });
-document.addEventListener('visibilitychange', () => { document.hidden ? $('musica2').pause() : (!enViaje && $('pantallaEntrada').style.display === 'none' && $('musica2').play().catch(() => {})); });
 
-init(); animate();
+init();
+animate();
 </script>
 </body>
 </html>
