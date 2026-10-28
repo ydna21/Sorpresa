@@ -407,7 +407,7 @@ function explotarSol() {
     const pts = new THREE.Points(g, m); pts.frustumCulled = false; systemRotationGroup.add(pts);
     return { pts, g, m, pos, vel, n };
   };
-  cache.heart = cache.heart || emojiTexture('💖');
+  cache.heart = cache.heart || emojiTexture('❤️');
   cache.teamo = cache.teamo || emojiTexture('TE AMO', 256, '600 44px Jost, Arial');
   bursts.push({ start: performance.now(), life: 4200, layers: [mk(esCelular ? 90 : 180, cache.heart, 70, 1000), mk(esCelular ? 22 : 45, cache.teamo, 150, 800)] });
 }
