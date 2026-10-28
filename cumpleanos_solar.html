@@ -119,7 +119,7 @@
   <h2 id="tituloEntrada">Preparando el viaje espacial…</h2>
   <div class="barra" id="barra"><i id="barraFill"></i></div>
   <button id="btnEmpezarUniverso">Entrar al universo 🚀</button>
-  <small></small>
+  <small>Sube el volumen y usa audífonos 🎧</small>
 </div>
 
 <div id="threeCanvas"></div>
@@ -196,7 +196,7 @@ const textureLoader = new THREE.TextureLoader();
 const raycaster = new THREE.Raycaster(), ndc = new THREE.Vector2();
 const sfxFirework = $('sfxFirework');
 const planetasLeidos = new Set();
-let faseEvento = 0, tEv = 0, indiceFoto = -1, grupoConstelacion = null, estrellaGigante = null, hoverPendiente = false, hoverPlaneta = null, ultimoTexto = 0;
+let ordenFoto = 0; let faseEvento = 0, tEv = 0, indiceFoto = -1, grupoConstelacion = null, estrellaGigante = null, hoverPendiente = false, hoverPlaneta = null, ultimoTexto = 0;
 const cache = {};
 
 /* ============ Texturas procedurales ============ */
@@ -328,15 +328,47 @@ function createStarfield() {
   if (!esCelular) createComets();
 }
 
+let nebGroup; const nebSprites = [];
+function nebulaTexture() {
+  const S = 256, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d'); g.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 80; i++) {
+    const r = 18 + Math.random() * 70, a = Math.random() * Math.PI * 2, d = Math.random() * Math.random() * 80, x = S / 2 + Math.cos(a) * d, y = S / 2 + Math.sin(a) * d * .7;
+    const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, `rgba(255,255,255,${.04 + Math.random() * .09})`); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, S, S);
+  }
+  g.globalCompositeOperation = 'destination-in'; const m = g.createRadialGradient(S / 2, S / 2, S * .12, S / 2, S / 2, S / 2);
+  m.addColorStop(0, 'rgba(0,0,0,1)'); m.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = m; g.fillRect(0, 0, S, S);
+  return new THREE.CanvasTexture(c);
+}
 function createNebulae() {
-  const cols = [0xff2d8a, 0x7a3cff, 0x3ea0ff, 0xff7eb6, 0xb02cff];
-  const tex = radialTexture([[0, 'rgba(255,255,255,.55)'], [.4, 'rgba(255,255,255,.18)'], [1, 'rgba(255,255,255,0)']], 256);
-  cols.forEach((c, i) => {
-    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: c, transparent: true, opacity: .16, blending: THREE.AdditiveBlending, depthWrite: false }));
-    const a = i / cols.length * Math.PI * 2 + .6, d = 7000 + Math.random() * 3000;
-    s.position.set(Math.cos(a) * d, (Math.random() - .5) * 3500, Math.sin(a) * d);
-    s.scale.setScalar(5500 + Math.random() * 3500); scene.add(s);
-  });
+  nebGroup = new THREE.Group(); scene.add(nebGroup);
+  const tints = [0xff2d8a, 0x7a3cff, 0x3ea0ff, 0xff7eb6, 0xb02cff, 0x20d0c8, 0xffb36b], texs = [nebulaTexture(), nebulaTexture(), nebulaTexture()];
+  const n = esCelular ? 5 : 9;
+  for (let i = 0; i < n; i++) { // cada nebulosa = nube principal + nube secundaria de otro color (da degradado)
+    const th = Math.random() * Math.PI * 2, y = (Math.random() - .5) * 1.4, r = 9000 + Math.random() * 4000, rr = Math.sqrt(1 - Math.min(.9, y * y / 1.2));
+    const base = new THREE.Vector3(Math.cos(th) * rr * r, y * r * .6, Math.sin(th) * rr * r), size = 6000 + Math.random() * 5000;
+    [[0, 1, .2], [1, .6, .16]].forEach(([k, sc, op]) => {
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: texs[(i + k) % 3], color: tints[(i + k * 2 + (Math.random() * 3 | 0)) % tints.length], transparent: true, opacity: op * (.7 + Math.random() * .6), blending: THREE.AdditiveBlending, depthWrite: false }));
+      sp.position.copy(base).add(new THREE.Vector3((Math.random() - .5) * 2500, (Math.random() - .5) * 1800, (Math.random() - .5) * 2500)); sp.scale.setScalar(size * sc);
+      sp.material.rotation = Math.random() * 6.28; nebGroup.add(sp); nebSprites.push(sp);
+    });
+  }
+  // Vía Láctea: franja inclinada de estrellitas rosadas y azules
+  const N = esCelular ? 2500 : 6500, pos = new Float32Array(N * 3), col = new Float32Array(N * 3);
+  const nrm = new THREE.Vector3(.35, .85, .4).normalize(), e1 = new THREE.Vector3().crossVectors(nrm, new THREE.Vector3(0, 0, 1)).normalize(), e2 = new THREE.Vector3().crossVectors(nrm, e1);
+  const cs = [new THREE.Color(0xffc2dd), new THREE.Color(0xb9d0ff), new THREE.Color(0xffffff), new THREE.Color(0xd9b8ff)], v = new THREE.Vector3();
+  for (let i = 0; i < N; i++) {
+    const a = Math.random() * Math.PI * 2, th = (Math.random() + Math.random() + Math.random() - 1.5) * .22, r = 12000 + Math.random() * 3000;
+    v.copy(e1).multiplyScalar(Math.cos(a)).addScaledVector(e2, Math.sin(a)).addScaledVector(nrm, th).normalize().multiplyScalar(r); pos.set([v.x, v.y, v.z], i * 3);
+    const c = cs[(Math.random() * cs.length) | 0], b = .35 + Math.random() * .65 * (1 - Math.abs(th) * 2.5); col.set([c.r * b, c.g * b, c.b * b], i * 3);
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  nebGroup.add(new THREE.Points(g, new THREE.PointsMaterial({ size: 3, map: texDot(), vertexColors: true, transparent: true, opacity: .8, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: false })));
+  for (let i = 0; i < (esCelular ? 6 : 12); i++) { // resplandor suave a lo largo de la franja
+    const a = i / 12 * Math.PI * 2; v.copy(e1).multiplyScalar(Math.cos(a)).addScaledVector(e2, Math.sin(a)).multiplyScalar(12500);
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: texs[i % 3], color: i % 2 ? 0xb89cff : 0xff9cc9, transparent: true, opacity: .09, blending: THREE.AdditiveBlending, depthWrite: false }));
+    sp.position.copy(v); sp.scale.setScalar(4500); nebGroup.add(sp);
+  }
 }
 
 function createComets() {
@@ -407,7 +439,7 @@ function explotarSol() {
     const pts = new THREE.Points(g, m); pts.frustumCulled = false; systemRotationGroup.add(pts);
     return { pts, g, m, pos, vel, n };
   };
-  cache.heart = cache.heart || emojiTexture('❤️');
+  cache.heart = cache.heart || emojiTexture('💖');
   cache.teamo = cache.teamo || emojiTexture('TE AMO', 256, '600 44px Jost, Arial');
   bursts.push({ start: performance.now(), life: 4200, layers: [mk(esCelular ? 90 : 180, cache.heart, 70, 1000), mk(esCelular ? 22 : 45, cache.teamo, 150, 800)] });
 }
@@ -469,24 +501,25 @@ function actualizarEvento(dt) {
   if (faseEvento === 1) {
     const intervalo = 1.8, idx = Math.floor(tEv / intervalo);
     if (idx > indiceFoto && idx < photoStars.length) {
-      indiceFoto = idx; const s = photoStars[idx];
+      indiceFoto = idx; const s = photoStars[idx], u = s.userData;
       systemRotationGroup.remove(s); scene.add(s);
-      const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
-      s.position.copy(frente(600)).addScaledVector(right, (Math.random() - .5) * 260);
-      const h = esCelular ? 300 : 360; s.scale.set(h * s.userData.aspect, h, 1);
-      s.material.depthTest = false; s.renderOrder = 10; s.material.opacity = 0;
-      s.userData.activa = true; s.userData.born = performance.now();
+      const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0), dir = new THREE.Vector3(); camera.getWorldDirection(dir);
+      u.p0 = frente(600).addScaledVector(right, (Math.random() - .5) * 90); u.dir = dir; u.up = new THREE.Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
+      u.h = esCelular ? 300 : 360; u.w = u.h * u.aspect;
+      s.position.copy(u.p0); s.scale.set(u.w * .9, u.h * .9, 1);
+      s.material.depthTest = false; s.renderOrder = 10 + (++ordenFoto); s.material.opacity = 0; // la más nueva siempre queda encima (orden fijo = sin parpadeo)
+      u.activa = true; u.born = performance.now();
     }
     if (idx >= photoStars.length && tEv > photoStars.length * intervalo + 1.5) { faseEvento = 2; tEv = 0; crearConstelacion(); }
   }
 
-  const up = new THREE.Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
   photoStars.forEach(s => {
-    if (!s.userData.activa) return;
-    const age = (performance.now() - s.userData.born) / 1000;
-    s.material.opacity = clamp(age / .6, 0, 1) * (1 - clamp((age - 2.2) / 1.1, 0, 1));
-    s.position.addScaledVector(up, dt * 28);
-    if (age > 3.4) { s.userData.activa = false; scene.remove(s); }
+    const u = s.userData; if (!u.activa) return;
+    const age = (performance.now() - u.born) / 1000, e = 1 - Math.pow(1 - clamp(age / .9, 0, 1), 3), k = .9 + .1 * e;
+    s.position.copy(u.p0).addScaledVector(u.dir, 95 * age).addScaledVector(u.up, 16 * age); // retrocede despacio
+    s.scale.set(u.w * k, u.h * k, 1);
+    s.material.opacity = clamp(age / .7, 0, 1) * (1 - clamp((age - 1.6) / 1.4, 0, 1)); // se desvanece mientras entra la siguiente
+    if (age > 3.1) { u.activa = false; scene.remove(s); }
   });
 
   if (faseEvento === 2 && grupoConstelacion) {
@@ -557,6 +590,8 @@ function animate() {
   glowInner.material.opacity = .75 + beatSmooth * .25; glowOuter.material.opacity = .4 + beatSmooth * .4;
   if (bloomPass) bloomPass.strength = .6 + beatSmooth * .35;
   sun.rotation.y += dt * .12;
+  nebGroup.rotation.y += dt * .004; nebGroup.rotation.x += dt * .0008;
+  nebSprites.forEach((sp, i) => sp.material.rotation += dt * .012 * (i % 2 ? 1 : -1));
   twinkle.material.opacity = .25 + .25 * Math.sin(tiempo * 1.7);
 
   // Fotos flotantes: aparecen y brillan suavemente
