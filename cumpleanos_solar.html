@@ -51,10 +51,10 @@
     transition: opacity 2.4s ease, transform 2.4s ease;
   }
   #mainContent.visible { opacity: 1; transform: none; }
-  h1 { margin: 0 0 12px; font: italic 600 clamp(2.2rem, 7vw, 4.4rem)/1.05 var(--serif); letter-spacing: .01em; color: #fff;
+  h1 { margin: 0 0 12px; font: italic 600 clamp(1.9rem, 2.8vw, 2.9rem)/1.1 var(--serif); letter-spacing: .01em; color: #fff;
        text-shadow: 0 0 30px rgba(255, 126, 182, .75), 0 2px 18px rgba(0,0,0,.6); }
-  #parrafoCumple { margin: 0; max-width: 560px; font-weight: 300; font-size: clamp(.95rem, 2.6vw, 1.2rem); line-height: 1.6; color: var(--blush); text-shadow: 0 2px 14px rgba(0,0,0,.7); }
-  #pastelBtn { display: inline-block; cursor: default; pointer-events: none; opacity: .75; transition: opacity 1s; }
+  #parrafoCumple { margin: 0; max-width: 560px; font-weight: 300; font-size: clamp(.95rem, 1.2vw, 1.08rem); line-height: 1.6; color: var(--blush); text-shadow: 0 2px 14px rgba(0,0,0,.7); }
+  #pastelBtn { font-size: .72em; display: inline-block; cursor: default; pointer-events: none; opacity: .75; transition: opacity 1s; }
   #pastelBtn.pastel-activo { cursor: pointer; pointer-events: auto; opacity: 1; animation: pastel 1.6s ease-in-out infinite; filter: drop-shadow(0 0 14px var(--rose)); }
   @keyframes pastel { 50% { transform: scale(1.25) rotate(-6deg); } }
 
@@ -82,7 +82,8 @@
     padding: 11px 22px; border-radius: 40px; cursor: pointer; font-size: .9rem; font-weight: 400; letter-spacing: .04em; color: var(--blush); white-space: nowrap;
     background: var(--glass); border: 1px solid var(--line); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); transition: background .3s, box-shadow .3s, color .3s;
   }
-  .btn-flotante:hover, .btn-flotante:focus-visible { background: rgba(255, 95, 162, .85); color: #fff; box-shadow: 0 0 30px rgba(255, 95, 162, .6); outline: none; }
+  .btn-flotante.activo, .btn-flotante:focus-visible { background: rgba(255, 95, 162, .85); color: #fff; box-shadow: 0 0 30px rgba(255, 95, 162, .6); outline: none; }
+  @media (hover: hover) { .btn-flotante:hover { background: rgba(255, 95, 162, .85); color: #fff; box-shadow: 0 0 30px rgba(255, 95, 162, .6); } }
   #btnLeerCarta { display: none; }
 
   #flash { position: fixed; inset: 0; z-index: 1500; background: radial-gradient(circle, #fff, #ffc2dd 50%, transparent 80%); opacity: 0; pointer-events: none; transition: opacity 1.4s ease; }
@@ -107,6 +108,11 @@
   #cartaFinal.abierta > :nth-child(5) { transition-delay: 4.2s; }
   #cerrarCartaFinal { margin-top: 18px; }
 
+  @media (max-width: 768px) {
+    h1 { font-size: clamp(2.2rem, 7vw, 4.4rem); }
+    #parrafoCumple { font-size: clamp(.95rem, 2.6vw, 1.2rem); }
+    #pastelBtn { font-size: 1em; }
+  }
   @media (prefers-reduced-motion: reduce) { #btnEmpezarUniverso.listo, #pastelBtn.pastel-activo { animation: none; } }
 </style>
 </head>
@@ -439,9 +445,9 @@ function explotarSol() {
     const pts = new THREE.Points(g, m); pts.frustumCulled = false; systemRotationGroup.add(pts);
     return { pts, g, m, pos, vel, n };
   };
-  cache.heart = cache.heart || emojiTexture('💖');
+  cache.heart = cache.heart || emojiTexture('❤️');
   cache.teamo = cache.teamo || emojiTexture('TE AMO', 256, '600 44px Jost, Arial');
-  bursts.push({ start: performance.now(), life: 4200, layers: [mk(esCelular ? 90 : 180, cache.heart, 70, 1000), mk(esCelular ? 22 : 45, cache.teamo, 150, 800)] });
+  bursts.push({ start: performance.now(), life: 7500, layers: [mk(esCelular ? 90 : 180, cache.heart, 70, 2300), mk(esCelular ? 22 : 45, cache.teamo, 150, 1800)] });
 }
 
 /* ============ Evento final ============ */
@@ -465,18 +471,26 @@ function crearConstelacion() {
   const c = document.createElement('canvas'); c.width = 1024; c.height = 512;
   const g = c.getContext('2d'); g.fillStyle = '#000'; g.fillRect(0, 0, 1024, 512);
   g.fillStyle = '#fff'; g.font = 'bold 180px "Courier New"'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('P Y A', 512, 256);
-  const data = g.getImageData(0, 0, 1024, 512).data, target = [], start = [];
+  const data = g.getImageData(0, 0, 1024, 512).data, tg = [], st = [], de = [], col = [];
+  const pink = new THREE.Color(0xffc8de), gold = new THREE.Color(0xffe2a8), cc = new THREE.Color();
   for (let y = 0; y < 512; y += 5) for (let x = 0; x < 1024; x += 5) {
     if (data[(y * 1024 + x) * 4] > 128) {
-      target.push(-(x - 512) * 1.1, -(y - 256) * 1.1, 0);
-      start.push((Math.random() - .5) * 8000, (Math.random() - .5) * 8000, (Math.random() - .5) * 8000);
+      const tx = (x - 512) * 1.1, ty = -(y - 256) * 1.1, t = clamp((x - 150) / 724, 0, 1);
+      tg.push(tx, ty, 0); de.push(t * 2.6 + Math.random() * .5); // las letras se arman en una ola de izquierda a derecha
+      const ang = Math.random() * Math.PI * 2, rad = 800 + Math.random() * 3500;
+      st.push(Math.cos(ang) * rad, Math.sin(ang) * rad * .7, -2500 - Math.random() * 3500); // nacen lejos, detrás de la letra
+      cc.copy(pink).lerp(gold, .5 + .5 * Math.sin(t * 5 + Math.random() * .8)); col.push(cc.r, cc.g, cc.b);
     }
   }
   const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(start, 3)); geo.setAttribute('targetPos', new THREE.Float32BufferAttribute(target, 3));
-  const mat = new THREE.PointsMaterial({ color: 0xffc8de, map: texDot(), size: esCelular ? 11 : 8, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(st.slice(), 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  const mat = new THREE.PointsMaterial({ map: texDot(), vertexColors: true, size: esCelular ? 11 : 8, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
   grupoConstelacion = new THREE.Points(geo, mat); grupoConstelacion.frustumCulled = false;
-  const p = frente(600); p.y += 80; grupoConstelacion.position.copy(p); grupoConstelacion.lookAt(camera.position); scene.add(grupoConstelacion);
+  const p = frente(600); p.y += 80; grupoConstelacion.position.copy(p); grupoConstelacion.lookAt(camera.position);
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: texGlow(), color: 0xff6fae, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+  glow.scale.set(1900, 1000, 1); glow.position.z = -60; grupoConstelacion.add(glow);
+  grupoConstelacion.userData = { tg: new Float32Array(tg), st: new Float32Array(st), delay: new Float32Array(de), base: p.clone(), up: new THREE.Vector3(0, 1, 0).applyQuaternion(camera.quaternion), glow };
+  scene.add(grupoConstelacion);
 }
 
 function crearEstrellaGigante() {
@@ -487,8 +501,8 @@ function crearEstrellaGigante() {
   estrellaGigante.userData.target = camera.position.clone(); scene.add(estrellaGigante);
 }
 
-function abrirCarta() { $('cartaFinal').classList.add('abierta'); }
-function cerrarCarta() { $('cartaFinal').classList.remove('abierta'); }
+function abrirCarta() { $('cartaFinal').classList.add('abierta'); $('btnLeerCarta').classList.add('activo'); }
+function cerrarCarta() { $('cartaFinal').classList.remove('abierta'); $('btnLeerCarta').classList.remove('activo'); }
 
 function actualizarEvento(dt) {
   tEv += dt;
@@ -523,18 +537,26 @@ function actualizarEvento(dt) {
   });
 
   if (faseEvento === 2 && grupoConstelacion) {
-    grupoConstelacion.material.opacity = Math.min(1, grupoConstelacion.material.opacity + dt * .5);
-    grupoConstelacion.material.size = (esCelular ? 11 : 8) * (1 + .12 * Math.sin(tEv * 3));
-    const pos = grupoConstelacion.geometry.attributes.position.array, tg = grupoConstelacion.geometry.attributes.targetPos.array, k = smooth(1.8, dt);
-    for (let i = 0; i < pos.length; i++) pos[i] += (tg[i] - pos[i]) * k;
-    grupoConstelacion.geometry.attributes.position.needsUpdate = true;
+    const gc = grupoConstelacion, u = gc.userData;
+    gc.material.opacity = Math.min(1, gc.material.opacity + dt * .8);
+    gc.material.size = (esCelular ? 11 : 8) * (1 + .15 * Math.sin(tEv * 2.4));
+    const pos = gc.geometry.attributes.position.array, tg = u.tg, st = u.st, de = u.delay, n = de.length;
+    for (let i = 0; i < n; i++) { // cada partícula llega girando en espiral desde el fondo
+      const p = clamp((tEv - de[i]) / 3.2, 0, 1), e = 1 - Math.pow(1 - p, 3), r = 1 - e, i3 = i * 3;
+      if (r === 0) { pos[i3] = tg[i3]; pos[i3 + 1] = tg[i3 + 1]; pos[i3 + 2] = 0; continue; }
+      const ox = st[i3] - tg[i3], oy = st[i3 + 1] - tg[i3 + 1], a = r * 3.2, cs = Math.cos(a), sn = Math.sin(a);
+      pos[i3] = tg[i3] + (ox * cs - oy * sn) * r; pos[i3 + 1] = tg[i3 + 1] + (ox * sn + oy * cs) * r; pos[i3 + 2] = (st[i3 + 2]) * r;
+    }
+    gc.geometry.attributes.position.needsUpdate = true;
+    gc.position.copy(u.base).addScaledVector(u.up, Math.sin(tEv * .9) * 14); // flota suavemente
+    u.glow.material.opacity = clamp(tEv / 4, 0, 1) * (.2 + .08 * Math.sin(tEv * 2));
     if (tEv > 16) { faseEvento = 3; crearEstrellaGigante(); }
   }
 
   if (faseEvento === 3 && estrellaGigante) {
     const cur = estrellaGigante.position, tgt = estrellaGigante.userData.target;
     cur.lerp(tgt, smooth(1.5, dt)); estrellaGigante.scale.addScalar(dt * 10);
-    if (grupoConstelacion) grupoConstelacion.material.opacity = Math.max(0, grupoConstelacion.material.opacity - dt * .4);
+    if (grupoConstelacion) { grupoConstelacion.material.opacity = Math.max(0, grupoConstelacion.material.opacity - dt * .4); grupoConstelacion.userData.glow.material.opacity *= Math.pow(.4, dt); }
     if (cur.distanceTo(tgt) < 320) {
       faseEvento = 4; scene.remove(estrellaGigante);
       $('flash').classList.add('on'); setTimeout(() => $('flash').classList.remove('on'), 300);
@@ -546,7 +568,7 @@ function actualizarEvento(dt) {
 
 /* ============ Botones ============ */
 $('btnRepetirViaje').addEventListener('click', () => location.reload());
-$('btnLeerCarta').addEventListener('click', abrirCarta);
+$('btnLeerCarta').addEventListener('click', e => { $('cartaFinal').classList.contains('abierta') ? cerrarCarta() : abrirCarta(); e.currentTarget.blur(); });
 $('cerrarCartaFinal').addEventListener('click', cerrarCarta);
 $('pastelBtn').addEventListener('click', () => { location.href = 'index.html'; });
 
@@ -655,10 +677,10 @@ function animate() {
   for (let i = bursts.length - 1; i >= 0; i--) {
     const b = bursts[i], e = now - b.start, r = e / b.life;
     if (r >= 1) { b.layers.forEach(l => { systemRotationGroup.remove(l.pts); l.g.dispose(); l.m.dispose(); }); bursts.splice(i, 1); continue; }
-    const drag = Math.exp(-1.4 * dt);
+    const drag = Math.exp(-.55 * dt);
     b.layers.forEach(l => {
       for (let j = 0; j < l.n * 3; j++) { l.vel[j] *= drag; l.pos[j] += l.vel[j] * dt; }
-      l.g.attributes.position.needsUpdate = true; l.m.opacity = 1 - r * r;
+      l.g.attributes.position.needsUpdate = true; l.m.opacity = Math.pow(1 - r, 1.6);
     });
   }
 
