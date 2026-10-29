@@ -39,9 +39,8 @@
     background:var(--glass); border:1px solid rgba(255,255,255,.15); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
 
   /* Título principal */
-  #titulo { position:fixed; top:max(36px, env(safe-area-inset-top) + 22px); left:0; right:0; z-index:10; text-align:center; pointer-events:none; padding:0 14px; }
-  #titulo h2 { margin:0; font:italic 600 clamp(2.2rem,7.5vw,4.6rem)/1.05 var(--serif); background:linear-gradient(180deg,#fff6d6 10%,#ffd76a 55%,#ffa62b 100%); -webkit-background-clip:text; background-clip:text; color:transparent;
-    filter:drop-shadow(0 0 22px rgba(255,170,60,.65)); }
+  #titulo { position:fixed; top:max(36px, env(safe-area-inset-top) + 22px); left:0; right:0; z-index:10; text-align:center; pointer-events:none; padding:0 14px; filter:drop-shadow(0 0 22px rgba(255,170,60,.65)); }
+#titulo h2 { margin:0; font:italic 600 clamp(2.2rem,7.5vw,4.6rem)/1.05 var(--serif); background:linear-gradient(180deg,#fff6d6 10%,#ffd76a 55%,#ffa62b 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
   #titulo h2 span { display:inline-block; opacity:0; transform:translateY(24px) scale(.8); animation:letra .9s cubic-bezier(.2,.9,.2,1.2) forwards; }
   @keyframes letra { to { opacity:1; transform:none; } }
   #titulo p { margin:10px 0 0; font:300 clamp(.95rem,2.6vw,1.25rem) var(--sans); letter-spacing:.14em; color:var(--cream); text-shadow:0 2px 14px rgba(0,0,0,.8); opacity:0; animation:letra 1.4s ease forwards 2.2s; }
@@ -196,7 +195,7 @@ cielo.renderOrder = -10; scene.add(cielo);
 /* Estrellas */
 (function () {
   const n = cel ? 900 : 2200, pos = new Float32Array(n * 3);
-  for (let i = 0; i < n; i++) { const r = 600, th = Math.random() * 6.283, ph = Math.acos(Math.random() * 1.6 - .5); pos.set([r * Math.sin(ph) * Math.cos(th), r * Math.cos(ph), r * Math.sin(ph) * Math.sin(th)], i * 3); }
+  for (let i = 0; i < n; i++) { const r = 600, th = Math.random() * 6.283, ph = Math.acos(clamp(Math.random() * 1.6 - .5, -1, 1)); pos.set([r * Math.sin(ph) * Math.cos(th), r * Math.cos(ph), r * Math.sin(ph) * Math.sin(th)], i * 3); }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   window.estrellas = new THREE.Points(g, new THREE.PointsMaterial({ size: 2.6, map: texDot, color: 0xfff1d6, ...adit, sizeAttenuation: false, opacity: 0 })); scene.add(estrellas);
 })();
@@ -327,7 +326,7 @@ function climax() {
   if (fase !== 'intro') return; fase = 'climax'; tAct = 0; eventosIntro.length = 0; $('lineas').classList.remove('on'); $('saltar').style.display = 'none'; intensidad = 1; sonFanfarria();
   $('flash').classList.add('on'); setTimeout(() => $('flash').classList.remove('on'), 260);
   const tit = CONFIG.nombre ? `¡Felicidades, ${CONFIG.nombre}!` : '¡Felicidades, graduada!';
-  $('titulo').innerHTML = `<h2>${[...tit].map((ch, i) => `<span style="animation-delay:${.4 + i * .06}s">${ch === ' ' ? '&nbsp;' : ch}</span>`).join('')}</h2><p>${CONFIG.subtitulo}</p>`;
+  $('titulo').innerHTML = `<h2>${[...tit].map((ch, i) => ch === ' ' ? ' ' : `<span style="animation-delay:${.4 + i * .06}s">${ch}</span>`).join('')}</h2><p>${CONFIG.subtitulo}</p>`;
   heroT = 0; U.uAmt.value = 0;
   let esperas = 0; const armar = setInterval(() => { if (fotosListas || ++esperas > 25) { clearInterval(armar); crearAnillo(); ringT = 0; } }, 200);
   for (let i = 0; i < 9; i++) en(.8 + i * .9, () => fuegoAleatorio(i === 4 ? 'corazon' : undefined));
