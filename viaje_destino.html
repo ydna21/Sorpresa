@@ -60,6 +60,16 @@
     letter-spacing: 1px; text-transform: uppercase;
     transition: color 1s ease;
   }
+
+  /* BARRA DE PROGRESO: el hilo que avanza hasta el portal secreto */
+  #linea { position: fixed; left: 0; right: 0; bottom: 0; height: 4px; z-index: 90; background: rgba(255,255,255,0.08); opacity: 0; transition: opacity 1.5s ease; }
+  #linea.on { opacity: 1; }
+  #lineaFill { height: 100%; width: 0; background: linear-gradient(90deg, #ff0000, #ff7a7a); box-shadow: 0 0 14px #ff0000; position: relative; }
+  #lineaFill::after { content: ''; position: absolute; right: -6px; top: 50%; width: 12px; height: 12px; margin-top: -6px; border-radius: 50%; background: #fff; box-shadow: 0 0 16px 4px #ff0000; }
+  #linea.listo #lineaFill { background: linear-gradient(90deg, #ff0000, #00ffff); box-shadow: 0 0 20px #00ffff; }
+  #linea.listo #lineaFill::after { box-shadow: 0 0 16px 4px #00ffff; }
+  #tiempoRestante { position: fixed; right: 16px; bottom: 10px; z-index: 90; font-size: 0.65rem; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.55); opacity: 0; transition: opacity 1.5s ease, color 1s ease; pointer-events: none; }
+  #tiempoRestante.on { opacity: 1; }
 </style>
   <meta name="theme-color" content="#000000">
 </head>
@@ -73,6 +83,9 @@
 
 <canvas id="canvasMundo"></canvas>
 <div id="contenedorMedia"></div>
+
+<div id="tiempoRestante"></div>
+<div id="linea"><div id="lineaFill"></div></div>
 
 <div id="controles">
   <a href="hilo_rojo.html" class="btn">🧵 Volver</a>
@@ -99,7 +112,8 @@ let centerX, centerY;
 let targetX, targetY;
 let stars = [];
 let mediaObjects = [];
-let relojIniciado = false;
+let relojIniciado = false, inicioMs = 0, portalListo = false;
+const T_PORTAL = 326; // segundos hasta que se abre el portal (5:26)
 let tiempoTotal = 0, spawnTimer = 70 / 60, controlesVisibles = false, ordenZ = 100000;
 const listos = [];          // recuerdos ya cargados, esperando salir
 let pendientes = 0, fallos = 0;
@@ -152,6 +166,9 @@ function iniciarExperiencia() {
             // Si el reloj no ha iniciado, lo disparamos aquí
             if (!relojIniciado) {
                 relojIniciado = true;
+                inicioMs = performance.now();
+                document.getElementById('linea').classList.add('on');
+                document.getElementById('tiempoRestante').classList.add('on');
                 
                 // 326000 milisegundos = 5 minutos y 26 segundos
                 setTimeout(() => {
@@ -160,6 +177,10 @@ function iniciarExperiencia() {
                     statusTxt.innerText = "¡UN PORTAL SE HA ABIERTO EN EL TIEMPO! ✨";
                     statusTxt.style.color = "#00ffff";
                     statusTxt.style.textShadow = "0 0 10px #00ffff";
+                    portalListo = true;
+                    document.getElementById('linea').classList.add('listo');
+                    document.getElementById('tiempoRestante').innerText = 'PORTAL ABIERTO';
+                    document.getElementById('tiempoRestante').style.color = '#00ffff';
                 }, 326000); 
             }
         }).catch(err => console.log("Esperando interacción..."));
@@ -312,6 +333,16 @@ function update(ahora) {
   // Un recuerdo nuevo cada ~1.17 s (igual que antes: 70 fotogramas a 60 Hz)
   spawnTimer += dt;
   if (spawnTimer >= 70 / 60 && spawnMedia()) spawnTimer = 0;
+
+  // Barra de progreso hacia el portal secreto
+  if (relojIniciado && !portalListo) {
+    const falta = Math.max(0, T_PORTAL - (performance.now() - inicioMs) / 1000);
+    document.getElementById('lineaFill').style.width = (100 - (falta / T_PORTAL) * 100) + '%';
+    const mm = Math.floor(falta / 60), ss = Math.ceil(falta % 60);
+    document.getElementById('tiempoRestante').innerText = 'FALTA ' + (ss === 60 ? (mm + 1) + ':00' : mm + ':' + String(ss).padStart(2, '0'));
+  } else if (portalListo) {
+    document.getElementById('lineaFill').style.width = '100%';
+  }
 
   if (!controlesVisibles && tiempoTotal >= 350 / 60) {
     controlesVisibles = true;
