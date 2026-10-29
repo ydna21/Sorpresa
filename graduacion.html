@@ -38,17 +38,13 @@
   #saltar { position:fixed; right:16px; bottom:max(18px, env(safe-area-inset-bottom) + 10px); z-index:30; display:none; padding:8px 16px; border-radius:30px; cursor:pointer; font:300 .8rem var(--sans); letter-spacing:.1em; color:rgba(255,236,200,.7);
     background:var(--glass); border:1px solid rgba(255,255,255,.15); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
 
-  /* Título principal */
-  #titulo { position:fixed; top:max(36px, env(safe-area-inset-top) + 22px); left:0; right:0; z-index:10; text-align:center; pointer-events:none; padding:0 14px; filter:drop-shadow(0 0 22px rgba(255,170,60,.65)); }
-#titulo h2 { margin:0; font:italic 600 clamp(2.2rem,7.5vw,4.6rem)/1.05 var(--serif); background:linear-gradient(180deg,#fff6d6 10%,#ffd76a 55%,#ffa62b 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
-  #titulo h2 span { display:inline-block; opacity:0; transform:translateY(24px) scale(.8); animation:letra .9s cubic-bezier(.2,.9,.2,1.2) forwards; }
+  /* Título principal (Modificado para evitar bug de Safari) */
+  #titulo { position:fixed; top:max(36px, env(safe-area-inset-top) + 22px); left:0; right:0; z-index:10; text-align:center; pointer-events:none; padding:0 14px; }
+  #titulo h2 { margin:0; font:italic 600 clamp(2.2rem,7vw,4.2rem)/1.05 var(--serif); color:var(--gold); text-shadow:0 0 22px rgba(255,170,60,.65); 
+    opacity:0; transform:translateY(20px); animation:letra 1.2s cubic-bezier(.2,.9,.2,1.2) forwards .4s; }
   @keyframes letra { to { opacity:1; transform:none; } }
-  #titulo p { margin:10px 0 0; font:300 clamp(.95rem,2.6vw,1.25rem) var(--sans); letter-spacing:.14em; color:var(--cream); text-shadow:0 2px 14px rgba(0,0,0,.8); opacity:0; animation:letra 1.4s ease forwards 2.2s; }
-
-  #pista { position:fixed; top:max(128px, env(safe-area-inset-top) + 112px); left:50%; transform:translateX(-50%); z-index:12; white-space:nowrap; opacity:0; pointer-events:none; padding:9px 20px; border-radius:30px;
-    background:var(--glass); border:1px solid var(--line); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); font:300 .85rem var(--sans); letter-spacing:.04em; color:var(--cream); transition:opacity 1.2s; }
-  #pista.on { opacity:1; }
-  @media (max-width:520px) { #pista { top:auto; bottom:max(86px, env(safe-area-inset-bottom) + 74px); white-space:normal; width:max-content; max-width:86vw; text-align:center; } }
+  #titulo p { margin:10px 0 0; font:300 clamp(.95rem,2.6vw,1.25rem) var(--sans); letter-spacing:.14em; color:var(--cream); text-shadow:0 2px 14px rgba(0,0,0,.8); 
+    opacity:0; transform:translateY(15px); animation:letra 1.4s ease forwards 1.2s; }
 
   #botones { position:fixed; bottom:max(22px, env(safe-area-inset-bottom) + 12px); left:0; right:0; z-index:30; display:flex; justify-content:center; gap:12px; flex-wrap:wrap; padding:0 12px;
     opacity:0; visibility:hidden; transform:translateY(10px); transition:opacity 1.2s, transform 1.2s, visibility 0s 1.2s; }
@@ -76,7 +72,6 @@
 
 <div id="lineas"></div>
 <div id="titulo"></div>
-<div id="pista"></div>
 <div id="saltar">saltar ›</div>
 
 <div id="botones">
@@ -119,9 +114,9 @@ const CONFIG = {
     'Gracias por dejarme ser parte de tu camino. Te amo infinitamente. ❤️'
   ],
   firma: '— Andy',
-  carpeta: 'graduacion',   // carpeta con las fotos: graduacion/1.jpg, graduacion/2.jpg, ...
-  maxFotos: 30,            // cuántas fotos como máximo buscará (1, 2, 3 ...)
-  musica: 'graduacion/musica.mp3' // opcional: si subes este archivo, sonará en vez de la música generada
+  carpeta: 'graduacion',   // carpeta con las fotos
+  maxFotos: 30,            // cuántas fotos como máximo buscará
+  musica: 'graduacion/musica.mp3' // opcional
 };
 /* ==================================================== */
 
@@ -134,7 +129,7 @@ const ease = t => 1 - Math.pow(1 - clamp(t, 0, 1), 3);
 const ss = (a, b, x) => { x = clamp((x - a) / (b - a), 0, 1); return x * x * (3 - 2 * x); };
 const V3 = THREE.Vector3;
 
-/* ================= AUDIO (música y efectos generados, sin archivos) ================= */
+/* ================= AUDIO ================= */
 let ac, master, ruidoBuf, musicaArchivo = null, intensidad = 0, sintetizar = true;
 function audioInit() {
   ac = new (window.AudioContext || window.webkitAudioContext)(); master = ac.createGain(); master.gain.value = .6;
@@ -155,7 +150,7 @@ const sonLanzar = () => { if (!ac) return; const t = ac.currentTime; ruido(t, .4
 const sonFanfarria = () => { if (!ac) return; const t = ac.currentTime; [261.6, 329.6, 392, 523.3, 659.3, 784, 1046.5].forEach((f, i) => { nota(f, t + i * .11, 1.8, 'triangle', .13); nota(f * 2, t + i * .11, 1.4, 'sine', .05); }); };
 const ACORDES = [[130.8, 196, 261.6, 329.6], [98, 196, 246.9, 293.7], [110, 220, 261.6, 329.6], [87.3, 174.6, 261.6, 349.2]], PENTA = [523.3, 587.3, 659.3, 784, 880, 1046.5];
 let proxAcorde = 0, idxAcorde = 0;
-function programarMusica() { // música ambiental generada: acordes suaves + campanitas
+function programarMusica() {
   if (!ac || !sintetizar) return; const ahora = ac.currentTime;
   while (proxAcorde < ahora + .8) {
     const t = Math.max(proxAcorde, ahora), ch = ACORDES[idxAcorde++ % 4]; ch.forEach((f, i) => { nota(f, t, 4.2, 'triangle', .05 + intensidad * .02, 1.2); nota(f * 1.004, t, 4.2, 'sine', .04, 1.4); });
@@ -169,7 +164,11 @@ const renderer = new THREE.WebGLRenderer({ antialias: !cel, powerPreference: 'hi
 let pr = Math.min(devicePixelRatio, cel ? 1.5 : 2); renderer.setPixelRatio(pr); renderer.setSize(innerWidth, innerHeight); $('lienzo').appendChild(renderer.domElement);
 const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, .5, 1500);
 let composer = null, bloom = null;
-if (!cel) { composer = new THREE.EffectComposer(renderer); composer.addPass(new THREE.RenderPass(scene, camera)); bloom = new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .55, .7, .6); composer.addPass(bloom); }
+if (!cel) { 
+  composer = new THREE.EffectComposer(renderer); composer.addPass(new THREE.RenderPass(scene, camera)); 
+  // Brillo reducido en PC (.3 en lugar de .55)
+  bloom = new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .3, .7, .6); composer.addPass(bloom); 
+}
 const U = { uT: { value: 0 }, uPR: { value: pr }, uGlow: { value: 0 }, uAmt: { value: 0 } };
 const adit = { transparent: true, depthWrite: false, blending: THREE.AdditiveBlending };
 
@@ -180,7 +179,7 @@ function radial(stops, s = 128) { const c = document.createElement('canvas'); c.
 const texDot = radial([[0, 'rgba(255,255,255,1)'], [.35, 'rgba(255,255,255,.75)'], [1, 'rgba(255,255,255,0)']], 64);
 const texGlow = radial([[0, 'rgba(255,255,255,1)'], [.2, 'rgba(255,255,255,.4)'], [.6, 'rgba(255,255,255,.08)'], [1, 'rgba(255,255,255,0)']], 256);
 
-/* Cielo del atardecer dorado */
+/* Cielo */
 const cielo = new THREE.Mesh(new THREE.SphereGeometry(700, 32, 20), new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, uniforms: { uT: U.uT, uGlow: U.uGlow },
   vertexShader: 'varying vec3 vD; void main(){ vD = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }',
   fragmentShader: `varying vec3 vD; uniform float uT, uGlow;
@@ -192,10 +191,13 @@ const cielo = new THREE.Mesh(new THREE.SphereGeometry(700, 32, 20), new THREE.Sh
       gl_FragColor = vec4(c, 1.); }` }));
 cielo.renderOrder = -10; scene.add(cielo);
 
-/* Estrellas */
+/* Estrellas (Con clamp agregado para arreglar el NaN) */
 (function () {
   const n = cel ? 900 : 2200, pos = new Float32Array(n * 3);
-  for (let i = 0; i < n; i++) { const r = 600, th = Math.random() * 6.283, ph = Math.acos(clamp(Math.random() * 1.6 - .5, -1, 1)); pos.set([r * Math.sin(ph) * Math.cos(th), r * Math.cos(ph), r * Math.sin(ph) * Math.sin(th)], i * 3); }
+  for (let i = 0; i < n; i++) { 
+    const r = 600, th = Math.random() * 6.283, ph = Math.acos(clamp(Math.random() * 1.6 - .5, -1, 1)); 
+    pos.set([r * Math.sin(ph) * Math.cos(th), r * Math.cos(ph), r * Math.sin(ph) * Math.sin(th)], i * 3); 
+  }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   window.estrellas = new THREE.Points(g, new THREE.PointsMaterial({ size: 2.6, map: texDot, color: 0xfff1d6, ...adit, sizeAttenuation: false, opacity: 0 })); scene.add(estrellas);
 })();
@@ -253,7 +255,7 @@ function confeti(n, o, fuerza) {
   }
 }
 
-/* Fuegos artificiales (un solo sistema de partículas reutilizable) */
+/* Fuegos artificiales */
 const FN = cel ? 1600 : 3000, fpos = new Float32Array(FN * 3), fvel = new Float32Array(FN * 3), fcol = new Float32Array(FN * 3), fbase = new Float32Array(FN * 3), fl = new Float32Array(FN), fm = new Float32Array(FN), fdr = new Float32Array(FN), fgr = new Float32Array(FN);
 const fgeo = new THREE.BufferGeometry(); fgeo.setAttribute('position', new THREE.BufferAttribute(fpos, 3).setUsage(THREE.DynamicDrawUsage)); fgeo.setAttribute('color', new THREE.BufferAttribute(fcol, 3).setUsage(THREE.DynamicDrawUsage));
 const fpts = new THREE.Points(fgeo, new THREE.PointsMaterial({ size: cel ? 1.7 : 1.5, map: texDot, vertexColors: true, ...adit })); fpts.frustumCulled = false; scene.add(fpts);
@@ -273,7 +275,7 @@ function estallido(x, y, z, tipo, hue) {
 const TIPOS = ['esfera', 'esfera', 'anillo', 'sauce', 'corazon'];
 function fuegoAleatorio(tipo) { estallido(rand(-30, 30), rand(8, 30), rand(-55, -30), tipo || TIPOS[Math.random() * TIPOS.length | 0], Math.random()); }
 
-/* ================= FOTOS DEL DÍA ================= */
+/* ================= FOTOS ================= */
 const EXT = ['jpg', 'jpeg', 'png', 'webp', 'JPG', 'JPEG', 'PNG'], fotos = []; let extOk = null, fotosListas = false;
 function cargarImagen(n) {
   return new Promise(res => {
@@ -283,7 +285,7 @@ function cargarImagen(n) {
 }
 async function cargarFotos() {
   let faltan = 0;
-  for (let n = 1; n <= CONFIG.maxFotos && faltan < 3; n++) { // tolera hasta 2 números vacíos seguidos
+  for (let n = 1; n <= CONFIG.maxFotos && faltan < 3; n++) {
     const im = await cargarImagen(n); if (!im) { faltan++; continue; } faltan = 0;
     const k = Math.min(1, 768 / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
     c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); const t = new THREE.CanvasTexture(c); t.minFilter = THREE.LinearFilter; t.generateMipmaps = false; fotos.push({ tex: t, aspect: im.width / im.height });
@@ -309,7 +311,7 @@ function crearAnillo() {
 }
 
 /* ================= LÍNEA DE TIEMPO ================= */
-let fase = 'espera', tAct = 0, heroT = 0, ringT = 0, lluvia = 0, proxAuto = 3, proxToss = 22; const agenda = [];
+let fase = 'espera', tAct = 0, heroT = 0, ringT = 0, proxAuto = 3, proxToss = 22; const agenda = [];
 const en = (d, f) => agenda.push({ t: d, f });
 const eventosIntro = CONFIG.lineas.map((txt, i) => ({ t: .8 + i * 4.2, f: () => linea(txt) }));
 eventosIntro.push({ t: .8 + CONFIG.lineas.length * 4.2 + .6, f: () => climax() });
@@ -318,20 +320,25 @@ function linea(txt) { const l = $('lineas'); l.classList.remove('on'); setTimeou
 function comenzar() {
   $('inicio').classList.add('fuera'); setTimeout(() => $('inicio').style.display = 'none', 1700); fase = 'intro'; tAct = 0; $('saltar').style.display = 'block';
   try { audioInit(); if (ac.state === 'suspended') ac.resume(); } catch (e) {}
-  const a = new Audio(CONFIG.musica); a.loop = true; a.volume = 0; // música propia opcional
+  const a = new Audio(CONFIG.musica); a.loop = true; a.volume = 0; 
   a.play().then(() => { musicaArchivo = a; sintetizar = false; const f = setInterval(() => { a.volume = Math.min(.85, a.volume + .03); if (a.volume >= .85) clearInterval(f); }, 120); }).catch(() => {});
   cargarFotos();
 }
 function climax() {
   if (fase !== 'intro') return; fase = 'climax'; tAct = 0; eventosIntro.length = 0; $('lineas').classList.remove('on'); $('saltar').style.display = 'none'; intensidad = 1; sonFanfarria();
   $('flash').classList.add('on'); setTimeout(() => $('flash').classList.remove('on'), 260);
+  
+  // Título sin spans individuales para evitar el bug de safari
   const tit = CONFIG.nombre ? `¡Felicidades, ${CONFIG.nombre}!` : '¡Felicidades, graduada!';
-  $('titulo').innerHTML = `<h2>${[...tit].map((ch, i) => ch === ' ' ? ' ' : `<span style="animation-delay:${.4 + i * .06}s">${ch}</span>`).join('')}</h2><p>${CONFIG.subtitulo}</p>`;
+  $('titulo').innerHTML = `<h2>${tit}</h2><p>${CONFIG.subtitulo}</p>`;
+  
   heroT = 0; U.uAmt.value = 0;
   let esperas = 0; const armar = setInterval(() => { if (fotosListas || ++esperas > 25) { clearInterval(armar); crearAnillo(); ringT = 0; } }, 200);
   for (let i = 0; i < 9; i++) en(.8 + i * .9, () => fuegoAleatorio(i === 4 ? 'corazon' : undefined));
   en(1.2, () => confeti(cel ? 120 : 260, new V3(0, 16, 4), 9)); en(3.2, () => confeti(cel ? 120 : 260, new V3(0, 16, 4), 9)); en(4.5, () => lanzarBirretes(cel ? 12 : 22));
-  en(9, () => { fase = 'libre'; $('botones').classList.add('on'); const p = $('pista'); p.textContent = fotos.length ? 'Toca el cielo para lanzar birretes 🎓 · toca una foto para verla' : 'Toca el cielo para lanzar birretes 🎓'; p.classList.add('on'); setTimeout(() => p.classList.remove('on'), 9000); });
+  
+  // Eliminado el mensaje de "pista"
+  en(9, () => { fase = 'libre'; $('botones').classList.add('on'); });
 }
 
 /* ================= INTERACCIÓN ================= */
@@ -372,20 +379,17 @@ function animar() {
   U.uGlow.value *= Math.exp(-1.1 * dt); if (fase === 'libre') U.uGlow.value = Math.max(U.uGlow.value, .25);
   if (fase === 'climax' || fase === 'libre') U.uAmt.value += (1 - U.uAmt.value) * smooth(.5, dt);
 
-  // Cámara con un poco de parallax
   const asp = innerWidth / innerHeight, fovT = asp < .8 ? 74 : 60; if (camera.fov !== fovT || camera.aspect !== asp) { camera.fov = fovT; camera.aspect = asp; camera.updateProjectionMatrix(); }
   const dT = fase === 'espera' || fase === 'intro' ? 20 - Math.min(3, tAct * .2) : 17, lT = fase === 'intro' ? 9 - Math.min(3, tAct * .25) : 5.4;
   camDist += (dT - camDist) * smooth(2, dt); camLook += (lT - camLook) * smooth(2, dt);
   camera.position.set(ptr.x * 1.6, 3.2 - ptr.y * .8 + Math.sin(t * .3) * .2, camDist); camera.lookAt(0, camLook, 0);
 
-  // Birrete héroe
   if (fase === 'climax' || fase === 'libre') {
     heroT += dt; const k = ease(heroT / 2.8), oy = (1 - k) * -17;
     heroe.position.y = 5 + oy + Math.sin(t * 1.2) * .25; heroe.rotation.y += dt * .55; heroe.rotation.x = ptr.y * .25 + .12; heroe.rotation.z = -ptr.x * .2;
     luzHeroe.intensity = 2.4 * k; aura.material.opacity = (.35 + .1 * Math.sin(t * 2)) * k; aura.position.set(0, heroe.position.y + .2, -2);
   }
 
-  // Anillo de fotos
   if (polas.length) {
     ringT += dt; anilloVisible = Math.min(1, ringT / 3); anilloAng += (.14 + anilloVel) * dt; anilloVel *= Math.exp(-1.8 * dt);
     focoF += ((foco ? 1 : 0) - focoF) * smooth(5, dt);
@@ -393,7 +397,7 @@ function animar() {
     polas.forEach(p => {
       const a = p.i / p.n * 6.283 + anilloAng, ap = ease((ringT - 1.2 - p.delay) / 1.4), esFoco = foco === p;
       tmp.set(Math.sin(a) * p.R, p.y, Math.cos(a) * p.R); p.g.position.copy(tmp);
-      let sc = ap * (.6 + .4 * ss(-p.R, p.R, tmp.z)); // las del fondo se ven un poco más pequeñas
+      let sc = ap * (.6 + .4 * ss(-p.R, p.R, tmp.z));
       let op = ap * (foco && !esFoco ? 1 - .6 * focoF : 1);
       if (esFoco) {
         const vw = 2 * 8 * Math.tan(camera.fov * .00872665) * camera.aspect, vh = 2 * 8 * Math.tan(camera.fov * .00872665), fit = Math.min(vw * .88 / (p.w + .5), vh * .8 / 4.3, 2.4);
@@ -406,13 +410,11 @@ function animar() {
     if (foco && !foco.g.parent) foco = null;
   }
 
-  // Birretes lanzados
   for (let i = lanzados.length - 1; i >= 0; i--) {
     const c = lanzados[i]; c.v.y -= 18 * dt; c.g.position.addScaledVector(c.v, dt); c.g.rotation.x += c.s.x * dt; c.g.rotation.y += c.s.y * dt; c.g.rotation.z += c.s.z * dt;
     if (c.g.position.y < -6 && c.v.y < 0) { scene.remove(c.g); lanzados.splice(i, 1); }
   }
 
-  // Confeti
   for (let i = 0; i < CN; i++) {
     const c = cd[i]; if (c.life <= 0) { if (!c.off) { dummy.scale.set(0, 0, 0); dummy.updateMatrix(); confMesh.setMatrixAt(i, dummy.matrix); c.off = true; } continue; }
     c.life -= dt; c.v.y -= 6 * dt; c.v.multiplyScalar(Math.exp(-1.5 * dt)); c.v.x += Math.sin(t * 3 + c.ph) * .8 * dt; c.p.addScaledVector(c.v, dt); c.r.addScaledVector(c.s, dt);
@@ -420,7 +422,6 @@ function animar() {
   }
   confMesh.instanceMatrix.needsUpdate = true;
 
-  // Fuegos artificiales
   for (let i = 0; i < FN; i++) {
     if (fl[i] <= 0) continue; fl[i] -= dt; const i3 = i * 3;
     if (fl[i] <= 0) { fcol[i3] = fcol[i3 + 1] = fcol[i3 + 2] = 0; continue; }
@@ -430,12 +431,14 @@ function animar() {
   }
   fgeo.attributes.position.needsUpdate = true; fgeo.attributes.color.needsUpdate = true;
 
-  // Espectáculo automático en modo libre
   if (fase === 'libre') {
     proxAuto -= dt; if (proxAuto <= 0) { fuegoAleatorio(); proxAuto = rand(1.4, 3.2); }
     proxToss -= dt; if (proxToss <= 0) { lanzarBirretes(cel ? 5 : 9); confeti(cel ? 50 : 110, new V3(0, 14, 4), 8); proxToss = rand(20, 32); }
   }
-  if (bloom) bloom.strength = .5 + U.uGlow.value * .4;
+  
+  // Brillo más suave adaptado al nuevo Bloom base
+  if (bloom) bloom.strength = .25 + U.uGlow.value * .3;
+  
   composer ? composer.render() : renderer.render(scene, camera);
 }
 addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); if (composer) composer.setSize(innerWidth, innerHeight); });
