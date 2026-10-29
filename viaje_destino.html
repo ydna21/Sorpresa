@@ -68,8 +68,6 @@
   #lineaFill::after { content: ''; position: absolute; right: -6px; top: 50%; width: 12px; height: 12px; margin-top: -6px; border-radius: 50%; background: #fff; box-shadow: 0 0 16px 4px #ff0000; }
   #linea.listo #lineaFill { background: linear-gradient(90deg, #ff0000, #00ffff); box-shadow: 0 0 20px #00ffff; }
   #linea.listo #lineaFill::after { box-shadow: 0 0 16px 4px #00ffff; }
-  #tiempoRestante { position: fixed; right: 16px; bottom: 10px; z-index: 90; font-size: 0.65rem; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.55); opacity: 0; transition: opacity 1.5s ease, color 1s ease; pointer-events: none; }
-  #tiempoRestante.on { opacity: 1; }
 </style>
   <meta name="theme-color" content="#000000">
 </head>
@@ -84,7 +82,6 @@
 <canvas id="canvasMundo"></canvas>
 <div id="contenedorMedia"></div>
 
-<div id="tiempoRestante"></div>
 <div id="linea"><div id="lineaFill"></div></div>
 
 <div id="controles">
@@ -114,6 +111,8 @@ let stars = [];
 let mediaObjects = [];
 let relojIniciado = false, inicioMs = 0, portalListo = false;
 const T_PORTAL = 326; // segundos hasta que se abre el portal (5:26)
+let iniciado = false, vel = 0, tHilo = 0;
+function empezar() { iniciado = true; }
 let tiempoTotal = 0, spawnTimer = 70 / 60, controlesVisibles = false, ordenZ = 100000;
 const listos = [];          // recuerdos ya cargados, esperando salir
 let pendientes = 0, fallos = 0;
@@ -141,7 +140,7 @@ function init() {
   shuffle(recuerdosDisponibles);
 }
 
-function apuntar(x, y) { targetX = x; targetY = y; }
+function apuntar(x, y) { targetX = x; targetY = y; empezar(); }
 window.addEventListener('mousemove', (e) => apuntar(e.clientX, e.clientY));
 window.addEventListener('touchmove', (e) => { if (e.touches.length) apuntar(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
 window.addEventListener('touchstart', (e) => { if (e.touches.length) apuntar(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
@@ -155,6 +154,7 @@ function shuffle(array) {
 
 // --- LÓGICA DE INICIO Y TEMPORIZADOR EXACTO ---
 function iniciarExperiencia() {
+    empezar();
     if (audio.paused) {
         audio.volume = 0;
         audio.play().then(() => {
@@ -168,7 +168,6 @@ function iniciarExperiencia() {
                 relojIniciado = true;
                 inicioMs = performance.now();
                 document.getElementById('linea').classList.add('on');
-                document.getElementById('tiempoRestante').classList.add('on');
                 
                 // 326000 milisegundos = 5 minutos y 26 segundos
                 setTimeout(() => {
@@ -179,8 +178,6 @@ function iniciarExperiencia() {
                     statusTxt.style.textShadow = "0 0 10px #00ffff";
                     portalListo = true;
                     document.getElementById('linea').classList.add('listo');
-                    document.getElementById('tiempoRestante').innerText = 'PORTAL ABIERTO';
-                    document.getElementById('tiempoRestante').style.color = '#00ffff';
                 }, 326000); 
             }
         }).catch(err => console.log("Esperando interacción..."));
@@ -259,10 +256,12 @@ function update(ahora) {
   // Todo el movimiento va por tiempo (no por fotogramas): igual de fluido en 60, 90 o 120 Hz
   const dt = Math.min((ahora - ultimo) / 1000, 0.05);
   ultimo = ahora;
+  // Estrellas e hilo se mueven siempre; las fotos y los botones esperan al primer movimiento o toque
+  tHilo += dt;
+  if (iniciado) tiempoTotal += dt;
   const s = dt * 60;
-  tiempoTotal += dt;
 
-  const k = 1 - Math.pow(1 - 0.05, s);
+  const k = 1 - Math.pow(1 - 0.05, dt * 60); // el destino siempre responde al cursor
   centerX += (targetX - centerX) * k;
   centerY += (targetY - centerY) * k;
 
@@ -281,7 +280,7 @@ function update(ahora) {
   });
 
   // HILO ROJO: la misma onda de siempre, pero más suave y con brillo sin efecto pesado
-  const ahoraMs = Date.now();
+  const ahoraMs = tHilo * 1000;
   const hilo = new Path2D();
   for(let i=10; i<2000; i+=14) {
     let f = 400 / i;
@@ -331,15 +330,15 @@ function update(ahora) {
   }
 
   // Un recuerdo nuevo cada ~1.17 s (igual que antes: 70 fotogramas a 60 Hz)
-  spawnTimer += dt;
-  if (spawnTimer >= 70 / 60 && spawnMedia()) spawnTimer = 0;
+  if (iniciado) {
+    spawnTimer += dt;
+    if (spawnTimer >= 70 / 60 && spawnMedia()) spawnTimer = 0;
+  }
 
   // Barra de progreso hacia el portal secreto
   if (relojIniciado && !portalListo) {
     const falta = Math.max(0, T_PORTAL - (performance.now() - inicioMs) / 1000);
     document.getElementById('lineaFill').style.width = (100 - (falta / T_PORTAL) * 100) + '%';
-    const mm = Math.floor(falta / 60), ss = Math.ceil(falta % 60);
-    document.getElementById('tiempoRestante').innerText = 'FALTA ' + (ss === 60 ? (mm + 1) + ':00' : mm + ':' + String(ss).padStart(2, '0'));
   } else if (portalListo) {
     document.getElementById('lineaFill').style.width = '100%';
   }
