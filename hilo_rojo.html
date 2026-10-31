@@ -148,13 +148,15 @@ p{margin:0;font-size:clamp(1rem,4vw,1.2rem);line-height:1.65;color:var(--rojo-su
   .content{transform:none}
 }
 
-   /* Efecto especial para el botón de Graduación */
+  /* Efecto especial para el botón de Graduación */
   .btn-graduacion {
     background: rgba(0, 229, 255, 0.08) !important;
     border-color: rgba(0, 229, 255, 0.6) !important;
     text-shadow: 0 0 10px rgba(0, 229, 255, 0.8);
     box-shadow: 0 0 15px rgba(0, 229, 255, 0.4), inset 0 0 10px rgba(0, 229, 255, 0.2);
-    animation: latido-azul 2s ease-in-out infinite alternate;
+    
+    /* Primero ejecuta "subir" para aparecer, y luego inicia "latido-azul" con un retraso de 0.6s */
+    animation: subir .6s ease forwards, latido-azul 2s ease-in-out infinite alternate .6s;
   }
 
   @keyframes latido-azul {
