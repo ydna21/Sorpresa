@@ -147,6 +147,26 @@ p{margin:0;font-size:clamp(1rem,4vw,1.2rem);line-height:1.65;color:var(--rojo-su
   *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
   .content{transform:none}
 }
+
+   /* Efecto especial para el botón de Graduación */
+  .btn-graduacion {
+    background: rgba(0, 229, 255, 0.08) !important;
+    border-color: rgba(0, 229, 255, 0.6) !important;
+    text-shadow: 0 0 10px rgba(0, 229, 255, 0.8);
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.4), inset 0 0 10px rgba(0, 229, 255, 0.2);
+    animation: latido-azul 2s ease-in-out infinite alternate;
+  }
+
+  @keyframes latido-azul {
+    0% {
+      box-shadow: 0 0 15px rgba(0, 229, 255, 0.4), inset 0 0 10px rgba(0, 229, 255, 0.2);
+    }
+    100% {
+      box-shadow: 0 0 30px rgba(0, 229, 255, 0.9), inset 0 0 15px rgba(0, 229, 255, 0.6);
+      transform: scale(1.03);
+    }
+  }
+   
 </style>
 </head>
 <body>
@@ -201,6 +221,7 @@ p{margin:0;font-size:clamp(1rem,4vw,1.2rem);line-height:1.65;color:var(--rojo-su
       <a href="dia_fisioterapia.html" class="btn-destino" style="--c:#00BFFF">⚕️ Día del Fisioterapeuta</a>
       <a href="secreto_universo.html" class="btn-destino" style="--c:#FFF8E7">🌌 Universo Secreto</a>
       <a href="flores_amarillas.html" class="btn-destino" style="--c:#ffdb58">🌻 Jardín Secreto</a>
+      <a href="graduacion.html" class="btn-destino btn-graduacion" style="--c:#00e5ff">🎓 Sorpresa de Graduación ✨</a>
 
       <a href="index.html" class="btn-destino btn-volver">⬅️ Volver al Inicio</a>
     </div>
